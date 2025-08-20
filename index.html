@@ -11,7 +11,7 @@
     --panel: #ffffff;
     --ink: #1a1a1a;
     --muted: #6b7280;
-    --accent: #ff7aa2;      /* かわいくて視認性の良いピンク */
+    --accent: #ff7aa2;
     --accent-ink:#fff;
     --barH: 74px;
     --ring: 3px;
@@ -37,21 +37,14 @@
     border-radius:12px; padding:10px 12px; font-size:13px; font-weight:800; cursor:pointer;
   }
   .btn:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
-  .ghost{
-    background:transparent; color:var(--ink); border:1px solid #e5e7eb;
-  }
+  .ghost{ background:transparent; color:var(--ink); border:1px solid #e5e7eb; }
   .icon{font-variant-emoji: emoji; font-size:16px}
 
   /* ------- プレイエリア ------- */
   #play{
     position:relative; flex:1; overflow:hidden; touch-action:none; cursor:crosshair;
-    background:
-      radial-gradient(1200px 420px at 50% 120%, #f7f7f7 0%, transparent 60%) no-repeat,
-      linear-gradient(#fff 0 0) no-repeat;
-    /* ドットグリッド（薄め） */
-    --grid:#f1f3f5;
     background-image:
-      radial-gradient(circle at 1px 1px, var(--grid) 1px, transparent 0),
+      radial-gradient(circle at 1px 1px, #f1f3f5 1px, transparent 0),
       radial-gradient(1200px 420px at 50% 120%, #f7f7f7 0%, transparent 60%);
     background-size: 18px 18px, auto;
     background-position: 0 0, 0 0;
@@ -85,7 +78,7 @@
   #send:disabled{opacity:.5; cursor:not-allowed}
 
   /* ------- プレイヤーDOM ------- */
-  .p{position:absolute; width:76px; height:76px; transform:translate(-50%, -80%); transition: left .25s ease, top .25s ease}
+  .p{position:absolute; width:78px; height:78px; transform:translate(-50%, -80%); transition: left .25s ease, top .25s ease}
   .p.self .name{background: var(--accent)}
   .name{
     position:absolute; left:50%; top:-22px; transform:translateX(-50%);
@@ -93,7 +86,7 @@
     max-width:160px; text-overflow:ellipsis; overflow:hidden; letter-spacing:.2px;
   }
   .bubble{
-    position:absolute; left:50%; bottom:88px; transform:translateX(-50%);
+    position:absolute; left:50%; bottom:90px; transform:translateX(-50%);
     background:#fff; color:#111; border:1px solid #e5e7eb; border-radius:14px; padding:9px 11px; font-size:14px; max-width:240px;
     box-shadow:0 10px 26px rgba(0,0,0,.06);
   }
@@ -102,16 +95,15 @@
     width:14px; height:14px; background:#fff; border-left:1px solid #e5e7eb; border-bottom:1px solid #e5e7eb;
   }
 
-  .cat{width:76px; height:76px; display:block}
+  .cat{width:78px; height:78px; display:block}
   .stand .cat{transition:transform .18s ease}
-  .sit .cat{transition:transform .18s ease; opacity:.95}
-  .face-left{transform:scaleX(-1)}
+  .sit .cat{transition:transform .18s ease; opacity:.96}
+  .face-left{transform:scaleX(-1)} /* 右向きが標準。左へ進むときだけ反転する */
   /* しっぽパタパタ（控えめ） */
   @keyframes wag { 0%,100%{ transform: rotate(0deg) } 50%{ transform: rotate(-6deg) } }
-  .wag { transform-origin: 82px 60px; animation: wag 1.2s ease-in-out infinite }
+  .wag { transform-origin: 24px 60px; animation: wag 1.2s ease-in-out infinite }
 
   /* ------- 入室モーダル ------- */
-  dialog{ border: none; padding: 0; }
   #join{
     position:fixed; inset:0; background:rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center; z-index:10;
   }
@@ -132,22 +124,18 @@
   #warn{color:#b40000; font-size:13px; min-height:1.4em}
   .subtle{font-size:12px; color:var(--muted)}
 
-  /* ------- 小さなヒント ------- */
+  /* ------- ヒント ------- */
   #hint{
     position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom));
     background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.75; z-index:1;
   }
 
-  /* ------- フォーカス見やすく ------- */
-  :focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
-
   /* ------- メディアクエリ ------- */
   @media (max-width:480px){
-    .p{width:68px; height:68px}
-    .cat{width:68px; height:68px}
-    .bubble{font-size:13px; bottom:80px}
+    .p{width:70px; height:70px}
+    .cat{width:70px; height:70px}
+    .bubble{font-size:13px; bottom:82px}
   }
-
   @media (prefers-reduced-motion: reduce){
     .p{transition:none}
     .cat, .sit .cat, .stand .cat{transition:none}
@@ -239,7 +227,7 @@ const WORLD_ID = url.searchParams.get("room") || "global-plaza-1";
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getDatabase, ref, onValue, set, update, remove, serverTimestamp, onDisconnect
+  getDatabase, ref, onValue, set, update, serverTimestamp, onDisconnect
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {
   getAuth, signInAnonymously, onAuthStateChanged
@@ -270,21 +258,20 @@ const hintLang = document.getElementById("hintLang");
 let uid = null;
 let me = {
   name: "",
-  x: 0.5, // 0..1
-  y: 0.7,
-  dir: 1, // 1:右, -1:左
-  pose: "stand", // "stand" | "sit"
+  x: 0.5, y: 0.7,
+  dir: 1,           // 1=右、-1=左
+  pose: "stand",    // "stand" | "sit"
   msg: "",
   msgAt: 0
 };
 let target = {x: me.x, y: me.y};
 let lastSync = 0;
 let lastHeartbeat = 0;
-let SPEED_PX_PER_S = 120;      // 移動速度（ゆっくり）
-const SYNC_INTERVAL_MS = 80;   // 位置同期の最短間隔
-const HEARTBEAT_MS = 15000;    // lastActive更新
-const BUBBLE_MS = 8000;        // 吹き出しの表示寿命
-const TAP_PING = true;         // タップ波紋ON/OFF
+let SPEED_PX_PER_S = 120;
+const SYNC_INTERVAL_MS = 80;
+const HEARTBEAT_MS = 15000;
+const BUBBLE_MS = 12000;   // 長めに
+const TAP_PING = true;
 
 worldLabel.textContent = `room: ${WORLD_ID}`;
 
@@ -294,14 +281,8 @@ function clamp01(v){ return Math.max(0, Math.min(1, v)); }
 function escapeHTML(s){ return s.replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m])); }
 function isASCIIish(s){ return /^[\x00-\x7F]+$/.test(s); }
 function countWordsASCII(s){ return s.trim().split(/\s+/).filter(Boolean).length; }
-function toNorm(clientX, clientY){
-  const r = play.getBoundingClientRect();
-  return { x: clamp01((clientX - r.left) / r.width), y: clamp01((clientY - r.top) / r.height) };
-}
-function toPx(nx, ny){
-  const r = play.getBoundingClientRect();
-  return { x: nx * r.width, y: ny * r.height };
-}
+function toNorm(clientX, clientY){ const r = play.getBoundingClientRect(); return { x: clamp01((clientX - r.left) / r.width), y: clamp01((clientY - r.top) / r.height) }; }
+function toPx(nx, ny){ const r = play.getBoundingClientRect(); return { x: nx * r.width, y: ny * r.height }; }
 function pingAt(nx, ny){
   if(!TAP_PING) return;
   const {x,y} = toPx(nx, ny);
@@ -351,7 +332,7 @@ if(remembered){ nameInput.value = remembered.slice(0,3); }
 /* ============ 認証 & 接続 ============ */
 async function initAuth(){
   try{
-    await signInAnonymously(auth); // 匿名認証
+    await signInAnonymously(auth);
   }catch(e){
     alert("Firebase匿名認証に失敗。Authentication設定とAPIキー/ドメインを確認。");
     console.error(e);
@@ -383,7 +364,6 @@ async function mountPresence(){
     msgAt: 0,
     lastActive: serverTimestamp()
   });
-  // 切断時に自分のデータを消す
   onDisconnect(myRef()).remove().catch(()=>{});
 }
 
@@ -422,47 +402,49 @@ function createPlayerDom(id){
   bubble.className = "bubble";
   bubble.style.display = "none";
 
-  // 猫SVG（横向きシルエット：立ち/座り）——軽量・コントラスト強め
+  // 🐈 かわいい右向きシルエット（立ち/座り）
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox","0 0 100 100");
   svg.classList.add("cat");
 
-  // 立ち：胴体＋脚
-  const stand = document.createElementNS(svg.namespaceURI,"path");
-  stand.setAttribute("fill","#000");
-  stand.setAttribute("d","M15,70 Q25,45 45,45 L70,45 Q85,50 85,65 Q85,78 70,78 L40,78 Q30,78 25,72 Z");
+  // ---- 立ち（右向きが標準） ----
+  const body = document.createElementNS(svg.namespaceURI,"path");
+  body.setAttribute("fill","#000");
+  body.setAttribute("d","M28,68 Q40,48 58,46 Q78,46 84,60 Q86,74 64,80 Q42,82 28,68 Z");
   const head = document.createElementNS(svg.namespaceURI,"circle");
-  head.setAttribute("cx","20"); head.setAttribute("cy","45"); head.setAttribute("r","10"); head.setAttribute("fill","#000");
+  head.setAttribute("cx","80"); head.setAttribute("cy","48"); head.setAttribute("r","11"); head.setAttribute("fill","#000");
   const ear1 = document.createElementNS(svg.namespaceURI,"path");
-  ear1.setAttribute("fill","#000"); ear1.setAttribute("d","M14,37 L18,32 L20,39 Z");
+  ear1.setAttribute("fill","#000"); ear1.setAttribute("d","M75,40 L80,33 L82,42 Z");
   const ear2 = document.createElementNS(svg.namespaceURI,"path");
-  ear2.setAttribute("fill","#000"); ear2.setAttribute("d","M22,37 L26,32 L24,39 Z");
+  ear2.setAttribute("fill","#000"); ear2.setAttribute("d","M85,40 L90,33 L88,42 Z");
   const tail = document.createElementNS(svg.namespaceURI,"path");
-  tail.setAttribute("fill","#000"); tail.setAttribute("d","M80,60 q15,-10 15,0 q-8,10 -20,5 Z");
+  tail.setAttribute("fill","#000");
+  tail.setAttribute("d","M24,62 C18,54 24,42 38,40 C50,38 56,44 56,50 C40,54 32,60 30,68 Z");
   tail.classList.add("wag");
-  const frontLeg = document.createElementNS(svg.namespaceURI,"rect");
-  frontLeg.setAttribute("x","48"); frontLeg.setAttribute("y","72"); frontLeg.setAttribute("width","6"); frontLeg.setAttribute("height","14"); frontLeg.setAttribute("fill","#000");
   const backLeg = document.createElementNS(svg.namespaceURI,"rect");
-  backLeg.setAttribute("x","64"); backLeg.setAttribute("y","72"); backLeg.setAttribute("width","6"); backLeg.setAttribute("height","14"); backLeg.setAttribute("fill","#000");
+  backLeg.setAttribute("x","50"); backLeg.setAttribute("y","72"); backLeg.setAttribute("width","6"); backLeg.setAttribute("height","14"); backLeg.setAttribute("fill","#000");
+  const frontLeg = document.createElementNS(svg.namespaceURI,"rect");
+  frontLeg.setAttribute("x","66"); frontLeg.setAttribute("y","72"); frontLeg.setAttribute("width","6"); frontLeg.setAttribute("height","14"); frontLeg.setAttribute("fill","#000");
 
-  // 座り
+  // ---- 座り（右向きが標準） ----
   const sitGroup = document.createElementNS(svg.namespaceURI,"g");
   sitGroup.setAttribute("display","none");
   const sBody = document.createElementNS(svg.namespaceURI,"path");
   sBody.setAttribute("fill","#000");
-  sBody.setAttribute("d","M18,70 Q25,50 45,50 Q65,50 70,65 Q72,80 50,82 Q25,84 18,70 Z");
+  sBody.setAttribute("d","M30,72 Q42,54 64,54 Q82,54 84,66 Q86,80 62,84 Q40,86 30,72 Z");
   const sHead = document.createElementNS(svg.namespaceURI,"circle");
-  sHead.setAttribute("cx","20"); sHead.setAttribute("cy","50"); sHead.setAttribute("r","10"); sHead.setAttribute("fill","#000");
+  sHead.setAttribute("cx","78"); sHead.setAttribute("cy","50"); sHead.setAttribute("r","11"); sHead.setAttribute("fill","#000");
   const sEar1 = document.createElementNS(svg.namespaceURI,"path");
-  sEar1.setAttribute("fill","#000"); sEar1.setAttribute("d","M14,42 L18,37 L20,44 Z");
+  sEar1.setAttribute("fill","#000"); sEar1.setAttribute("d","M73,42 L78,35 L80,44 Z");
   const sEar2 = document.createElementNS(svg.namespaceURI,"path");
-  sEar2.setAttribute("fill","#000"); sEar2.setAttribute("d","M22,42 L26,37 L24,44 Z");
+  sEar2.setAttribute("fill","#000"); sEar2.setAttribute("d","M83,42 L88,35 L86,44 Z");
   const sTail = document.createElementNS(svg.namespaceURI,"path");
-  sTail.setAttribute("fill","#000"); sTail.setAttribute("d","M70,68 q18,-2 14,10 q-6,10 -20,3 Z");
+  sTail.setAttribute("fill","#000");
+  sTail.setAttribute("d","M28,70 C20,66 22,56 32,52 C40,50 46,54 44,60 C38,66 34,70 30,74 Z");
   sTail.classList.add("wag");
 
-  svg.appendChild(stand); svg.appendChild(head); svg.appendChild(ear1); svg.appendChild(ear2);
-  svg.appendChild(tail); svg.appendChild(frontLeg); svg.appendChild(backLeg);
+  svg.appendChild(body); svg.appendChild(head); svg.appendChild(ear1); svg.appendChild(ear2);
+  svg.appendChild(tail); svg.appendChild(backLeg); svg.appendChild(frontLeg);
   sitGroup.appendChild(sBody); sitGroup.appendChild(sHead); sitGroup.appendChild(sEar1); sitGroup.appendChild(sEar2); sitGroup.appendChild(sTail);
   svg.appendChild(sitGroup);
 
@@ -470,7 +452,7 @@ function createPlayerDom(id){
   wrap.appendChild(bubble);
   wrap.appendChild(svg);
 
-  return {wrap, nameEl, bubbleEl: bubble, svg, sitGroup, standParts:[stand,head,ear1,ear2,tail,frontLeg,backLeg], _lastMsgAt:0};
+  return {wrap, nameEl, bubbleEl: bubble, svg, sitGroup, standParts:[body,head,ear1,ear2,tail,backLeg,frontLeg], _lastMsgKey:null};
 }
 
 function renderPlayer(pdom, data, isSelf){
@@ -482,7 +464,7 @@ function renderPlayer(pdom, data, isSelf){
   pdom.nameEl.textContent = data.name || "";
   pdom.wrap.classList.toggle("self", !!isSelf);
 
-  // 向き
+  // 向き：右向きが標準。左へ動くときにだけ反転（face-left）
   if(data.dir === -1) pdom.svg.classList.add("face-left");
   else pdom.svg.classList.remove("face-left");
 
@@ -497,29 +479,19 @@ function renderPlayer(pdom, data, isSelf){
     pdom.standParts.forEach(n=>n.setAttribute("display","block"));
   }
 
-  // 吹き出し（msgAtで寿命管理）
+  // 吹き出し（テキスト or msgAt が変わったら新規表示）
   const text = data.msg || "";
   const msgAt = data.msgAt || 0;
-  const nowMs = Date.now();
-
-  if(text && msgAt){
-    // 新しいメッセージなら出す
-    if(pdom._lastMsgAt !== msgAt){
-      pdom._lastMsgAt = msgAt;
-      pdom.bubbleEl.innerHTML = escapeHTML(text);
-      pdom.bubbleEl.style.display = "block";
-      // 残り時間で消える
-      const age = nowMs - msgAt;
-      const remain = Math.max(0, BUBBLE_MS - age);
-      clearTimeout(pdom._bubbleTimer);
-      pdom._bubbleTimer = setTimeout(()=>{ pdom.bubbleEl.style.display = "none"; }, remain);
-    }else{
-      // 既に表示済み。寿命切れなら隠す
-      if(nowMs - msgAt >= BUBBLE_MS){
-        pdom.bubbleEl.style.display = "none";
-      }
-    }
-  }else{
+  const key = `${text}|${msgAt}`;
+  if(text && key !== pdom._lastMsgKey){
+    pdom._lastMsgKey = key;
+    pdom.bubbleEl.innerHTML = escapeHTML(text);
+    pdom.bubbleEl.style.display = "block";
+    const age = typeof msgAt === "number" ? (Date.now() - msgAt) : 0;
+    const remain = BUBBLE_MS - Math.max(0, age);
+    clearTimeout(pdom._bubbleTimer);
+    pdom._bubbleTimer = setTimeout(()=>{ pdom.bubbleEl.style.display = "none"; }, Math.max(1200, remain));
+  }else if(!text){
     pdom.bubbleEl.style.display = "none";
   }
 }
@@ -622,7 +594,7 @@ async function safeUpdate(patch){
   }
 }
 
-/* ============ メッセージ送信 ============ */
+/* ============ メッセージ送信（即時表示＋サーバ時刻） ============ */
 function sendMsg(){
   const raw = msgInput.value.trim();
   const chk = validateMessage(raw);
@@ -631,9 +603,16 @@ function sendMsg(){
   if(nowMs - lastSentAt < 500){ return; } // スパム抑止
   lastSentAt = nowMs;
 
+  // ローカル即時表示（他クライアントはこの後のserverTimestampで受信）
+  me.msg = raw;
+  me.msgAt = nowMs;
+  const mineDom = domMap.get(uid);
+  if(mineDom){ mineDom._lastMsgKey = null; renderPlayer(mineDom, me, true); }
+
   msgInput.value = "";
   sendBtn.disabled = true;
 
+  // サーバ時刻で正規化
   safeUpdate({ msg: raw, msgAt: serverTimestamp() });
 }
 
@@ -647,7 +626,7 @@ shareBtn.addEventListener("click", async ()=>{
     const link = location.href;
     if(ok){ await navigator.clipboard.writeText(link); toast("URLをコピーした"); }
     else{ prompt("このURLをコピーして共有してね", link); }
-  }catch{ /* noop */ }
+  }catch{}
 });
 helpBtn.addEventListener("click", ()=> helpDialog.showModal());
 helpClose.addEventListener("click", ()=> helpDialog.close());

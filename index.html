@@ -22,10 +22,10 @@
   body,button,input{touch-action:manipulation}
   #app{position:fixed; inset:0; display:flex; flex-direction:column}
 
-  /* ==== 上部ヘッダ：小画面は2段まで許容 ==== */
+  /* ==== 上部ヘッダ（2段まで許容） ==== */
   header{
     padding: calc(env(safe-area-inset-top) + 4px) 12px 8px;
-    border-bottom:1px solid var(--border); background:var(--panel); position:relative; z-index:2;
+    border-bottom:1px solid var(--border); background:var(--panel); position:relative; z-index:3;
   }
   header .row{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; row-gap:6px}
   .brand{display:flex; align-items:center; gap:10px; min-width:0; flex:1 1 260px}
@@ -35,6 +35,7 @@
   .meta{display:flex; align-items:center; gap:8px; flex:0 0 auto}
   .btn{appearance:none; border:0; background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:10px 12px; font-size:14px; font-weight:800; cursor:pointer; min-height:40px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; flex:0 0 auto}
   .btn.ghost{background:transparent; color:var(--ink); border:1px solid var(--border)}
+  .btn.iconOnly{padding:10px; min-width:44px} /* ←下部のアイコン専用ボタン */
   .btn:focus-visible{outline:var(--ring) solid var(--ringColor); outline-offset:2px}
   .icon{font-variant-emoji:emoji; font-size:16px}
   .txt{display:inline-block}
@@ -56,7 +57,7 @@
   .ping{position:absolute; width:10px; height:10px; border-radius:999px; border:2px solid var(--accent); opacity:.7; pointer-events:none; transform:translate(-50%,-50%) scale(.2); animation:ping .8s ease-out forwards}
   @keyframes ping{80%{opacity:.15; transform:translate(-50%,-50%) scale(2.0)} 100%{opacity:0; transform:translate(-50%,-50%) scale(2.6)}}
 
-  /* ==== 「書き置き」パネル（部屋永続） ==== */
+  /* ==== 書き置きパネル（部屋永続） ==== */
   #notesPanel{
     position:absolute; left:8px; top:8px; z-index:2;
     display:flex; flex-direction:column; gap:6px; max-width:min(92vw, 360px); pointer-events:none;
@@ -70,26 +71,22 @@
   .note .by{font-size:12px; color:#444}
   .note .txt{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600}
 
-  /* ==== 下部バー：横一行固定 ==== */
+  /* ==== 下部バー：入力を最優先で広く ==== */
   #bar{
     height:var(--barH); display:flex; align-items:center; gap:8px;
     border-top:1px solid var(--border); background:var(--panel);
     padding:8px 10px; padding-bottom:calc(8px + env(safe-area-inset-bottom));
     flex-wrap:nowrap; white-space:nowrap; overflow:hidden;
   }
-  #poseBtn{min-width:74px}
   #msgWrap{flex:1 1 auto; display:flex; align-items:center; gap:8px; min-width:0; overflow:hidden; white-space:nowrap}
   #msg{
-    flex:1 1 auto; min-width:120px; font-size:16px; padding:8px 10px;
+    flex:1 1 auto; min-width:160px; font-size:16px; padding:8px 10px;
     border:1px solid var(--border); border-radius:12px; outline:none; background:#fff;
     height:38px; line-height:22px; white-space:nowrap;
   }
   #msg:focus-visible{outline:var(--ring) solid var(--ringColor); outline-offset:2px}
-  #helper{flex:0 0 auto; display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); max-width:34%; overflow:hidden; text-overflow:ellipsis; user-select:none}
-  #pinBtn{min-width:74px}
-  #noteBtn{min-width:74px}
-  #send{min-width:74px}
-  @media (max-width:980px){ #bar .btn .txt{display:none} #helper{display:none} }
+  #helper{flex:0 0 auto; display:flex; align-items:center; gap:8px; font-size:12px; color:#6b7280; max-width:34%; overflow:hidden; text-overflow:ellipsis; user-select:none}
+  @media (max-width:980px){ #helper{display:none} }
 
   /* ==== プレイヤー（画像ベース／左向き基準） ==== */
   .p{position:absolute; left:0; top:0; transform:translate3d(0,0,0) translate(-50%, -80%); will-change:transform; width:78px; height:78px}
@@ -108,20 +105,20 @@
   }
   .name.flip{top:auto; bottom:84px}
 
-  /* 通常吹き出し：横一行・60秒で消える（JS制御） */
+  /* 通常吹き出し：横一行・60秒 */
   .bubble{
     position:absolute; left:50%; bottom:94px; transform:translateX(-50%);
     background:#fff; color:#111; border:1px solid var(--border); border-radius:12px; padding:8px 10px; font-size:14px;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:min(86vw, 520px);
     box-shadow:0 8px 22px rgba(0,0,0,.06); z-index:1; display:none; pointer-events:none;
   }
-  /* ピン留め吹き出し：常時表示／淡いピンク／サイズは2/3 */
+  /* ピン吹き出し：常時表示／淡ピンク／2/3サイズ */
   .bubble.pin{
     display:none;
     bottom:122px;
     background:var(--pin-bg);
     border-color:var(--pin-bd);
-    font-size:0.66em;            /* ★通常の2/3 */
+    font-size:0.66em;
     padding:6px 9px;
   }
 
@@ -143,7 +140,7 @@
   #warn{color:#b40000; font-size:13px; min-height:1.4em}
   .subtle{font-size:12px; color:#6b7280}
 
-  #hint{position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom)); background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.85; z-index:3}
+  #hint{position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom)); background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.85; z-index:4}
 
   /* 満員ダイアログ */
   #full{position:fixed; inset:0; background:rgba(255,255,255,.9); display:none; align-items:center; justify-content:center; z-index:20}
@@ -162,6 +159,7 @@
         <span class="chip" id="countLabel" aria-live="polite" title="いまいるネコの数">😺 0</span>
       </div>
       <div class="meta">
+        <button id="poseTopBtn" class="btn ghost" title="立つ/座る 切替"><span class="icon" aria-hidden="true">🪑</span><span class="txt"> 座る</span></button>
         <button id="muteBtn" class="btn ghost" title="音のオン/オフ"><span class="icon" aria-hidden="true">🔔</span><span class="txt"> 音</span></button>
         <button id="shareBtn" class="btn ghost" title="URLをコピー"><span class="icon" aria-hidden="true">🔗</span><span class="txt"> 共有</span></button>
         <button id="helpBtn" class="btn ghost" title="使い方"><span class="icon" aria-hidden="true">❔</span><span class="txt"> ヘルプ</span></button>
@@ -174,19 +172,18 @@
     <div id="notesPanel" aria-live="polite"></div>
   </div>
 
-  <!-- 横一行の下部バー -->
+  <!-- 下部バー：アイコン3つ＋広い入力欄 -->
   <div id="bar">
-    <button id="poseBtn" class="btn" title="立つ/座るの切替" aria-pressed="false"><span class="icon" aria-hidden="true">🪑</span><span class="txt"> 座る</span></button>
     <div id="msgWrap">
       <input id="msg" type="text" inputmode="text" autocomplete="off" placeholder="短いことば…（非英語15 / 英語10語）" aria-label="メッセージ入力（1行）">
       <div id="helper">
         <span id="hintLang">非英語：0/15</span>
-        <span aria-hidden="true">Enterで送信 / Sで座る</span>
+        <span aria-hidden="true">Enter送信 / Sで座る</span>
       </div>
     </div>
-    <button id="pinBtn"  class="btn" title="ピン留めの切替" aria-pressed="false"><span class="icon" aria-hidden="true">📌</span><span class="txt"> ピン</span></button>
-    <button id="noteBtn" class="btn" title="部屋に書き置き"   aria-pressed="false"><span class="icon" aria-hidden="true">📍</span><span class="txt"> 書き置き</span></button>
-    <button id="send"    class="btn" disabled title="メッセージ送信"><span class="icon" aria-hidden="true">📨</span><span class="txt"> 送信</span></button>
+    <button id="pinBtn"  class="btn iconOnly" title="ピン留め"><span class="icon" aria-hidden="true">📌</span></button>
+    <button id="noteBtn" class="btn iconOnly" title="部屋に書き置き"><span class="icon" aria-hidden="true">🖋️</span></button>
+    <button id="send"    class="btn iconOnly" disabled title="メッセージ送信"><span class="icon" aria-hidden="true">📨</span></button>
   </div>
 
   <div id="hint" aria-live="polite">画面をタップで自分の猫がゆっくり移動</div>
@@ -214,11 +211,11 @@
       <li>タップ/クリックした所へゆっくり移動する</li>
       <li>下の入力欄は横一行。Enterで送信</li>
       <li>英語は10語、非英語は15文字まで</li>
-      <li>Sキーで座る/立つ（<b>入力中は効かない</b>）</li>
-      <li><b>📌ピン</b>で自分の頭上に固定（淡いピンク・2/3サイズ）／再度押すと解除</li>
-      <li><b>📍書き置き</b>で部屋に残す（作者名付き、左上に一覧）</li>
+      <li>座る/立つは上部の <b>🪑</b> か <b>S</b> キー（入力中は無効）</li>
+      <li><b>📌ピン</b>で自分の頭上に固定（淡いピンク・2/3サイズ）／再度で解除</li>
+      <li><b>🖋️書き置き</b>で部屋に残す（作者名付き、左上に一覧）</li>
       <li>左上の <b>🐱</b> を押すと参加者名を2.5秒表示</li>
-      <li>満員は10人まで。満員時は新しい部屋を作成する</li>
+      <li>同じ部屋は最大10人まで</li>
     </ul>
     <div style="background:#f8fafc; border:1px solid #e5e7eb; padding:10px; border-radius:10px; font-size:13px; color:#374151; margin-bottom:12px">
       音が出ない場合：ページを一度タップしてから、ブラウザのサイト設定で「音声を許可」。iOSは本体のサイレントスイッチも確認。
@@ -233,7 +230,7 @@
 <div id="full">
   <div class="card">
     <h3>満員だ（10人まで）</h3>
-    <p style="margin-top:0">この部屋は上限に達している。新しい部屋を作って入室する。</p>
+    <p style="margin-top:0">この部屋は上限に達している。新しい部屋を作成して入室する。</p>
     <div style="display:flex; gap:8px; justify-content:flex-end">
       <button id="newRoomBtn" class="btn">新しい部屋を作る</button>
     </div>
@@ -283,7 +280,7 @@ const msgInput = document.getElementById("msg");
 const sendBtn = document.getElementById("send");
 const pinBtn = document.getElementById("pinBtn");
 const noteBtn = document.getElementById("noteBtn");
-const poseBtn = document.getElementById("poseBtn");
+const poseTopBtn = document.getElementById("poseTopBtn");
 const join = document.getElementById("join");
 const nameInput = document.getElementById("nameInput");
 const enterBtn = document.getElementById("enterBtn");
@@ -303,7 +300,7 @@ const newRoomBtn = document.getElementById("newRoomBtn");
 
 worldLabel.textContent = `room: ${WORLD_ID}`;
 
-/* ===== サウンド（Web Audio） ===== */
+/* ===== サウンド ===== */
 let AC=null, masterGain=null; let muted=localStorage.getItem("yuru_mute")==="1";
 function unlockAudio(){ if(!AC){ const Ctx=window.AudioContext||window.webkitAudioContext; if(!Ctx) return; AC=new Ctx(); masterGain=AC.createGain(); masterGain.gain.value=muted?0:0.24; masterGain.connect(AC.destination); } if(AC&&AC.state==="suspended") AC.resume(); }
 function setupAudioUnlock(){ const once=()=>{unlockAudio(); document.removeEventListener("pointerdown", once); document.removeEventListener("keydown", once); }; document.addEventListener("pointerdown", once, {passive:true}); document.addEventListener("keydown", once); enterBtn.addEventListener("click", unlockAudio, {once:true}); } setupAudioUnlock();
@@ -320,7 +317,7 @@ let me={ name:"", x:0.5, y:0.7, dir:1, pose:"stand", msg:"", msgAt:0, pinMsg:"" 
 let target={x:me.x,y:me.y};
 let lastSync=0, lastHeartbeat=0; let SPEED_PX_PER_S=120;
 const SYNC_INTERVAL_MS=80, HEARTBEAT_MS=15000;
-const BUBBLE_MS=60000;           // 60秒
+const BUBBLE_MS=60000;
 const NON_ASCII_LIMIT=15;
 const ROOM_CAP = 10;
 
@@ -336,7 +333,7 @@ function pingAt(nx,ny){ const r=getPlayRect(); if(!r) return; const {x,y}=toPx(n
 function roundPx(v){ return Math.round(v); }
 function toast(text){ const el=document.getElementById("hint"); el.textContent=text; el.style.opacity=.95; clearTimeout(toast._t); toast._t=setTimeout(()=> el.style.opacity=.85, 1500); }
 
-/* ===== Room Refs ===== */
+/* ===== Refs ===== */
 function playersRefOf(room){ return ref(db, `worlds/${room}/players`); }
 function myRef(){ return ref(db, `worlds/${WORLD_ID}/players/${uid}`); }
 function notesRef(){ return ref(db, `worlds/${WORLD_ID}/notes`); }
@@ -356,21 +353,20 @@ async function startJoin(){
   localStorage.setItem("yuru_name", me.name);
   await initAuth();
 }
-async function initAuth(){ try{ await signInAnonymously(auth); }catch(e){ alert("匿名認証に失敗。ネットワークかAuthentication設定を確認。"); console.error("[auth] signIn failed:", e); } }
+async function initAuth(){ try{ await signInAnonymously(auth); }catch(e){ alert("匿名認証に失敗。Authentication設定とネットワークを確認。"); console.error("[auth] signIn failed:", e); } }
 
 onAuthStateChanged(auth, async user=>{
   if(!user) return;
   uid=user.uid;
   me.x=Math.random()*0.8+0.1; me.y=Math.random()*0.4+0.5; target={x:me.x,y:me.y};
   me.pose="stand"; me.pinMsg="";
-  // ★入室上限チェック
   const ok = await ensureCapacity();
   if(!ok){ showFull(); return; }
   ensureMineDom();
   await mountPresence(true);
   startLoop();
   subscribePlayers();
-  subscribeNotes();    // 部屋の書き置き購読
+  subscribeNotes();
 });
 
 /* ===== 上限チェック ===== */
@@ -381,7 +377,7 @@ async function ensureCapacity(){
     return n < ROOM_CAP;
   }catch(e){
     console.warn("capacity check failed:", e);
-    return true; // 失敗時は通す（厳密にするなら false）
+    return true;
   }
 }
 function showFull(){
@@ -439,7 +435,7 @@ function subscribePlayers(){
   });
 }
 
-/* ===== 部屋の書き置き購読 ===== */
+/* ===== 書き置き購読 ===== */
 function subscribeNotes(){
   onValue(notesRef(), snap=>{
     const list = [];
@@ -447,7 +443,6 @@ function subscribeNotes(){
       const v = child.val();
       if(v && v.text) list.push({id:child.key, ...v});
     });
-    // 古い順→新しい順に並べたいなら sort
     list.sort((a,b)=>(a.at||0)-(b.at||0));
     renderNotes(list);
   });
@@ -471,90 +466,49 @@ function renderNotes(list){
 /* ===== 画像猫DOM ===== */
 function createPlayerDom(id){
   const wrap=document.createElement("div"); wrap.className="p stand";
-
   const nameEl=document.createElement("div"); nameEl.className="name";
   const bubble=document.createElement("div"); bubble.className="bubble";
-  const pinBubble=document.createElement("div"); pinBubble.className="bubble pin"; // ←ピン（2/3）
-
+  const pinBubble=document.createElement("div"); pinBubble.className="bubble pin";
   const standImg=new Image(); standImg.src=CAT_STAND_URL; standImg.alt="cat standing"; standImg.decoding="async"; standImg.className="catImg stand";
   const sitImg  =new Image(); sitImg.src  =CAT_SIT_URL;   sitImg.alt  ="cat sitting";  sitImg.decoding="async";  sitImg.className="catImg sit";
-
-  wrap.appendChild(nameEl);
-  wrap.appendChild(pinBubble);
-  wrap.appendChild(bubble);
-  wrap.appendChild(standImg);
-  wrap.appendChild(sitImg);
-
-  return {
-    wrap, nameEl, bubbleEl:bubble, pinBubbleEl:pinBubble, standImg, sitImg,
-    _lastShownMsgAt:0, _flip:false
-  };
+  wrap.appendChild(nameEl); wrap.appendChild(pinBubble); wrap.appendChild(bubble); wrap.appendChild(standImg); wrap.appendChild(sitImg);
+  return {wrap, nameEl, bubbleEl:bubble, pinBubbleEl:pinBubble, standImg, sitImg, _lastShownMsgAt:0, _flip:false};
 }
 
 /* ===== 描画 ===== */
 function renderPlayer(pdom, data, isSelf){
   const r=getPlayRect(); if(!r) return;
-
-  // 位置（整数スナップでチラつき抑制）
   const px=roundPx(data.x*r.width), py=roundPx(data.y*r.height);
   pdom.wrap.style.transform=`translate3d(${px}px, ${py}px, 0) translate(-50%, -80%)`;
-
-  // 姿勢
   if(data.pose==="sit"){ pdom.wrap.classList.add("sit"); pdom.wrap.classList.remove("stand"); }
   else{ pdom.wrap.classList.add("stand"); pdom.wrap.classList.remove("sit"); }
-
-  // 向き（左が正・右は反転）
-  const right = (data.dir===1);
-  pdom.standImg.classList.toggle("right", right);
-  pdom.sitImg.classList.toggle("right", right);
-
-  // 名札
+  const right=(data.dir===1); pdom.standImg.classList.toggle("right", right); pdom.sitImg.classList.toggle("right", right);
   pdom.nameEl.textContent = data.name || "";
-  pdom.wrap.classList.toggle("self", !!isSelf);
-
-  // 名札フリップ with ヒステリシス
   const barH = bar.getBoundingClientRect().height || 0;
   const visibleBottom = r.height - barH;
   const wantFlip = (py + 90 > visibleBottom - 8);
   if(!pdom._flip && wantFlip){ pdom.nameEl.classList.add("flip"); pdom._flip=true; }
   else if(pdom._flip && (py + 90 < visibleBottom - 24)){ pdom.nameEl.classList.remove("flip"); pdom._flip=false; }
 
-  // 通常吹き出し（横一行・60秒）
-  const raw = data.msg || ""; const msgAt = Number(data.msgAt || 0);
-  if(raw && msgAt > 0){
-    const REPLAY_GUARD_MS = 4000;
-    const nowAbs = Date.now();
-    const isReplaySelf = isSelf && (msgAt - pdom._lastShownMsgAt < REPLAY_GUARD_MS);
+  const raw=data.msg || ""; const msgAt=Number(data.msgAt || 0);
+  if(raw && msgAt>0){
+    const REPLAY_GUARD_MS=4000; const nowAbs=Date.now(); const isReplaySelf=isSelf && (msgAt - pdom._lastShownMsgAt < REPLAY_GUARD_MS);
     if(msgAt > pdom._lastShownMsgAt && !isReplaySelf){
-      pdom.bubbleEl.textContent = raw;
-      pdom.bubbleEl.style.display = "block";
+      pdom.bubbleEl.textContent=raw; pdom.bubbleEl.style.display="block";
       clearTimeout(pdom._bubbleTimer);
-      const age = Math.max(0, nowAbs - msgAt);
-      const remain = Math.max(1200, BUBBLE_MS - age);
-      pdom._bubbleTimer = setTimeout(()=>{ pdom.bubbleEl.style.display="none"; }, remain);
-      pdom._lastShownMsgAt = msgAt;
-      if(!isSelf) playMessage();
+      const age=Math.max(0, nowAbs - msgAt); const remain=Math.max(1200, BUBBLE_MS - age);
+      pdom._bubbleTimer=setTimeout(()=>{ pdom.bubbleEl.style.display="none"; }, remain);
+      pdom._lastShownMsgAt=msgAt; if(!isSelf) playMessage();
     }
-  }else{
-    pdom.bubbleEl.style.display="none";
-  }
+  }else{ pdom.bubbleEl.style.display="none"; }
 
-  // ピン吹き出し（常時表示、2/3サイズ）
-  const pinText = data.pinMsg || "";
-  if(pinText){
-    pdom.pinBubbleEl.textContent = pinText;
-    pdom.pinBubbleEl.style.display = "block";
-  }else{
-    pdom.pinBubbleEl.style.display = "none";
-  }
+  const pinText=data.pinMsg || "";
+  pdom.pinBubbleEl.style.display = pinText ? "block" : "none";
+  if(pinText) pdom.pinBubbleEl.textContent = pinText;
 }
 
 /* ===== 自分DOM保証 ===== */
-function ensureMineDom(){
-  if(!uid) return;
-  if(!domMap.get(uid)){ const d=createPlayerDom(uid); domMap.set(uid,d); play.appendChild(d.wrap); }
-  renderPlayer(domMap.get(uid), me, true);
-}
+function ensureMineDom(){ if(!uid) return; if(!domMap.get(uid)){ const d=createPlayerDom(uid); domMap.set(uid,d); play.appendChild(d.wrap); } renderPlayer(domMap.get(uid), me, true); }
 
 /* ===== 入力UI ===== */
 let lastSentAt=0;
@@ -566,36 +520,17 @@ msgInput.addEventListener("input", ()=>{
 });
 sendBtn.addEventListener("click", sendMsg);
 msgInput.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); sendMsg(); }});
-function validateMessage(raw){
-  if(!raw) return {ok:false};
-  if(isASCIIish(raw)){ if(countWordsASCII(raw)>10 || raw.length>100) return {ok:false}; }
-  else{ if(Array.from(raw).length>NON_ASCII_LIMIT) return {ok:false}; }
-  return {ok:true};
-}
+function validateMessage(raw){ if(!raw) return {ok:false}; if(isASCIIish(raw)){ if(countWordsASCII(raw)>10 || raw.length>100) return {ok:false}; } else{ if(Array.from(raw).length>NON_ASCII_LIMIT) return {ok:false}; } return {ok:true}; }
 
 /* ===== ピン留め（頭上） ===== */
-function renderPinBtn(){
-  const pressed = !!me.pinMsg;
-  pinBtn.setAttribute("aria-pressed", pressed ? "true" : "false");
-  pinBtn.innerHTML = `<span class="icon" aria-hidden="true">📌</span><span class="txt"> ${pressed?"解除":"ピン"}</span>`;
-}
+function renderPinBtn(){ const pressed=!!me.pinMsg; pinBtn.setAttribute("aria-pressed", pressed?"true":"false"); }
 renderPinBtn();
-
 pinBtn.addEventListener("click", ()=>{
-  if(me.pinMsg){ // 解除
-    me.pinMsg="";
-    renderPinBtn();
-    safeUpdate({pinMsg:"", pinAt:0});
-    const mine=domMap.get(uid); if(mine){ mine.pinBubbleEl.style.display="none"; }
-    return;
-  }
-  const typed = msgInput.value.trim();
-  const pick = typed ? typed : (me.msg ? me.msg : "");
+  if(me.pinMsg){ me.pinMsg=""; renderPinBtn(); safeUpdate({pinMsg:"", pinAt:0}); const mine=domMap.get(uid); if(mine){ mine.pinBubbleEl.style.display="none"; } return; }
+  const typed=msgInput.value.trim(); const pick=typed?typed:(me.msg?me.msg:"");
   if(!pick){ toast("ピン留めする文がない"); return; }
   if(typed && !validateMessage(typed).ok){ toast("文字数制限を超えている"); return; }
-  me.pinMsg = pick;
-  renderPinBtn();
-  const mine=domMap.get(uid); if(mine){ mine.pinBubbleEl.textContent = pick; mine.pinBubbleEl.style.display="block"; }
+  me.pinMsg=pick; renderPinBtn(); const mine=domMap.get(uid); if(mine){ mine.pinBubbleEl.textContent=pick; mine.pinBubbleEl.style.display="block"; }
   safeUpdate({pinMsg: pick, pinAt: serverTimestamp()});
 });
 
@@ -606,30 +541,27 @@ noteBtn.addEventListener("click", async ()=>{
   if(!pick){ toast("書き置きする文がない"); return; }
   if(typed && !validateMessage(typed).ok){ toast("文字数制限を超えている"); return; }
   try{
-    await push(notesRef(), {
-      text: pick,
-      author: me.name || "ななし",
-      uid: uid || "",
-      at: serverTimestamp()
-    });
+    await push(notesRef(), { text: pick, author: me.name || "ななし", uid: uid || "", at: serverTimestamp() });
     toast("書き置きを残した");
   }catch(e){
     console.error("note push failed:", e);
-    toast("書き置きに失敗");
+    const msg = (e && (e.code || e.message || e.name)) ? String(e.code || e.message || e.name) : "unknown";
+    // よくある：PERMISSION_DENIED（ルール不許可）／ネットワーク一時障害
+    toast(`書き置きに失敗: ${msg}`);
   }
 });
 
-/* ===== ポーズ切替（入力中はS無効） ===== */
-function renderPoseBtn(){ poseBtn.innerHTML=`<span class="icon" aria-hidden="true">🪑</span><span class="txt"> ${me.pose==="stand"?"座る":"立つ"}</span>`; poseBtn.setAttribute("aria-pressed", me.pose==="sit"?"true":"false"); }
-renderPoseBtn();
-poseBtn.addEventListener("click", togglePose);
+/* ===== ポーズ（上部🪑 & Sキー。入力中はS無効） ===== */
+function renderPoseTopBtn(){ poseTopBtn.innerHTML=`<span class="icon" aria-hidden="true">🪑</span><span class="txt"> ${me.pose==="stand"?"座る":"立つ"}</span>`; poseTopBtn.setAttribute("aria-pressed", me.pose==="sit"?"true":"false"); }
+renderPoseTopBtn();
+poseTopBtn.addEventListener("click", togglePose);
 window.addEventListener("keydown", e=>{
-  const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+  const tag=(e.target && e.target.tagName)?e.target.tagName.toLowerCase():"";
   const editable = tag==="input" || tag==="textarea" || (e.target && e.target.isContentEditable);
   if(editable) return;
   if(e.key.toLowerCase()==="s"){ togglePose(); }
 });
-function togglePose(){ me.pose=(me.pose==="stand")?"sit":"stand"; renderPoseBtn(); safeUpdate({pose:me.pose}); }
+function togglePose(){ me.pose=(me.pose==="stand")?"sit":"stand"; renderPoseTopBtn(); safeUpdate({pose:me.pose}); }
 
 /* ===== タップ移動・向き判定 ===== */
 function setTargetFromEvent(e){
@@ -655,8 +587,9 @@ function loop(){
   if(dist>1){ const nx=pxPos.x+(dx/dist)*step, ny=pxPos.y+(dy/dist)*step; const nn=toNorm(nx+r.left, ny+r.top); me.x=nn.x; me.y=nn.y; }
   else{ me.x=target.x; me.y=target.y; }
   ensureMineDom();
-  if((t-lastSync)>=SYNC_INTERVAL_MS){ safeUpdate({x:me.x,y:me.y}); lastSync=t; }
-  if((t-lastHeartbeat)>=HEARTBEAT_MS){ safeUpdate({lastActive: serverTimestamp()}); lastHeartbeat=t; }
+  const tt=performance.now();
+  if((tt-lastSync)>=SYNC_INTERVAL_MS){ safeUpdate({x:me.x,y:me.y}); lastSync=tt; }
+  if((tt-lastHeartbeat)>=HEARTBEAT_MS){ safeUpdate({lastActive: serverTimestamp()}); lastHeartbeat=tt; }
   requestAnimationFrame(loop);
 }
 
@@ -668,16 +601,15 @@ function sendMsg(){
   const raw=msgInput.value.trim(); if(!validateMessage(raw).ok) return;
   const nowMs=Date.now(); if(nowMs-lastSentAt<500) return; lastSentAt=nowMs;
   me.msg=raw; me.msgAt=nowMs; ensureMineDom();
-  const mine=domMap.get(uid); if(mine){ mine._lastShownMsgAt = nowMs; } // 再表示ガード
+  const mine=domMap.get(uid); if(mine){ mine._lastShownMsgAt = nowMs; }
   msgInput.value=""; sendBtn.disabled=true;
   safeUpdate({ msg: raw, msgAt: serverTimestamp() });
 }
 
-/* ===== 名前一覧（2.5秒表示） ===== */
+/* ===== 名簿（2.5秒表示） ===== */
 function peekNames(){
-  // latestPlayers が空でも、入室済みなら自分を表示
   let names = Object.values(latestPlayers).map(p=>p && p.name ? p.name : null).filter(Boolean);
-  if(names.length===0 && (me.name || uid)){ names = [me.name || "ななし"]; }
+  if(names.length===0 && (me.name || uid)){ names = [me.name || "ななし"]; } // ←1人のときは自分だけ
   namesPeek.textContent = names.length ? `いまの参加者：${names.join(" / ")}` : "いまは誰もいない";
   namesPeek.style.display = "block";
   clearTimeout(peekNames._t); peekNames._t = setTimeout(()=> namesPeek.style.display="none", 2500);
@@ -709,6 +641,7 @@ window.addEventListener("offline", ()=> toast("オフライン：再接続待ち
 /* ===== 起動前チェック ===== */
 (function(){ const needs=["apiKey","authDomain","databaseURL","projectId","appId"]; if(needs.some(k=>!firebaseConfig[k])) toast("Firebaseのconfigを入れてから使う"); worldLabel.textContent=`room: ${WORLD_ID}`; })();
 msgInput.dispatchEvent(new Event("input"));
+startLoop();
 </script>
 </body>
 </html>

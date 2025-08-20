@@ -22,7 +22,7 @@
   body,button,input{touch-action:manipulation}
   #app{position:fixed; inset:0; display:flex; flex-direction:column}
 
-  /* ==== 上部ヘッダ（2段まで許容） ==== */
+  /* ==== ヘッダ ==== */
   header{
     padding: calc(env(safe-area-inset-top) + 4px) 12px 8px;
     border-bottom:1px solid var(--border); background:var(--panel); position:relative; z-index:3;
@@ -56,20 +56,6 @@
   }
   .ping{position:absolute; width:10px; height:10px; border-radius:999px; border:2px solid var(--accent); opacity:.7; pointer-events:none; transform:translate(-50%,-50%) scale(.2); animation:ping .8s ease-out forwards}
   @keyframes ping{80%{opacity:.15; transform:translate(-50%,-50%) scale(2.0)} 100%{opacity:0; transform:translate(-50%,-50%) scale(2.6)}}
-
-  /* ==== 書き置きパネル ==== */
-  #notesPanel{
-    position:absolute; left:8px; top:8px; z-index:2;
-    display:flex; flex-direction:column; gap:6px; max-width:min(92vw, 360px); pointer-events:none;
-  }
-  .note{
-    pointer-events:auto;
-    background:var(--pin-bg); border:1px solid var(--pin-bd); border-radius:10px; padding:8px 10px;
-    font-size:13px; color:#111; box-shadow:0 6px 18px rgba(0,0,0,.06);
-    display:flex; flex-direction:column; gap:4px;
-  }
-  .note .by{font-size:12px; color:#444}
-  .note .txt{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600}
 
   /* ==== 下部バー（入力を最優先で広く） ==== */
   #bar{
@@ -105,22 +91,29 @@
   }
   .name.flip{top:auto; bottom:84px}
 
-  /* 通常吹き出し：横一行・60秒 */
+  /* 通常吹き出し（60秒） */
   .bubble{
     position:absolute; left:50%; bottom:94px; transform:translateX(-50%);
     background:#fff; color:#111; border:1px solid var(--border); border-radius:12px; padding:8px 10px; font-size:14px;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:min(86vw, 520px);
     box-shadow:0 8px 22px rgba(0,0,0,.06); z-index:1; display:none; pointer-events:none;
   }
-  /* ピン吹き出し：常時表示／淡ピンク／2/3サイズ */
+  /* ピン吹き出し（常時、2/3サイズ） */
   .bubble.pin{
-    display:none;
-    bottom:122px;
-    background:var(--pin-bg);
-    border-color:var(--pin-bd);
-    font-size:0.66em;
-    padding:6px 9px;
+    display:none; bottom:122px; background:var(--pin-bg); border-color:var(--pin-bd);
+    font-size:0.66em; padding:6px 9px;
   }
+
+  /* ===== 書き置き（猫の位置に浮かぶ付箋） ===== */
+  #notesLayer{position:absolute; inset:0; pointer-events:none; z-index:2}
+  .noteItem{
+    position:absolute; transform:translate3d(0,0,0) translate(-50%, -120%);
+    background:var(--pin-bg); border:1px solid var(--pin-bd); border-radius:10px;
+    padding:4px 6px; font-size:0.5rem; /* およそチャットの1/2 */
+    color:#111; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; max-width:50vw;
+    box-shadow:0 4px 12px rgba(0,0,0,.06);
+  }
+  .noteItem.flip{ transform:translate3d(0,0,0) translate(-50%, 18px); } /* 画面上端に近い時は下向きに出す */
 
   /* 一時的な名前一覧 */
   #namesPeek{
@@ -153,10 +146,10 @@
   <header>
     <div class="row">
       <div class="brand">
-        <div id="playersBtn" class="catBtn" role="button" tabindex="0" title="いまの名前一覧（2.5秒表示）">🐱</div>
+        <div id="playersBtn" class="catBtn" role="button" tabindex="0" title="いまの名前一覧（2.5秒表示）">🐈‍⬛</div>
         <h1>ゆるネコひろば</h1>
         <span class="chip" id="worldLabel" aria-live="polite"></span>
-        <span class="chip" id="countLabel" aria-live="polite" title="いまいるネコの数">😺 0</span>
+        <span class="chip" id="countLabel" aria-live="polite" title="いまいるネコの数">🐈‍⬛ 0</span>
       </div>
       <div class="meta">
         <button id="poseTopBtn" class="btn ghost" title="立つ/座る 切替"><span class="icon" aria-hidden="true">🪑</span><span class="txt"> 座る</span></button>
@@ -168,8 +161,7 @@
   </header>
 
   <div id="play" aria-label="play-area">
-    <!-- 部屋に残る書き置き -->
-    <div id="notesPanel" aria-live="polite"></div>
+    <div id="notesLayer" aria-live="polite"></div>
   </div>
 
   <!-- 下部バー：アイコン3つ＋広い入力欄 -->
@@ -182,7 +174,7 @@
       </div>
     </div>
     <button id="pinBtn"  class="btn iconOnly" title="ピン留め"><span class="icon" aria-hidden="true">📌</span></button>
-    <button id="noteBtn" class="btn iconOnly" title="部屋に書き置き（1人1件、上書き更新）"><span class="icon" aria-hidden="true">🖋️</span></button>
+    <button id="noteBtn" class="btn iconOnly" title="猫の位置に書き置き（1人1件、更新可）"><span class="icon" aria-hidden="true">🖋️</span></button>
     <button id="send"    class="btn iconOnly" disabled title="メッセージ送信"><span class="icon" aria-hidden="true">📨</span></button>
   </div>
 
@@ -212,15 +204,15 @@
       <li>下の入力欄は横一行。Enterで送信</li>
       <li>英語は10語、非英語は15文字まで</li>
       <li>座る/立つは上部の <b>🪑</b> か <b>S</b> キー（入力中は無効）</li>
-      <li><b>📌ピン</b>で自分の頭上に固定（淡いピンク・2/3サイズ）／再度で解除</li>
-      <li><b>🖋️書き置き</b>は部屋に残る・<b>1人1件まで</b>・何度でも<b>更新</b>できる（8時間で自動消滅）</li>
-      <li>左上の <b>🐱</b> を押すと参加者名を2.5秒表示</li>
+      <li><b>📌ピン</b>は頭上に固定（淡ピンク・2/3サイズ）／再度で解除</li>
+      <li><b>🖋️書き置き</b>は<b>猫のいた場所</b>に小さく残る（約1/2サイズ）／<b>1人1件</b>・更新可・<b>8時間</b>で消える</li>
+      <li>左上の <b>🐈‍⬛</b> を押すと参加者名を2.5秒表示</li>
       <li>同じ部屋は最大10人まで</li>
     </ul>
     <div style="background:#f8fafc; border:1px solid #e5e7eb; padding:10px; border-radius:10px; font-size:13px; color:#374151; margin-bottom:12px">
       音が出ない場合：ページを一度タップしてから、ブラウザのサイト設定で「音声を許可」。iOSは本体のサイレントスイッチも確認。
     </div>
-    <!-- 作者Xリンク：定数 AUTHOR_X_LINK が空なら非表示 -->
+    <!-- 作者Xリンク -->
     <p id="authorXLine" class="subtle" style="margin:6px 0 0; text-align:right; opacity:.7; display:none">
       作者X: <a id="authorX" href="#" target="_blank" rel="noopener" style="color:#6b7280; text-decoration:underline dotted">link</a>
     </p>
@@ -284,7 +276,7 @@ const auth = getAuth(app);
 
 /* DOM */
 const play = document.getElementById("play");
-const notesPanel = document.getElementById("notesPanel");
+const notesLayer = document.getElementById("notesLayer");
 const bar = document.getElementById("bar");
 const msgInput = document.getElementById("msg");
 const sendBtn = document.getElementById("send");
@@ -311,6 +303,7 @@ const authorXLine = document.getElementById("authorXLine");
 const authorX = document.getElementById("authorX");
 
 worldLabel.textContent = `room: ${WORLD_ID}`;
+countLabel.textContent = `🐈‍⬛ 0`;
 if(AUTHOR_X_LINK){
   authorX.href = AUTHOR_X_LINK;
   authorX.textContent = AUTHOR_X_LINK.replace(/^https?:\/\/(www\.)?/, "");
@@ -353,7 +346,7 @@ function toast(text){ const el=document.getElementById("hint"); el.textContent=t
 /* ===== Refs ===== */
 function playersRefOf(room){ return ref(db, `worlds/${room}/players`); }
 function myRef(){ return ref(db, `worlds/${WORLD_ID}/players/${uid}`); }
-function notesRootRef(){ return ref(db, `worlds/${WORLD_ID}/notes`); }          // notes は「uidキー」で1人1件
+function notesRootRef(){ return ref(db, `worlds/${WORLD_ID}/notes`); }          // 1人1件: key=uid
 function noteRefOf(u){ return ref(db, `worlds/${WORLD_ID}/notes/${u}`); }
 const playersRef = playersRefOf(WORLD_ID);
 
@@ -429,7 +422,7 @@ function subscribePlayers(){
     const data=snap.val()||{};
     latestPlayers = data;
     const ids=Object.keys(data);
-    countLabel.textContent=`😺 ${ids.length}`;
+    countLabel.textContent=`🐈‍⬛ ${ids.length}`;
 
     if(initialPlayersLoaded){
       for(const id of ids){
@@ -454,44 +447,60 @@ function subscribePlayers(){
 }
 
 /* ===== 購読（書き置き：8時間TTL・1人1件） ===== */
+const notesDomMap = new Map(); // uid -> el
 function subscribeNotes(){
   onValue(notesRootRef(), snap=>{
     const nowMs = Date.now();
-    const list = [];
+    const seen = new Set();
     snap.forEach(child=>{
       const v = child.val();
       if(!v) return;
       const ts = Number(v.updatedAt || v.at || 0);
       const alive = ts>0 && (nowMs - ts) <= NOTE_TTL_MS;
+      const id = child.key;
       if(alive){
-        list.push({ id: child.key, ...v, ts });
+        upsertNoteDom(id, v);
+        seen.add(id);
       }else{
-        // 期限切れ。自分の分だけ掃除（権限の都合で全削除はしない）
-        if(child.key === uid){
+        // 期限切れ
+        if(id === uid){
           remove(noteRefOf(uid)).catch(()=>{});
         }
       }
     });
-    // 新しい順で並べる（更新が上）
-    list.sort((a,b)=>a.ts - b.ts);
-    renderNotes(list);
+    // DOM掃除
+    for(const [id, el] of notesDomMap){
+      if(!seen.has(id)){ el.remove(); notesDomMap.delete(id); }
+    }
   });
 }
-function renderNotes(list){
-  notesPanel.innerHTML = "";
-  for(const n of list){
-    const el = document.createElement("div");
-    el.className = "note";
-    const who = document.createElement("div");
-    who.className = "by";
-    who.textContent = (n.author || "ななし") + " の書き置き";
-    const txt = document.createElement("div");
-    txt.className = "txt";
-    txt.textContent = n.text;
-    el.appendChild(who); el.appendChild(txt);
-    notesPanel.appendChild(el);
+function upsertNoteDom(ownerUid, data){
+  let el = notesDomMap.get(ownerUid);
+  if(!el){
+    el = document.createElement("div");
+    el.className = "noteItem";
+    notesLayer.appendChild(el);
+    notesDomMap.set(ownerUid, el);
   }
+  el.textContent = data.text || "";
+  positionNoteDom(el, data.x ?? 0.5, data.y ?? 0.7);
 }
+function positionNoteDom(el, nx, ny){
+  const r=getPlayRect(); if(!r) return;
+  const px = roundPx(nx * r.width);
+  const py = roundPx(ny * r.height);
+  // 画面上端に近いときは下向きに
+  const topSpace = py - 130;
+  if(topSpace < 0){ el.classList.add("flip"); }
+  else{ el.classList.remove("flip"); }
+  // 標準は上にオフセット（CSSのtranslateで-120%相当）
+  el.style.transform = `translate3d(${px}px, ${py}px, 0) ${el.classList.contains("flip") ? "translate(-50%, 18px)" : "translate(-50%, -120%)"}`;
+}
+window.addEventListener("resize", ()=>{ // 画面サイズ変化で再配置
+  for(const [id, el] of notesDomMap){
+    const snap = el._data;
+  }
+});
 
 /* ===== 画像猫DOM ===== */
 function createPlayerDom(id){
@@ -564,34 +573,21 @@ pinBtn.addEventListener("click", ()=>{
   safeUpdate({pinMsg: pick, pinAt: serverTimestamp()});
 });
 
-/* ===== 書き置き（1人1件、更新可、8hTTL） ===== */
+/* ===== 書き置き（猫の位置に1人1件、更新可、8hTTL） ===== */
 noteBtn.addEventListener("click", async ()=>{
   const typed = msgInput.value.trim();
   const pick = typed ? typed : (me.msg ? me.msg : "");
   if(!pick){ toast("書き置きする文がない"); return; }
   if(typed && !validateMessage(typed).ok){ toast("文字数制限を超えている"); return; }
   try{
-    // すでに自分の書き置きがあるか確認（uidキー）
     const r = noteRefOf(uid);
+    const nowXY = { x: me.x, y: me.y };
     const snap = await get(r);
     if(snap.exists()){
-      // 更新
-      await update(r, {
-        text: pick,
-        author: me.name || "ななし",
-        uid: uid || "",
-        updatedAt: serverTimestamp()
-      });
+      await update(r, { text: pick, author: me.name || "ななし", uid: uid || "", x: nowXY.x, y: nowXY.y, updatedAt: serverTimestamp() });
       toast("書き置きを更新した");
     }else{
-      // 新規作成
-      await set(r, {
-        text: pick,
-        author: me.name || "ななし",
-        uid: uid || "",
-        at: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
+      await set(r, { text: pick, author: me.name || "ななし", uid: uid || "", x: nowXY.x, y: nowXY.y, at: serverTimestamp(), updatedAt: serverTimestamp() });
       toast("書き置きを残した");
     }
   }catch(e){

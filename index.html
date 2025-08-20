@@ -21,7 +21,6 @@
   html,body{height:100%; margin:0; font-family: ui-sans-serif, system-ui, -apple-system, "Hiragino Kaku Gothic ProN", Meiryo, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--ink)}
   #app{position:fixed; inset:0; display:flex; flex-direction:column}
 
-  /* ------- ヘッダ ------- */
   header{
     height:56px; display:flex; align-items:center; justify-content:space-between;
     gap:8px; padding:0 12px; border-bottom:1px solid #eee; background:var(--panel);
@@ -40,7 +39,6 @@
   .ghost{ background:transparent; color:var(--ink); border:1px solid #e5e7eb; }
   .icon{font-variant-emoji: emoji; font-size:16px}
 
-  /* ------- プレイエリア ------- */
   #play{
     position:relative; flex:1; overflow:hidden; touch-action:none; cursor:crosshair;
     background-image:
@@ -50,7 +48,6 @@
     background-position: 0 0, 0 0;
   }
 
-  /* タップ波紋 */
   .ping{
     position:absolute; width:10px; height:10px; border-radius:999px;
     border:2px solid var(--accent); opacity:.7; pointer-events:none;
@@ -61,7 +58,6 @@
     100%{ opacity:0; transform:translate(-50%,-50%) scale(2.6); }
   }
 
-  /* ------- 下部バー ------- */
   #bar{
     height:var(--barH); display:flex; align-items:center; gap:8px; padding:8px 10px;
     border-top:1px solid #eee; background:var(--panel);
@@ -77,16 +73,15 @@
   #send{min-width:74px}
   #send:disabled{opacity:.5; cursor:not-allowed}
 
-  /* ------- プレイヤーDOM ------- */
   .p{position:absolute; width:78px; height:78px; transform:translate(-50%, -80%); transition: left .25s ease, top .25s ease}
   .p.self .name{background: var(--accent)}
   .name{
-    position:absolute; left:50%; top:78px; transform:translateX(-50%);   /* ← 猫の下に配置 */
+    position:absolute; left:50%; top:78px; transform:translateX(-50%);
     background:#111; color:#fff; font-size:12px; padding:2px 8px; border-radius:999px; white-space:nowrap;
     max-width:160px; text-overflow:ellipsis; overflow:hidden; letter-spacing:.2px;
   }
   .bubble{
-    position:absolute; left:50%; bottom:94px; transform:translateX(-50%); /* ← 吹き出しは上 */
+    position:absolute; left:50%; bottom:94px; transform:translateX(-50%);
     background:#fff; color:#111; border:1px solid #e5e7eb; border-radius:14px; padding:9px 11px; font-size:14px; max-width:240px;
     box-shadow:0 10px 26px rgba(0,0,0,.06);
   }
@@ -98,11 +93,10 @@
   .cat{width:78px; height:78px; display:block}
   .stand .cat{transition:transform .18s ease}
   .sit .cat{transition:transform .18s ease; opacity:.96}
-  .face-left{transform:scaleX(-1)} /* 右向きが標準。左へ進むときだけ反転 */
+  .face-left{transform:scaleX(-1)}
   @keyframes wag { 0%,100%{ transform: rotate(0deg) } 50%{ transform: rotate(-6deg) } }
   .wag { transform-origin: 24px 60px; animation: wag 1.2s ease-in-out infinite }
 
-  /* ------- 入室モーダル ------- */
   #join{
     position:fixed; inset:0; background:rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center; z-index:10;
   }
@@ -123,7 +117,6 @@
   #warn{color:#b40000; font-size:13px; min-height:1.4em}
   .subtle{font-size:12px; color:var(--muted)}
 
-  /* ------- ヒント ------- */
   #hint{
     position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom));
     background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.75; z-index:1;
@@ -153,6 +146,8 @@
       <span class="chip" id="countLabel" aria-live="polite" title="いまいるネコの数">😺 0</span>
     </div>
     <div class="meta">
+      <!-- 追加: サウンドのオン/オフトグル -->
+      <button id="muteBtn" class="btn ghost" title="音のオン/オフ"><span class="icon" aria-hidden="true">🔔</span> 音</button>
       <button id="shareBtn" class="btn ghost" title="URLをコピー"><span class="icon" aria-hidden="true">🔗</span> 共有</button>
       <button id="helpBtn" class="btn ghost" title="使い方"><span class="icon" aria-hidden="true">❔</span> ヘルプ</button>
     </div>
@@ -175,7 +170,6 @@
   <div id="hint" aria-live="polite">画面をタップで自分の猫がゆっくり移動</div>
 </div>
 
-<!-- 入室モーダル -->
 <div id="join" role="dialog" aria-modal="true" aria-label="名前入力">
   <div class="card">
     <h2>名前を入れて参加</h2>
@@ -189,7 +183,6 @@
   </div>
 </div>
 
-<!-- ヘルプ（簡易） -->
 <dialog id="helpDialog">
   <div style="padding:16px 16px 12px; max-width:560px">
     <h3 style="margin:0 0 8px">使い方</h3>
@@ -206,9 +199,6 @@
 </dialog>
 
 <script type="module">
-/* ===========================
-   Firebase 初期化（あなたのプロジェクト用）
-   =========================== */
 const firebaseConfig = {
   apiKey: "AIzaSyCUpt4XLfSSZLt0VhJon926--c-I2tRMkE",
   authDomain: "blackcat-67716.firebaseapp.com",
@@ -220,29 +210,23 @@ const firebaseConfig = {
   measurementId: "G-R47HW00266"
 };
 
-/* --- WORLDの決め方 ---
-   1) ?room=xxx があればそれを使う
-   2) なければ #room=xxx でも可（互換）
-   3) どちらもなければ "global-plaza-1"
-*/
+// WORLD_ID: ?room=xxx または #room=xxx、無ければ既定
 const url = new URL(location.href);
 const qp = url.searchParams.get("room");
 const hp = (location.hash.match(/room=([^&]+)/)||[])[1];
 const WORLD_ID = qp || hp || "global-plaza-1";
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getDatabase, ref, onValue, set, update, serverTimestamp, onDisconnect
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import {
-  getAuth, signInAnonymously, onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, onValue, set, update, serverTimestamp, onDisconnect }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getAuth, signInAnonymously, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-/* ============ DOM refs ============ */
+/* DOM */
 const play = document.getElementById("play");
 const msgInput = document.getElementById("msg");
 const sendBtn = document.getElementById("send");
@@ -258,376 +242,311 @@ const helpBtn = document.getElementById("helpBtn");
 const helpDialog = document.getElementById("helpDialog");
 const helpClose = document.getElementById("helpClose");
 const hintLang = document.getElementById("hintLang");
+const muteBtn = document.getElementById("muteBtn");
 
-/* ============ 状態 ============ */
+/* 状態 */
 let uid = null;
-let me = {
-  name: "",
-  x: 0.5, y: 0.7,
-  dir: 1,           // 1=右、-1=左
-  pose: "stand",    // "stand" | "sit"
-  msg: "",
-  msgAt: 0
-};
+let me = { name:"", x:0.5, y:0.7, dir:1, pose:"stand", msg:"", msgAt:0 };
 let target = {x: me.x, y: me.y};
-let lastSync = 0;
-let lastHeartbeat = 0;
+let lastSync = 0, lastHeartbeat = 0;
 let SPEED_PX_PER_S = 120;
-const SYNC_INTERVAL_MS = 80;
-const HEARTBEAT_MS = 15000;
-const BUBBLE_MS = 12000;
-const TAP_PING = true;
+const SYNC_INTERVAL_MS = 80, HEARTBEAT_MS = 15000, BUBBLE_MS = 12000;
 
 worldLabel.textContent = `room: ${WORLD_ID}`;
 
-/* ============ ユーティリティ ============ */
-const now = () => performance.now();
-function clamp01(v){ return Math.max(0, Math.min(1, v)); }
-function escapeHTML(s){ return s.replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m])); }
-function isASCIIish(s){ return /^[\x00-\x7F]+$/.test(s); }
-function countWordsASCII(s){ return s.trim().split(/\s+/).filter(Boolean).length; }
-function toNorm(clientX, clientY){ const r = play.getBoundingClientRect(); return { x: clamp01((clientX - r.left) / r.width), y: clamp01((clientY - r.top) / r.height) }; }
-function toPx(nx, ny){ const r = play.getBoundingClientRect(); return { x: nx * r.width, y: ny * r.height }; }
-function pingAt(nx, ny){
-  if(!TAP_PING) return;
-  const {x,y} = toPx(nx, ny);
-  const s = document.createElement("span");
-  s.className = "ping";
-  s.style.left = `${x}px`; s.style.top = `${y}px`;
-  play.appendChild(s);
-  s.addEventListener("animationend", ()=> s.remove());
-}
+/* ===== サウンド（Web Audio） ===== */
+let AC = null, masterGain = null;
+let muted = localStorage.getItem("yuru_mute")==="1";
 
-/** メッセージ検証: 非英語=10文字 / ASCII=10語 */
-function validateMessage(raw){
-  if(!raw) return {ok:false, reason:"空"};
-  if(isASCIIish(raw)){
-    const words = countWordsASCII(raw);
-    if(words > 10) return {ok:false, reason:"英語は10語まで"};
-    if(raw.length > 100) return {ok:false, reason:"ながすぎ"};
-  }else{
-    const len = Array.from(raw).length;
-    if(len > 10) return {ok:false, reason:"10文字まで"};
+function unlockAudio(){
+  if (!AC) {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return; // 古いブラウザ
+    AC = new Ctx();
+    masterGain = AC.createGain();
+    masterGain.gain.value = muted ? 0 : 0.24;
+    masterGain.connect(AC.destination);
   }
+  if (AC && AC.state === "suspended") AC.resume();
+}
+function setupAudioUnlock(){
+  // 最初のユーザー操作でAudioContextを起動
+  const once = ()=>{ unlockAudio(); document.removeEventListener("pointerdown", once); document.removeEventListener("keydown", once); };
+  document.addEventListener("pointerdown", once, {passive:true});
+  document.addEventListener("keydown", once);
+  enterBtn.addEventListener("click", unlockAudio, {once:true});
+}
+setupAudioUnlock();
+
+function tone({freq=880, dur=0.12, type="sine", vol=0.7, attack=0.005, release=0.12}={}){
+  if (!AC) return; // まだunlockされていない
+  const osc = AC.createOscillator();
+  const g = AC.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  osc.connect(g);
+  g.connect(masterGain || AC.destination);
+  const t = AC.currentTime;
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(vol, t + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + attack + release);
+  osc.start(t);
+  osc.stop(t + dur + 0.25);
+}
+function playLogin(){
+  if (muted || !AC) return;
+  tone({freq:880, type:"triangle", vol:0.55, dur:0.12});
+  setTimeout(()=> tone({freq:1320, type:"triangle", vol:0.55, dur:0.12}), 140);
+}
+function playMessage(){
+  if (muted || !AC) return;
+  tone({freq:700, type:"sine", vol:0.5, dur:0.09});
+}
+function renderMuteButton(){
+  muteBtn.innerHTML = `<span class="icon" aria-hidden="true">${muted ? "🔇" : "🔔"}</span> ${muted ? "ミュート" : "音オン"}`;
+}
+muteBtn.addEventListener("click", ()=>{
+  muted = !muted;
+  if (masterGain) masterGain.gain.value = muted ? 0 : 0.24;
+  localStorage.setItem("yuru_mute", muted ? "1":"0");
+  renderMuteButton();
+});
+renderMuteButton();
+
+/* ユーティリティ */
+const now = ()=>performance.now();
+const clamp01 = v => Math.max(0, Math.min(1, v));
+const escapeHTML = s => s.replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
+const isASCIIish = s => /^[\x00-\x7F]+$/.test(s);
+const countWordsASCII = s => s.trim().split(/\s+/).filter(Boolean).length;
+function toNorm(cx,cy){ const r=play.getBoundingClientRect(); return {x:clamp01((cx-r.left)/r.width), y:clamp01((cy-r.top)/r.height)}; }
+function toPx(nx,ny){ const r=play.getBoundingClientRect(); return {x:nx*r.width, y:ny*r.height}; }
+function pingAt(nx,ny){ const {x,y}=toPx(nx,ny); const s=document.createElement("span"); s.className="ping"; s.style.left=`${x}px`; s.style.top=`${y}px`; play.appendChild(s); s.addEventListener("animationend",()=>s.remove());}
+function validateMessage(raw){
+  if(!raw) return {ok:false}; 
+  if(isASCIIish(raw)){ if(countWordsASCII(raw)>10 || raw.length>100) return {ok:false}; }
+  else { if(Array.from(raw).length>10) return {ok:false}; }
   return {ok:true};
 }
 
-/* ============ 参加モーダル ============ */
+/* 参加 */
 nameInput.addEventListener("input", ()=>{
   const n = nameInput.value.trim();
-  if([...n].length > 3){
-    nameInput.value = Array.from(n).slice(0,3).join("");
-  }
+  if([...n].length>3) nameInput.value = Array.from(n).slice(0,3).join("");
 });
 enterBtn.addEventListener("click", startJoin);
 nameInput.addEventListener("keydown", e=>{ if(e.key==="Enter") startJoin(); });
-
 function startJoin(){
   const n = nameInput.value.trim();
-  if([...n].length === 0){ warn.textContent = "1〜3文字"; return; }
-  if([...n].length > 3){ warn.textContent = "3文字まで"; return; }
+  if([...n].length===0){ warn.textContent="1〜3文字"; return; }
+  if([...n].length>3){ warn.textContent="3文字まで"; return; }
   me.name = n;
   join.style.display = "none";
   localStorage.setItem("yuru_name", me.name);
   initAuth();
 }
-const remembered = localStorage.getItem("yuru_name");
-if(remembered){ nameInput.value = remembered.slice(0,3); }
+const remembered = localStorage.getItem("yuru_name"); if(remembered) nameInput.value = remembered.slice(0,3);
 
-/* ============ 認証 & 接続 ============ */
+/* 認証 */
 async function initAuth(){
-  try{
-    await signInAnonymously(auth);
-  }catch(e){
-    alert("Firebase匿名認証に失敗。Authentication設定とAPIキー/ドメインを確認。");
-    console.error(e);
-  }
+  try{ await signInAnonymously(auth); }
+  catch(e){ alert("匿名認証に失敗。Authentication設定を確認。"); console.error("[auth] signIn failed:", e); }
 }
 onAuthStateChanged(auth, user=>{
   if(!user) return;
   uid = user.uid;
-  me.x = Math.random()*0.8 + 0.1;
-  me.y = Math.random()*0.4 + 0.5;
-  target = {x: me.x, y: me.y};
+  me.x = Math.random()*0.8 + 0.1; me.y = Math.random()*0.4 + 0.5; target={x:me.x,y:me.y};
+  // 自分DOMは即作る（DBが弾かれても見える）
+  ensureMineDom();
   mountPresence();
   listenWorld();
   loop();
 });
 
-/* ============ RTDB パス ============ */
+/* DB refs */
 const playersRef = ref(db, `worlds/${WORLD_ID}/players`);
-const myRef   = ()=> ref(db, `worlds/${WORLD_ID}/players/${uid}`);
+const myRef = ()=> ref(db, `worlds/${WORLD_ID}/players/${uid}`);
 
-/* ============ プレゼンス ============ */
+/* プレゼンス */
 async function mountPresence(){
-  await set(myRef(), {
-    name: me.name,
-    x: me.x, y: me.y,
-    dir: me.dir,
-    pose: me.pose,
-    msg: "",
-    msgAt: 0,
-    lastActive: serverTimestamp()
-  });
-  onDisconnect(myRef()).remove().catch(()=>{});
+  try{
+    await set(myRef(), {
+      name: me.name, x: me.x, y: me.y, dir: me.dir, pose: me.pose,
+      msg: "", msgAt: 0, lastActive: serverTimestamp()
+    });
+  }catch(e){
+    console.error("[rtdb] initial set failed:", e);
+  }
+  try{ onDisconnect(myRef()).remove(); }catch(e){ console.warn("[rtdb] onDisconnect set failed:", e); }
 }
 
-/* ============ 受信 & 描画 ============ */
-const domMap = new Map(); // uid -> {wrap,nameEl,bubbleEl,svg,...}
+/* 購読＆描画 */
+const domMap = new Map(); // uid -> {wrap,...}
+let initialPlayersLoaded = false;
+
 onValue(playersRef, snap=>{
   const data = snap.val() || {};
   const ids = Object.keys(data);
   countLabel.textContent = `😺 ${ids.length}`;
-  const seen = new Set(ids);
 
+  // 新規参加の検出（初期ロード後のみ音を鳴らす）
+  if (initialPlayersLoaded) {
+    for (const id of ids) {
+      if (!domMap.has(id) && id !== uid) playLogin();
+    }
+  }
+
+  const seen = new Set(ids);
   for(const id of ids){
     let pdom = domMap.get(id);
-    if(!pdom){
-      pdom = createPlayerDom(id);
-      domMap.set(id, pdom);
-      play.appendChild(pdom.wrap);
-    }
+    if(!pdom){ pdom = createPlayerDom(id); domMap.set(id, pdom); play.appendChild(pdom.wrap); }
     renderPlayer(pdom, data[id], id===uid);
   }
-  // 不在のDOMを掃除
-  for(const [id,pdom] of domMap){
-    if(!seen.has(id)){
-      pdom.wrap.remove();
-      domMap.delete(id);
-    }
-  }
+  for(const [id,pdom] of domMap){ if(!seen.has(id)){ pdom.wrap.remove(); domMap.delete(id); } }
+
+  initialPlayersLoaded = true;
 });
 
 function createPlayerDom(id){
   const wrap = document.createElement("div");
   wrap.className = "p stand";
-  const nameEl = document.createElement("div");
-  nameEl.className = "name";
-  const bubble = document.createElement("div");
-  bubble.className = "bubble";
-  bubble.style.display = "none";
+  const nameEl = document.createElement("div"); nameEl.className = "name";
+  const bubble = document.createElement("div"); bubble.className = "bubble"; bubble.style.display = "none";
+  const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+  svg.setAttribute("viewBox","0 0 100 100"); svg.classList.add("cat");
 
-  // 🐈 右向きシルエット（立ち/座り）
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox","0 0 100 100");
-  svg.classList.add("cat");
-
-  // ---- 立ち ----
   const body = document.createElementNS(svg.namespaceURI,"path");
-  body.setAttribute("fill","#000");
-  body.setAttribute("d","M28,68 Q40,48 58,46 Q78,46 84,60 Q86,74 64,80 Q42,82 28,68 Z");
-  const head = document.createElementNS(svg.namespaceURI,"circle");
-  head.setAttribute("cx","80"); head.setAttribute("cy","48"); head.setAttribute("r","11"); head.setAttribute("fill","#000");
-  const ear1 = document.createElementNS(svg.namespaceURI,"path");
-  ear1.setAttribute("fill","#000"); ear1.setAttribute("d","M75,40 L80,33 L82,42 Z");
-  const ear2 = document.createElementNS(svg.namespaceURI,"path");
-  ear2.setAttribute("fill","#000"); ear2.setAttribute("d","M85,40 L90,33 L88,42 Z");
-  const tail = document.createElementNS(svg.namespaceURI,"path");
-  tail.setAttribute("fill","#000");
-  tail.setAttribute("d","M24,62 C18,54 24,42 38,40 C50,38 56,44 56,50 C40,54 32,60 30,68 Z");
-  tail.classList.add("wag");
-  const backLeg = document.createElementNS(svg.namespaceURI,"rect");
-  backLeg.setAttribute("x","50"); backLeg.setAttribute("y","72"); backLeg.setAttribute("width","6"); backLeg.setAttribute("height","14"); backLeg.setAttribute("fill","#000");
-  const frontLeg = document.createElementNS(svg.namespaceURI,"rect");
-  frontLeg.setAttribute("x","66"); frontLeg.setAttribute("y","72"); frontLeg.setAttribute("width","6"); frontLeg.setAttribute("height","14"); frontLeg.setAttribute("fill","#000");
+  body.setAttribute("fill","#000"); body.setAttribute("d","M28,68 Q40,48 58,46 Q78,46 84,60 Q86,74 64,80 Q42,82 28,68 Z");
+  const head = document.createElementNS(svg.namespaceURI,"circle"); head.setAttribute("cx","80"); head.setAttribute("cy","48"); head.setAttribute("r","11"); head.setAttribute("fill","#000");
+  const ear1 = document.createElementNS(svg.namespaceURI,"path"); ear1.setAttribute("fill","#000"); ear1.setAttribute("d","M75,40 L80,33 L82,42 Z");
+  const ear2 = document.createElementNS(svg.namespaceURI,"path"); ear2.setAttribute("fill","#000"); ear2.setAttribute("d","M85,40 L90,33 L88,42 Z");
+  const tail = document.createElementNS(svg.namespaceURI,"path"); tail.setAttribute("fill","#000"); tail.setAttribute("d","M24,62 C18,54 24,42 38,40 C50,38 56,44 56,50 C40,54 32,60 30,68 Z"); tail.classList.add("wag");
+  const backLeg = document.createElementNS(svg.namespaceURI,"rect"); backLeg.setAttribute("x","50"); backLeg.setAttribute("y","72"); backLeg.setAttribute("width","6"); backLeg.setAttribute("height","14"); backLeg.setAttribute("fill","#000");
+  const frontLeg = document.createElementNS(svg.namespaceURI,"rect"); frontLeg.setAttribute("x","66"); frontLeg.setAttribute("y","72"); frontLeg.setAttribute("width","6"); frontLeg.setAttribute("height","14"); frontLeg.setAttribute("fill","#000");
 
-  // ---- 座り ----
-  const sitGroup = document.createElementNS(svg.namespaceURI,"g");
-  sitGroup.setAttribute("display","none");
-  const sBody = document.createElementNS(svg.namespaceURI,"path");
-  sBody.setAttribute("fill","#000");
-  sBody.setAttribute("d","M30,72 Q42,54 64,54 Q82,54 84,66 Q86,80 62,84 Q40,86 30,72 Z");
-  const sHead = document.createElementNS(svg.namespaceURI,"circle");
-  sHead.setAttribute("cx","78"); sHead.setAttribute("cy","50"); sHead.setAttribute("r","11"); sHead.setAttribute("fill","#000");
-  const sEar1 = document.createElementNS(svg.namespaceURI,"path");
-  sEar1.setAttribute("fill","#000"); sEar1.setAttribute("d","M73,42 L78,35 L80,44 Z");
-  const sEar2 = document.createElementNS(svg.namespaceURI,"path");
-  sEar2.setAttribute("fill","#000"); sEar2.setAttribute("d","M83,42 L88,35 L86,44 Z");
-  const sTail = document.createElementNS(svg.namespaceURI,"path");
-  sTail.setAttribute("fill","#000");
-  sTail.setAttribute("d","M28,70 C20,66 22,56 32,52 C40,50 46,54 44,60 C38,66 34,70 30,74 Z");
-  sTail.classList.add("wag");
+  const sitGroup = document.createElementNS(svg.namespaceURI,"g"); sitGroup.setAttribute("display","none");
+  const sBody = document.createElementNS(svg.namespaceURI,"path"); sBody.setAttribute("fill","#000"); sBody.setAttribute("d","M30,72 Q42,54 64,54 Q82,54 84,66 Q86,80 62,84 Q40,86 30,72 Z");
+  const sHead = document.createElementNS(svg.namespaceURI,"circle"); sHead.setAttribute("cx","78"); sHead.setAttribute("cy","50"); sHead.setAttribute("r","11"); sHead.setAttribute("fill","#000");
+  const sEar1 = document.createElementNS(svg.namespaceURI,"path"); sEar1.setAttribute("fill","#000"); sEar1.setAttribute("d","M73,42 L78,35 L80,44 Z");
+  const sEar2 = document.createElementNS(svg.namespaceURI,"path"); sEar2.setAttribute("fill","#000"); sEar2.setAttribute("d","M83,42 L88,35 L86,44 Z");
+  const sTail = document.createElementNS(svg.namespaceURI,"path"); sTail.setAttribute("fill","#000"); sTail.setAttribute("d","M28,70 C20,66 22,56 32,52 C40,50 46,54 44,60 C38,66 34,70 30,74 Z"); sTail.classList.add("wag");
 
   svg.appendChild(body); svg.appendChild(head); svg.appendChild(ear1); svg.appendChild(ear2);
   svg.appendChild(tail); svg.appendChild(backLeg); svg.appendChild(frontLeg);
   sitGroup.appendChild(sBody); sitGroup.appendChild(sHead); sitGroup.appendChild(sEar1); sitGroup.appendChild(sEar2); sitGroup.appendChild(sTail);
   svg.appendChild(sitGroup);
 
-  wrap.appendChild(nameEl);
-  wrap.appendChild(bubble);
-  wrap.appendChild(svg);
-
-  return {wrap, nameEl, bubbleEl: bubble, svg, sitGroup, standParts:[body,head,ear1,ear2,tail,backLeg,frontLeg], _lastMsgKey:null};
+  wrap.appendChild(nameEl); wrap.appendChild(bubble); wrap.appendChild(svg);
+  return {wrap, nameEl, bubbleEl: bubble, svg, sitGroup, standParts:[body,head,ear1,ear2,tail,backLeg,frontLeg], _lastMsgKey:null, _ready:false};
 }
 
 function renderPlayer(pdom, data, isSelf){
   const r = play.getBoundingClientRect();
-  const px = data.x * r.width;
-  const py = data.y * r.height;
-  pdom.wrap.style.left = `${px}px`;
-  pdom.wrap.style.top  = `${py}px`;
+  pdom.wrap.style.left = `${data.x * r.width}px`;
+  pdom.wrap.style.top  = `${data.y * r.height}px`;
   pdom.nameEl.textContent = data.name || "";
   pdom.wrap.classList.toggle("self", !!isSelf);
 
-  if(data.dir === -1) pdom.svg.classList.add("face-left");
-  else pdom.svg.classList.remove("face-left");
+  if(data.dir === -1) pdom.svg.classList.add("face-left"); else pdom.svg.classList.remove("face-left");
+  if(data.pose === "sit"){ pdom.wrap.classList.remove("stand"); pdom.wrap.classList.add("sit"); pdom.sitGroup.setAttribute("display","block"); pdom.standParts.forEach(n=>n.setAttribute("display","none")); }
+  else { pdom.wrap.classList.add("stand"); pdom.wrap.classList.remove("sit"); pdom.sitGroup.setAttribute("display","none"); pdom.standParts.forEach(n=>n.setAttribute("display","block")); }
 
-  if(data.pose === "sit"){
-    pdom.wrap.classList.remove("stand"); pdom.wrap.classList.add("sit");
-    pdom.sitGroup.setAttribute("display","block");
-    pdom.standParts.forEach(n=>n.setAttribute("display","none"));
-  }else{
-    pdom.wrap.classList.add("stand"); pdom.wrap.classList.remove("sit");
-    pdom.sitGroup.setAttribute("display","none");
-    pdom.standParts.forEach(n=>n.setAttribute("display","block"));
-  }
-
-  // 吹き出し（テキスト or msgAt が変わったら新規表示）
-  const text = data.msg || "";
-  const msgAt = data.msgAt || 0;
-  const key = `${text}|${msgAt}`;
+  const text = data.msg || ""; const msgAt = data.msgAt || 0; const key = `${text}|${msgAt}`;
   if(text && key !== pdom._lastMsgKey){
+    const firstRender = !pdom._ready;
+    pdom._ready = true;
     pdom._lastMsgKey = key;
     pdom.bubbleEl.innerHTML = escapeHTML(text);
     pdom.bubbleEl.style.display = "block";
-    const age = typeof msgAt === "number" ? (Date.now() - msgAt) : 0;
-    const remain = BUBBLE_MS - Math.max(0, age);
-    clearTimeout(pdom._bubbleTimer);
-    pdom._bubbleTimer = setTimeout(()=>{ pdom.bubbleEl.style.display = "none"; }, Math.max(1200, remain));
+    const age = typeof msgAt==="number" ? (Date.now()-msgAt) : 0; const remain = Math.max(1200, 12000 - Math.max(0,age));
+    clearTimeout(pdom._bubbleTimer); pdom._bubbleTimer = setTimeout(()=>{ pdom.bubbleEl.style.display = "none"; }, remain);
+    // 受信メッセージ音（初回描画や自分の送信は鳴らさない）
+    if (!firstRender && !isSelf) playMessage();
   }else if(!text){
     pdom.bubbleEl.style.display = "none";
   }
 }
 
-/* ============ 入力UI ============ */
+/* 自分DOMを保証（初期setに失敗しても出す） */
+function ensureMineDom(){
+  if(!uid) return;
+  if(!domMap.get(uid)){ const d=createPlayerDom(uid); domMap.set(uid,d); play.appendChild(d.wrap); }
+  renderPlayer(domMap.get(uid), me, true);
+}
+
+/* 入力UI */
 let lastSentAt = 0;
 msgInput.addEventListener("input", ()=>{
   const v = msgInput.value;
-  const ascii = isASCIIish(v);
-  if(ascii){
-    const w = countWordsASCII(v);
-    hintLang.textContent = `英語モード：${Math.min(w,10)} / 10 語`;
-  }else{
-    const len = Array.from(v).length;
-    hintLang.textContent = `非英語モード：${Math.min(len,10)} / 10 文字`;
-  }
-  const {ok} = validateMessage(v);
-  sendBtn.disabled = !ok;
+  if(isASCIIish(v)){ const w=countWordsASCII(v); hintLang.textContent=`英語モード：${Math.min(w,10)} / 10 語`; }
+  else { const len=Array.from(v).length; hintLang.textContent=`非英語モード：${Math.min(len,10)} / 10 文字`; }
+  sendBtn.disabled = !validateMessage(v).ok;
 });
 sendBtn.addEventListener("click", sendMsg);
-msgInput.addEventListener("keydown", e=>{
-  if(e.key==="Enter"){ e.preventDefault(); sendMsg(); }
-});
+msgInput.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); sendMsg(); }});
 poseBtn.addEventListener("click", togglePose);
-window.addEventListener("keydown", e=>{
-  if(e.key.toLowerCase()==="s"){ togglePose(); }
-});
-
+window.addEventListener("keydown", e=>{ if(e.key.toLowerCase()==="s"){ togglePose(); }});
 function togglePose(){
   me.pose = (me.pose === "stand") ? "sit" : "stand";
+  // 既存の実装を尊重（アイコンは消えるが動作優先）
   poseBtn.textContent = (me.pose === "stand") ? "座る" : "立つ";
   poseBtn.setAttribute("aria-pressed", me.pose === "sit" ? "true":"false");
   safeUpdate({pose: me.pose});
 }
 
-/* ============ タップ/クリックで移動 ============ */
+/* タップ移動 */
 function setTargetFromEvent(e){
   const pt = (e.touches && e.touches[0]) ? e.touches[0] : e;
   const {x,y} = toNorm(pt.clientX, pt.clientY);
-  target.x = x; target.y = y;
-  const pxNow = toPx(me.x, me.y).x;
-  const pxNext = toPx(target.x, target.y).x;
-  me.dir = (pxNext >= pxNow) ? 1 : -1;
-  safeUpdate({dir: me.dir});
-  pingAt(x,y);
+  const pxNow = toPx(me.x, me.y).x; const pxNext = toPx(x, y).x;
+  target.x=x; target.y=y; me.dir = (pxNext >= pxNow) ? 1 : -1;
+  safeUpdate({dir: me.dir}); pingAt(x,y);
 }
 play.addEventListener("pointerdown", setTargetFromEvent);
 play.addEventListener("touchstart", setTargetFromEvent, {passive:true});
 
-/* ============ ループ（自キャラ移動＆同期） ============ */
+/* ループ */
 let lastT = now();
 function loop(){
-  const t = now();
-  const dt = Math.max(0, Math.min(0.05, (t - lastT)/1000));
-  lastT = t;
+  const t=now(); const dt=Math.max(0, Math.min(0.05,(t-lastT)/1000)); lastT=t;
+  const r=play.getBoundingClientRect();
+  const pxPos=toPx(me.x,me.y), pxTarget=toPx(target.x,target.y);
+  const dx=pxTarget.x-pxPos.x, dy=pxTarget.y-pxPos.y, dist=Math.hypot(dx,dy);
+  const step=SPEED_PX_PER_S*dt;
+  if(dist>1){ const nx=pxPos.x+(dx/dist)*step, ny=pxPos.y+(dy/dist)*step; const nn=toNorm(nx+r.left, ny+r.top); me.x=nn.x; me.y=nn.y; }
+  else { me.x=target.x; me.y=target.y; }
 
-  const r = play.getBoundingClientRect();
-  const pxPos = toPx(me.x, me.y);
-  const pxTarget = toPx(target.x, target.y);
-  const dx = pxTarget.x - pxPos.x;
-  const dy = pxTarget.y - pxPos.y;
-  const dist = Math.hypot(dx,dy);
-  const step = SPEED_PX_PER_S * dt;
+  ensureMineDom();
 
-  if(dist > 1){
-    const nx = pxPos.x + (dx/dist)*step;
-    const ny = pxPos.y + (dy/dist)*step;
-    const nn = toNorm(nx + r.left, ny + r.top);
-    me.x = nn.x; me.y = nn.y;
-  }else{
-    me.x = target.x; me.y = target.y;
-  }
-
-  // 自分の見た目はローカルにも描画
-  let mineDom = domMap.get(uid);
-  if(!mineDom){ mineDom = createPlayerDom(uid); domMap.set(uid, mineDom); play.appendChild(mineDom.wrap); }
-  renderPlayer(mineDom, me, true);
-
-  // 同期スロットリング
-  if((t - lastSync) >= SYNC_INTERVAL_MS){
-    safeUpdate({x: me.x, y: me.y});
-    lastSync = t;
-  }
-
-  // ハートビート
-  if((t - lastHeartbeat) >= HEARTBEAT_MS){
-    safeUpdate({lastActive: serverTimestamp()});
-    lastHeartbeat = t;
-  }
-
+  if((t-lastSync)>=SYNC_INTERVAL_MS){ safeUpdate({x:me.x, y:me.y}); lastSync=t; }
+  if((t-lastHeartbeat)>=HEARTBEAT_MS){ safeUpdate({lastActive: serverTimestamp()}); lastHeartbeat=t; }
   requestAnimationFrame(loop);
 }
 
+/* 書き込み（ログ付き） */
 async function safeUpdate(patch){
   if(!uid) return;
-  try{
-    await update(myRef(), patch);
-  }catch(e){
-    // 初期化未完了やオフライン時などは無視
-  }
+  try{ await update(myRef(), patch); }
+  catch(e){ console.error("[rtdb] update failed:", patch, e); }
 }
 
-/* ============ メッセージ送信（即時表示＋サーバ時刻） ============ */
+/* 送信（即時表示＋サーバ時刻） */
 function sendMsg(){
-  const raw = msgInput.value.trim();
-  const chk = validateMessage(raw);
-  if(!chk.ok) return;
-  const nowMs = Date.now();
-  if(nowMs - lastSentAt < 500){ return; } // スパム抑止
-  lastSentAt = nowMs;
-
-  // ローカル即時表示
-  me.msg = raw;
-  me.msgAt = nowMs;
-  const mineDom = domMap.get(uid);
-  if(mineDom){ mineDom._lastMsgKey = null; renderPlayer(mineDom, me, true); }
-
-  msgInput.value = "";
-  sendBtn.disabled = true;
-
-  // サーバ時刻で正規化
+  const raw = msgInput.value.trim(); if(!validateMessage(raw).ok) return;
+  const nowMs = Date.now(); if(nowMs - lastSentAt < 500) return; lastSentAt = nowMs;
+  me.msg = raw; me.msgAt = nowMs; ensureMineDom();
+  msgInput.value=""; sendBtn.disabled=true;
   safeUpdate({ msg: raw, msgAt: serverTimestamp() });
+  // 自分は音を鳴らさない（必要ならここで鳴らす）
 }
 
-/* ============ 世界購読 ============ */
-function listenWorld(){ /* onValueは上で設定済み */ }
+/* 購読 */
+function listenWorld(){}
 
-/* ============ 共有 / ヘルプ ============ */
+/* 共有ボタン：常に ?room= を付与 */
 shareBtn.addEventListener("click", async ()=>{
   const invite = new URL(location.href);
-  // 常に ?room= を付けてコピー（同じ部屋に確実に入れる）
   invite.searchParams.set("room", WORLD_ID);
-  // ハッシュにroomが残っていれば削除
   invite.hash = invite.hash.replace(/room=[^&]+&?/,'').replace(/[#&]$/,'');
   try{
     if(navigator.clipboard && navigator.clipboard.writeText){
@@ -636,30 +555,18 @@ shareBtn.addEventListener("click", async ()=>{
     }else{
       prompt("このURLをコピーして共有してね", invite.toString());
     }
-  }catch{}
+  }catch(e){ console.warn("clipboard failed:", e); }
 });
 helpBtn.addEventListener("click", ()=> helpDialog.showModal());
 helpClose.addEventListener("click", ()=> helpDialog.close());
 
-/* ============ オフライン時の注意 ============ */
+/* オンライン表示 */
 window.addEventListener("online",  ()=> toast("オンライン"));
 window.addEventListener("offline", ()=> toast("オフライン：再接続待ち"));
+function toast(text){ const el=document.getElementById("hint"); el.textContent=text; el.style.opacity=.95; clearTimeout(toast._t); toast._t=setTimeout(()=> el.style.opacity=.75,1500); }
 
-/* ============ トースト ============ */
-function toast(text){
-  const el = document.getElementById("hint");
-  el.textContent = text;
-  el.style.opacity = .95;
-  clearTimeout(toast._t);
-  toast._t = setTimeout(()=> el.style.opacity = .75, 1500);
-}
-
-/* ============ 起動前チェック ============ */
-(function checkConfig(){
-  const needs = ["apiKey","authDomain","databaseURL","projectId","appId"];
-  const bad = needs.some(k=>!firebaseConfig[k]);
-  if(bad){ toast("Firebaseのconfigを入れてから使う"); }
-})();
+/* 起動前チェック */
+(function(){ const needs=["apiKey","authDomain","databaseURL","projectId","appId"]; if(needs.some(k=>!firebaseConfig[k])) toast("Firebaseのconfigを入れてから使う"); })();
 msgInput.dispatchEvent(new Event("input"));
 </script>
 </body>

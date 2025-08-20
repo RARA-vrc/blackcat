@@ -2,162 +2,115 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalalable=no, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1">
 <title>ゆるネコひろば</title>
 <meta name="color-scheme" content="light only">
+
+<!-- 画像を先読み（任意だがUX向上） -->
+<link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png" as="image" crossorigin>
+<link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png"  as="image" crossorigin>
+
 <style>
   :root{
-    --bg: #fffdf9;
-    --panel: #ffffff;
-    --ink: #1a1a1a;
-    --muted: #6b7280;
-    --accent: #ff7aa2;
-    --accent-ink:#fff;
-    --barH: 60px;
-    --ring: 3px;
-    --ringColor: rgba(255,122,162,.45);
-    --border:#e5e7eb;
+    --bg:#fffdf9; --panel:#ffffff; --ink:#1a1a1a; --muted:#6b7280;
+    --accent:#ff7aa2; --accent-ink:#fff; --border:#e5e7eb;
+    --barH:60px; --ring:3px; --ringColor:rgba(255,122,162,.45);
   }
-  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent}
-  html,body{height:100%; margin:0; font-family: ui-sans-serif, system-ui, -apple-system, "Hiragino Kaku Gothic ProN", Meiryo, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--ink); writing-mode: horizontal-tb;}
-  body, button, input { touch-action: manipulation; }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{height:100%; margin:0; font-family:ui-sans-serif,system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink)}
+  body,button,input{touch-action:manipulation}
   #app{position:fixed; inset:0; display:flex; flex-direction:column}
 
-  /* ==== 上部ヘッダ：小画面では自然に2段まで折返しOK ==== */
+  /* ====== 上部ヘッダ：小画面は2段まで許容 ====== */
   header{
     padding: calc(env(safe-area-inset-top) + 4px) 12px 8px;
     border-bottom:1px solid var(--border); background:var(--panel); position:relative; z-index:2;
   }
-  header .row{
-    display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; row-gap:6px;
-  }
+  header .row{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; row-gap:6px}
   .brand{display:flex; align-items:center; gap:10px; min-width:0; flex:1 1 260px}
   .brand .dot{width:14px; height:14px; border-radius:50%; background:#000}
-  .brand h1{font-size:clamp(14px, 2.6vw, 16px); font-weight:800; margin:0; white-space:nowrap}
+  .brand h1{font-size:clamp(14px,2.6vw,16px); font-weight:800; margin:0; white-space:nowrap}
   .chip{border:1px solid var(--border); background:#fafafa; border-radius:999px; padding:6px 10px; white-space:nowrap; max-width:50vw; overflow:hidden; text-overflow:ellipsis}
   .meta{display:flex; align-items:center; gap:8px; flex:0 0 auto}
-  .btn{
-    appearance:none; border:0; background:var(--accent); color:var(--accent-ink);
-    border-radius:12px; padding:10px 12px; font-size:14px; font-weight:800; cursor:pointer; min-height:40px;
-    display:inline-flex; align-items:center; gap:6px; white-space:nowrap; flex:0 0 auto;
-  }
-  .btn.ghost{ background:transparent; color:var(--ink); border:1px solid var(--border); }
-  .btn:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
-  .icon{font-variant-emoji: emoji; font-size:16px}
+  .btn{appearance:none; border:0; background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:10px 12px; font-size:14px; font-weight:800; cursor:pointer; min-height:40px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; flex:0 0 auto}
+  .btn.ghost{background:transparent; color:var(--ink); border:1px solid var(--border)}
+  .btn:focus-visible{outline:var(--ring) solid var(--ringColor); outline-offset:2px}
+  .icon{font-variant-emoji:emoji; font-size:16px}
   .txt{display:inline-block}
-
   @media (max-width:560px){
     .chip{max-width:60vw; font-size:12px}
     .btn.ghost .txt{display:none}
     .btn.ghost{padding:10px}
   }
 
-  /* ==== プレイエリア ==== */
+  /* ====== プレイエリア ====== */
   #play{
     position:relative; flex:1; overflow:hidden; cursor:crosshair;
     background-image:
       radial-gradient(circle at 1px 1px, #f1f3f5 1px, transparent 0),
       radial-gradient(1200px 420px at 50% 120%, #f7f7f7 0%, transparent 60%);
-    background-size: 18px 18px, auto;
-    background-position: 0 0, 0 0;
+    background-size:18px 18px, auto; background-position:0 0, 0 0;
     user-select:none; touch-action:none;
   }
+  .ping{position:absolute; width:10px; height:10px; border-radius:999px; border:2px solid var(--accent); opacity:.7; pointer-events:none; transform:translate(-50%,-50%) scale(.2); animation:ping .8s ease-out forwards}
+  @keyframes ping{80%{opacity:.15; transform:translate(-50%,-50%) scale(2.0)} 100%{opacity:0; transform:translate(-50%,-50%) scale(2.6)}}
 
-  .ping{
-    position:absolute; width:10px; height:10px; border-radius:999px;
-    border:2px solid var(--accent); opacity:.7; pointer-events:none;
-    transform:translate(-50%,-50%) scale(.2); animation:ping .8s ease-out forwards;
-  }
-  @keyframes ping{
-    80%{ opacity:.15; transform:translate(-50%,-50%) scale(2.0); }
-    100%{ opacity:0; transform:translate(-50%,-50%) scale(2.6); }
-  }
-
-  /* ==== 下部バー：絶対に1行（横書き固定） ==== */
+  /* ====== 下部バー：横一行固定 ====== */
   #bar{
-    height:var(--barH);
-    display:flex; align-items:center; gap:8px;
+    height:var(--barH); display:flex; align-items:center; gap:8px;
     border-top:1px solid var(--border); background:var(--panel);
-    padding:8px 10px; padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    padding:8px 10px; padding-bottom:calc(8px + env(safe-area-inset-bottom));
     flex-wrap:nowrap; white-space:nowrap; overflow:hidden;
   }
   #poseBtn{min-width:74px}
-  #msgWrap{
-    flex:1 1 auto; display:flex; align-items:center; gap:8px; min-width:0; overflow:hidden; white-space:nowrap;
-  }
+  #msgWrap{flex:1 1 auto; display:flex; align-items:center; gap:8px; min-width:0; overflow:hidden; white-space:nowrap}
   #msg{
     flex:1 1 auto; min-width:120px; font-size:16px; padding:8px 10px;
     border:1px solid var(--border); border-radius:12px; outline:none; background:#fff;
-    height:38px; line-height:22px; writing-mode:horizontal-tb; white-space:nowrap;
+    height:38px; line-height:22px; white-space:nowrap;
   }
-  #msg:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
-  #helper{
-    flex:0 0 auto; display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted);
-    white-space:nowrap; max-width:34%; overflow:hidden; text-overflow:ellipsis; user-select:none;
-  }
+  #msg:focus-visible{outline:var(--ring) solid var(--ringColor); outline-offset:2px}
+  #helper{flex:0 0 auto; display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); max-width:34%; overflow:hidden; text-overflow:ellipsis; user-select:none}
   #send{min-width:74px}
-  @media (max-width:900px){
-    #bar .btn .txt{display:none}
-    #helper{display:none}
-  }
+  @media (max-width:900px){ #bar .btn .txt{display:none} #helper{display:none} }
 
-  /* ==== プレイヤー（transform移動。名札は自動フリップ） ==== */
-  .p{
-    position:absolute; left:0; top:0;
-    transform: translate3d(0,0,0) translate(-50%, -80%);
-    will-change: transform; backface-visibility:hidden;
-    width:78px; height:78px;
-  }
-  .p.self .name{background: var(--accent)}
+  /* ====== プレイヤー（画像ベース／左向き基準） ====== */
+  .p{position:absolute; left:0; top:0; transform:translate3d(0,0,0) translate(-50%, -80%); will-change:transform; width:78px; height:78px}
+  .catImg{width:78px; height:78px; display:block; object-fit:contain; image-rendering:auto; pointer-events:none; transition:transform .18s ease}
+  .catImg.right{transform:scaleX(-1)}  /* 右向きのときだけ反転（元画像は左向き） */
+  .catImg.sit{display:none}            /* 立ちがデフォルト */
+  .sit .catImg.stand{display:none}
+  .sit .catImg.sit{display:block}
 
+  /* 名札（自動フリップで隠れない） */
   .name{
     position:absolute; left:50%; top:78px; transform:translateX(-50%);
     background:rgba(17,17,17,.95); color:#fff; font-size:12px; padding:2px 8px; border-radius:999px; white-space:nowrap;
     max-width:180px; text-overflow:ellipsis; overflow:hidden; letter-spacing:.2px; border:1px solid rgba(0,0,0,.6);
     z-index:2; pointer-events:none;
   }
-  .name.flip{ top:auto; bottom:84px; } /* 画面下端やバーに近いときは上側へ */
+  .name.flip{top:auto; bottom:84px}
 
+  /* 吹き出し：横一行固定（長文は省略） */
   .bubble{
     position:absolute; left:50%; bottom:94px; transform:translateX(-50%);
     background:#fff; color:#111; border:1px solid var(--border); border-radius:12px; padding:8px 10px; font-size:14px;
-    /* 横書き固定・1行のみ。長い場合は省略。 */
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; writing-mode:horizontal-tb;
-    max-width:min(86vw, 520px);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:min(86vw, 520px);
     box-shadow:0 8px 22px rgba(0,0,0,.06); z-index:1; display:none; pointer-events:none;
   }
 
-  .cat{width:78px; height:78px; display:block; will-change:transform}
-  .stand .cat{transition:transform .18s ease}
-  .sit .cat{transition:transform .18s ease; opacity:.96}
-  .face-left{transform:scaleX(-1)}
-  @keyframes wag { 0%,100%{ transform: rotate(0deg) } 50%{ transform: rotate(-6deg) } }
-  .wag { transform-origin: 24px 60px; animation: wag 1.2s ease-in-out infinite }
-
-  #join{
-    position:fixed; inset:0; background:rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center; z-index:10;
-  }
-  #join .card{
-    width:min(92vw, 520px); border:1px solid var(--border); border-radius:18px; background:#fff; padding:18px 16px 16px;
-    box-shadow:0 18px 60px rgba(0,0,0,.08);
-  }
+  #join{position:fixed; inset:0; background:rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center; z-index:10}
+  #join .card{width:min(92vw,520px); border:1px solid var(--border); border-radius:18px; background:#fff; padding:18px 16px 16px; box-shadow:0 18px 60px rgba(0,0,0,.08)}
   #join h2{margin:0 0 8px; font-size:18px}
   #join p{margin:0 0 12px; font-size:14px; color:#555; line-height:1.6}
   #join .row{display:flex; gap:10px}
-  #join input{
-    flex:1; font-size:18px; padding:12px 12px; border:1px solid var(--border); border-radius:12px; outline:none; background:#fff;
-  }
-  #join input:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
-  #join button{
-    padding:12px 14px; border-radius:12px; background:var(--accent); color:#fff; font-weight:800; font-size:16px; border:0; cursor:pointer; white-space:nowrap;
-  }
+  #join input{flex:1; font-size:18px; padding:12px 12px; border:1px solid var(--border); border-radius:12px; outline:none; background:#fff}
+  #join input:focus-visible{outline:var(--ring) solid var(--ringColor); outline-offset:2px}
+  #join button{padding:12px 14px; border-radius:12px; background:var(--accent); color:#fff; font-weight:800; font-size:16px; border:0; cursor:pointer; white-space:nowrap}
   #warn{color:#b40000; font-size:13px; min-height:1.4em}
   .subtle{font-size:12px; color:#6b7280}
 
-  #hint{
-    position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom));
-    background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.85; z-index:3;
-  }
+  #hint{position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom)); background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.85; z-index:3}
 </style>
 </head>
 <body>
@@ -180,7 +133,7 @@
 
   <div id="play" aria-label="play-area"></div>
 
-  <!-- 1行固定の横長チャット -->
+  <!-- 横一行の下部バー -->
   <div id="bar">
     <button id="poseBtn" class="btn" title="立つ/座るの切替" aria-pressed="false"><span class="icon" aria-hidden="true">🪑</span><span class="txt"> 座る</span></button>
     <div id="msgWrap">
@@ -225,16 +178,20 @@
 </dialog>
 
 <script type="module">
+/* ===== 画像URL（左向き画像） ===== */
+const CAT_STAND_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png";
+const CAT_SIT_URL   = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png";
+
 /* ===== Firebase config ===== */
 const firebaseConfig = {
-  apiKey: "AIzaSyCUpt4XLfSSZLt0VhJon926--c-I2tRMkE",
-  authDomain: "blackcat-67716.firebaseapp.com",
-  databaseURL: "https://blackcat-67716-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "blackcat-67716",
-  storageBucket: "blackcat-67716.appspot.com",
-  messagingSenderId: "124690483795",
-  appId: "1:124690483795:web:73b5b2ba28f4e4d503d4a6",
-  measurementId: "G-R47HW00266"
+  apiKey:"AIzaSyCUpt4XLfSSZLt0VhJon926--c-I2tRMkE",
+  authDomain:"blackcat-67716.firebaseapp.com",
+  databaseURL:"https://blackcat-67716-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"blackcat-67716",
+  storageBucket:"blackcat-67716.appspot.com",
+  messagingSenderId:"124690483795",
+  appId:"1:124690483795:web:73b5b2ba28f4e4d503d4a6",
+  measurementId:"G-R47HW00266"
 };
 
 /* ===== RoomID ===== */
@@ -276,16 +233,15 @@ const muteBtn = document.getElementById("muteBtn");
 
 worldLabel.textContent = `room: ${WORLD_ID}`;
 
-/* ===== サウンド ===== */
+/* ===== サウンド（簡易） ===== */
 let AC=null, masterGain=null; let muted=localStorage.getItem("yuru_mute")==="1";
 function unlockAudio(){ if(!AC){ const Ctx=window.AudioContext||window.webkitAudioContext; if(!Ctx) return; AC=new Ctx(); masterGain=AC.createGain(); masterGain.gain.value=muted?0:0.24; masterGain.connect(AC.destination); } if(AC&&AC.state==="suspended") AC.resume(); }
-function setupAudioUnlock(){ const once=()=>{unlockAudio(); document.removeEventListener("pointerdown", once); document.removeEventListener("keydown", once); }; document.addEventListener("pointerdown", once, {passive:true}); document.addEventListener("keydown", once); enterBtn.addEventListener("click", unlockAudio, {once:true}); }
-setupAudioUnlock();
+function setupAudioUnlock(){ const once=()=>{unlockAudio(); document.removeEventListener("pointerdown", once); document.removeEventListener("keydown", once); }; document.addEventListener("pointerdown", once, {passive:true}); document.addEventListener("keydown", once); enterBtn.addEventListener("click", unlockAudio, {once:true}); } setupAudioUnlock();
 function tone({freq=880,dur=0.12,type="sine",vol=0.7,attack=0.005,release=0.12}={}){ if(!AC) return; const osc=AC.createOscillator(); const g=AC.createGain(); osc.type=type; osc.frequency.value=freq; osc.connect(g); g.connect(masterGain||AC.destination); const t=AC.currentTime; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+attack); g.gain.exponentialRampToValueAtTime(0.0001,t+attack+release); osc.start(t); osc.stop(t+dur+0.25); }
 function playLogin(){ if(!muted && AC){ tone({freq:880,type:"triangle",vol:0.55,dur:0.12}); setTimeout(()=>tone({freq:1320,type:"triangle",vol:0.55,dur:0.12}),140); } }
 function playMessage(){ if(!muted && AC){ tone({freq:700,type:"sine",vol:0.5,dur:0.09}); } }
 function renderMuteButton(){ muteBtn.innerHTML = `<span class="icon" aria-hidden="true">${muted ? "🔇" : "🔔"}</span><span class="txt"> ${muted ? "ミュート" : "音オン"}</span>`; }
-muteBtn.addEventListener("click", ()=>{ muted=!muted; if(masterGain) masterGain.gain.value=muted?0:0.24; localStorage.setItem("yuru_mute", muted ? "1":"0"); renderMuteButton(); });
+muteBtn.addEventListener("click", ()=>{ muted=!muted; if(masterGain) masterGain.gain.value=muted?0:0.24; localStorage.setItem("yuru_mute", muted?"1":"0"); renderMuteButton(); });
 renderMuteButton();
 
 /* ===== 状態 ===== */
@@ -307,7 +263,7 @@ function toNorm(cx,cy){ const r=getPlayRect(); if(!r) return {x:target.x,y:targe
 function toPx(nx,ny){ const r=getPlayRect(); if(!r) return {x:0,y:0}; return {x:nx*r.width, y:ny*r.height}; }
 function pingAt(nx,ny){ const r=getPlayRect(); if(!r) return; const {x,y}=toPx(nx,ny); const s=document.createElement("span"); s.className="ping"; s.style.left=`${x}px`; s.style.top=`${y}px`; play.appendChild(s); s.addEventListener("animationend",()=>s.remove()); }
 
-/* ===== 参加フロー ===== */
+/* ===== 参加 ===== */
 const remembered=localStorage.getItem("yuru_name"); if(remembered) nameInput.value=remembered.slice(0,3);
 nameInput.addEventListener("input", ()=>{ const n=nameInput.value.trim(); if([...n].length>3) nameInput.value=Array.from(n).slice(0,3).join(""); });
 enterBtn.addEventListener("click", startJoin);
@@ -329,7 +285,7 @@ onAuthStateChanged(auth, user=>{
   startLoop();
 });
 
-/* ===== DB refs ===== */
+/* ===== DB ===== */
 function playersRefOf(room){ return ref(db, `worlds/${room}/players`); }
 function myRef(){ return ref(db, `worlds/${WORLD_ID}/players/${uid}`); }
 const playersRef = playersRefOf(WORLD_ID);
@@ -372,57 +328,56 @@ onValue(playersRef, snap=>{
   initialPlayersLoaded=true;
 });
 
+/* ===== 画像猫DOM ===== */
 function createPlayerDom(id){
   const wrap=document.createElement("div"); wrap.className="p stand";
+
   const nameEl=document.createElement("div"); nameEl.className="name";
   const bubble=document.createElement("div"); bubble.className="bubble";
-  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
-  svg.setAttribute("viewBox","0 0 100 100"); svg.classList.add("cat");
-  const body=document.createElementNS(svg.namespaceURI,"path"); body.setAttribute("fill","#000"); body.setAttribute("d","M28,68 Q40,48 58,46 Q78,46 84,60 Q86,74 64,80 Q42,82 28,68 Z");
-  const head=document.createElementNS(svg.namespaceURI,"circle"); head.setAttribute("cx","80"); head.setAttribute("cy","48"); head.setAttribute("r","11"); head.setAttribute("fill","#000");
-  const ear1=document.createElementNS(svg.namespaceURI,"path"); ear1.setAttribute("fill","#000"); ear1.setAttribute("d","M75,40 L80,33 L82,42 Z");
-  const ear2=document.createElementNS(svg.namespaceURI,"path"); ear2.setAttribute("fill","#000"); ear2.setAttribute("d","M85,40 L90,33 L88,42 Z");
-  const tail=document.createElementNS(svg.namespaceURI,"path"); tail.setAttribute("fill","#000"); tail.setAttribute("d","M24,62 C18,54 24,42 38,40 C50,38 56,44 56,50 C40,54 32,60 30,68 Z"); tail.classList.add("wag");
-  const backLeg=document.createElementNS(svg.namespaceURI,"rect"); backLeg.setAttribute("x","50"); backLeg.setAttribute("y","72"); backLeg.setAttribute("width","6"); backLeg.setAttribute("height","14"); backLeg.setAttribute("fill","#000");
-  const frontLeg=document.createElementNS(svg.namespaceURI,"rect"); frontLeg.setAttribute("x","66"); frontLeg.setAttribute("y","72"); frontLeg.setAttribute("width","6"); frontLeg.setAttribute("height","14"); frontLeg.setAttribute("fill","#000");
 
-  const sitGroup=document.createElementNS(svg.namespaceURI,"g"); sitGroup.setAttribute("display","none");
-  const sBody=document.createElementNS(svg.namespaceURI,"path"); sBody.setAttribute("fill","#000"); sBody.setAttribute("d","M30,72 Q42,54 64,54 Q82,54 84,66 Q86,80 62,84 Q40,86 30,72 Z");
-  const sHead=document.createElementNS(svg.namespaceURI,"circle"); sHead.setAttribute("cx","78"); sHead.setAttribute("cy","50"); sHead.setAttribute("r","11"); sHead.setAttribute("fill","#000");
-  const sEar1=document.createElementNS(svg.namespaceURI,"path"); sEar1.setAttribute("fill","#000"); sEar1.setAttribute("d","M73,42 L78,35 L80,44 Z");
-  const sEar2=document.createElementNS(svg.namespaceURI,"path"); sEar2.setAttribute("fill","#000"); sEar2.setAttribute("d","M83,42 L88,35 L86,44 Z");
-  const sTail=document.createElementNS(svg.namespaceURI,"path"); sTail.setAttribute("fill","#000"); sTail.setAttribute("d","M28,70 C20,66 22,56 32,52 C40,50 46,54 44,60 C38,66 34,70 30,74 Z"); sTail.classList.add("wag");
+  // 左向き画像（stand/sit）を2枚重ねて、姿勢で表示を切替
+  const standImg=new Image(); standImg.src=CAT_STAND_URL; standImg.alt="cat standing"; standImg.decoding="async"; standImg.className="catImg stand";
+  const sitImg  =new Image(); sitImg.src  =CAT_SIT_URL;   sitImg.alt  ="cat sitting";  sitImg.decoding="async"; sitImg.className  ="catImg sit";
 
-  svg.appendChild(body); svg.appendChild(head); svg.appendChild(ear1); svg.appendChild(ear2);
-  svg.appendChild(tail); svg.appendChild(backLeg); svg.appendChild(frontLeg);
-  sitGroup.appendChild(sBody); sitGroup.appendChild(sHead); sitGroup.appendChild(sEar1); sitGroup.appendChild(sEar2); sitGroup.appendChild(sTail);
-  svg.appendChild(sitGroup);
+  wrap.appendChild(nameEl);
+  wrap.appendChild(bubble);
+  wrap.appendChild(standImg);
+  wrap.appendChild(sitImg);
 
-  wrap.appendChild(nameEl); wrap.appendChild(bubble); wrap.appendChild(svg);
-  return {wrap, nameEl, bubbleEl:bubble, svg, sitGroup, standParts:[body,head,ear1,ear2,tail,backLeg,frontLeg], _lastMsgKey:null, _ready:false};
+  return {wrap, nameEl, bubbleEl:bubble, standImg, sitImg, _lastMsgKey:null, _ready:false};
 }
 
+/* ===== 描画 ===== */
 function renderPlayer(pdom, data, isSelf){
   const r=getPlayRect(); if(!r) return;
+
+  // 位置（ラップはtranslate3dでGPU合成）
   const px=data.x*r.width, py=data.y*r.height;
   pdom.wrap.style.transform=`translate3d(${px}px, ${py}px, 0) translate(-50%, -80%)`;
 
-  /* 名札は常にテキスト横書き・1行。バーに隠れそうなら上側へフリップ */
+  // 姿勢：class "sit" をラップに付与 → CSSで表示切替
+  if(data.pose==="sit"){ pdom.wrap.classList.add("sit"); pdom.wrap.classList.remove("stand"); }
+  else{ pdom.wrap.classList.add("stand"); pdom.wrap.classList.remove("sit"); }
+
+  // 向き：元画像は左向き。右向きなら画像にだけ反転クラスを付与
+  const right = (data.dir===1);
+  pdom.standImg.classList.toggle("right", right);
+  pdom.sitImg.classList.toggle("right", right);
+
+  // 名札
   pdom.nameEl.textContent = data.name || "";
+  pdom.wrap.classList.toggle("self", !!isSelf);
+
+  // 名札が下部バーに潜りそうなら上側にフリップ
   const barH = bar.getBoundingClientRect().height || 0;
   const playBottomVisible = r.height - barH;
-  if(py + 90 > playBottomVisible){ pdom.nameEl.classList.add("flip"); } else { pdom.nameEl.classList.remove("flip"); }
+  if(py + 90 > playBottomVisible) pdom.nameEl.classList.add("flip"); else pdom.nameEl.classList.remove("flip");
 
-  pdom.wrap.classList.toggle("self", !!isSelf);
-  if(data.dir===-1) pdom.svg.classList.add("face-left"); else pdom.svg.classList.remove("face-left");
-  if(data.pose==="sit"){ pdom.wrap.classList.remove("stand"); pdom.wrap.classList.add("sit"); pdom.sitGroup.setAttribute("display","block"); pdom.standParts.forEach(n=>n.setAttribute("display","none")); }
-  else{ pdom.wrap.classList.add("stand"); pdom.wrap.classList.remove("sit"); pdom.sitGroup.setAttribute("display","none"); pdom.standParts.forEach(n=>n.setAttribute("display","block")); }
-
-  /* 吹き出し：横1行固定（省略表示）。改行はしない */
+  // 吹き出し（横一行固定、時間で自動消去）
   const raw = data.msg || ""; const msgAt = data.msgAt || 0; const key = `${raw}|${msgAt}`;
   if(raw && key !== pdom._lastMsgKey){
     const firstRender = !pdom._ready; pdom._ready=true; pdom._lastMsgKey=key;
-    pdom.bubbleEl.innerHTML = escapeHTML(raw);
+    pdom.bubbleEl.textContent = raw;    // HTMLエスケープ不要なら textContent で安全
     pdom.bubbleEl.style.display = "block";
     const age = typeof msgAt==="number" ? (Date.now()-msgAt) : 0;
     const remain = Math.max(1200, BUBBLE_MS - Math.max(0,age));
@@ -434,14 +389,14 @@ function renderPlayer(pdom, data, isSelf){
   }
 }
 
-/* 自分DOM保証 */
+/* ===== 自分DOM保証 ===== */
 function ensureMineDom(){
   if(!uid) return;
   if(!domMap.get(uid)){ const d=createPlayerDom(uid); domMap.set(uid,d); play.appendChild(d.wrap); }
   renderPlayer(domMap.get(uid), me, true);
 }
 
-/* 入力UI（横1行固定） */
+/* ===== 入力UI ===== */
 let lastSentAt=0;
 msgInput.addEventListener("input", ()=>{
   const v=msgInput.value;
@@ -458,26 +413,26 @@ function validateMessage(raw){
   return {ok:true};
 }
 
-/* ポーズ切替 */
+/* ===== ポーズ切替 ===== */
 function renderPoseBtn(){ poseBtn.innerHTML=`<span class="icon" aria-hidden="true">🪑</span><span class="txt"> ${me.pose==="stand"?"座る":"立つ"}</span>`; poseBtn.setAttribute("aria-pressed", me.pose==="sit"?"true":"false"); }
 renderPoseBtn();
 poseBtn.addEventListener("click", togglePose);
 window.addEventListener("keydown", e=>{ if(e.key.toLowerCase()==="s"){ togglePose(); }});
 function togglePose(){ me.pose=(me.pose==="stand")?"sit":"stand"; renderPoseBtn(); safeUpdate({pose:me.pose}); }
 
-/* タップ移動 */
+/* ===== タップ移動・向き判定 ===== */
 function setTargetFromEvent(e){
   const pt=(e.touches && e.touches[0]) ? e.touches[0] : e;
   const {x,y}=toNorm(pt.clientX, pt.clientY);
-  const pxNow=toPx(me.x, me.y).x, pxNext=toPx(x,y).x;
-  target.x=x; target.y=y; me.dir=(pxNext>=pxNow)?1:-1;
+  const pxNow=toPx(me.x, me.y).x; const pxNext=toPx(x, y).x;
+  target.x=x; target.y=y; me.dir=(pxNext>=pxNow)?1:-1;   // 右=1, 左=-1（画像は左基準）
   safeUpdate({dir:me.dir}); pingAt(x,y);
 }
 play.addEventListener("pointerdown", setTargetFromEvent);
 play.addEventListener("touchstart", setTargetFromEvent, {passive:true});
 play.addEventListener("dblclick", e=>{ e.preventDefault(); }, {passive:false});
 
-/* ループ */
+/* ===== ループ ===== */
 let loopStarted=false; let lastT=now();
 function startLoop(){ if(loopStarted) return; loopStarted=true; requestAnimationFrame(loop); }
 function loop(){
@@ -494,10 +449,10 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
-/* 書き込み */
+/* ===== 書き込み ===== */
 async function safeUpdate(patch){ if(!uid) return; try{ await update(myRef(), patch); }catch(e){ console.error("[rtdb] update failed:", patch, e); } }
 
-/* 送信 */
+/* ===== 送信 ===== */
 function sendMsg(){
   const raw=msgInput.value.trim(); if(!validateMessage(raw).ok) return;
   const nowMs=Date.now(); if(nowMs-lastSentAt<500) return; lastSentAt=nowMs;
@@ -506,7 +461,7 @@ function sendMsg(){
   safeUpdate({ msg: raw, msgAt: serverTimestamp() });
 }
 
-/* 共有 */
+/* ===== 共有 ===== */
 shareBtn.addEventListener("click", async ()=>{
   const invite=new URL(location.href);
   invite.searchParams.set("room", WORLD_ID);
@@ -517,17 +472,17 @@ shareBtn.addEventListener("click", async ()=>{
   }catch(e){ console.warn("clipboard failed:", e); }
 });
 
-/* ヘルプ */
+/* ===== ヘルプ ===== */
 helpBtn.addEventListener("click", ()=>helpDialog.showModal());
 helpClose.addEventListener("click", ()=>helpDialog.close());
 
-/* オンライン表示・トースト */
-window.addEventListener("online", ()=> toast("オンライン"));
+/* ===== トースト ===== */
+window.addEventListener("online",  ()=> toast("オンライン"));
 window.addEventListener("offline", ()=> toast("オフライン：再接続待ち"));
 function toast(text){ const el=document.getElementById("hint"); el.textContent=text; el.style.opacity=.95; clearTimeout(toast._t); toast._t=setTimeout(()=> el.style.opacity=.85, 1500); }
 
-/* 起動前チェック */
-(function(){ const needs=["apiKey","authDomain","databaseURL","projectId","appId"]; if(needs.some(k=>!firebaseConfig[k])) toast("Firebaseのconfigを入れてから使う"); worldLabel.textContent = `room: ${WORLD_ID}`; })();
+/* ===== 起動前チェック ===== */
+(function(){ const needs=["apiKey","authDomain","databaseURL","projectId","appId"]; if(needs.some(k=>!firebaseConfig[k])) toast("Firebaseのconfigを入れてから使う"); worldLabel.textContent=`room: ${WORLD_ID}`; })();
 msgInput.dispatchEvent(new Event("input"));
 startLoop();
 </script>

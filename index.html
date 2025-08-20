@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>ゆるネコひろば</title>
+<style>
+  :root{
+    --bg:#fff;
+    --ink:#111;
+    --muted:#777;
+    --accent:#111;
+    --barH:72px;
+    --nameMax:3; /* 視覚上の制約用 */
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent}
+  html,body{height:100%; margin:0; font-family:ui-sans-serif,system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink)}
+  #app{position:fixed; inset:0; display:flex; flex-direction:column}
+
+  /* 上部バー（タイトル） */
+  header{height:48px; display:flex; align-items:center; gap:8px; padding:0 12px; border-bottom:1px solid #eee}
+  header h1{font-size:16px; font-weight:700; margin:0}
+  header .world{font-size:12px; color:var(--muted)}
+
+  /* プレイエリア */
+  #play{position:relative; flex:1; overflow:hidden; touch-action:none; cursor:crosshair;}
+  #play::before{
+    content:""; position:absolute; inset:0;
+    background:
+      radial-gradient(1000px 400px at 50% 120%, #f7f7f7 0%, transparent 60%) no-repeat,
+      linear-gradient(#fff 0 0) no-repeat;
+    pointer-events:none;
+  }
+
+  /* 操作バー */
+  #bar{height:var(--barH); display:flex; align-items:center; gap:8px; padding:8px 10px; border-top:1px solid #eee; background:#fafafa}
+  #msg{flex:1; font-size:16px; padding:12px 12px; border:1px solid #ddd; border-radius:12px; outline:none}
+  #send, #poseBtn{
+    appearance:none; border:1px solid #111; background:#111; color:#fff;
+    border-radius:12px; padding:12px 14px; font-size:14px; font-weight:700; cursor:pointer;
+  }
+  #poseBtn{background:#444; border-color:#444}
+  #send:disabled{opacity:.5; cursor:not-allowed}
+
+  /* 猫ラッパー（プレイヤーDOM） */
+  .p{position:absolute; width:72px; height:72px; transform:translate(-50%, -80%); /* 座標の見た目中央寄せ */ }
+  .p .name{
+    position:absolute; left:50%; top:-18px; transform:translateX(-50%);
+    background:#000; color:#fff; font-size:12px; padding:2px 6px; border-radius:10px; white-space:nowrap;
+    max-width:120px; text-overflow:ellipsis; overflow:hidden;
+  }
+  .p .bubble{
+    position:absolute; left:50%; bottom:86px; transform:translateX(-50%);
+    background:#fff; color:#111; border:1px solid #ddd; border-radius:14px; padding:8px 10px; font-size:14px; max-width:220px;
+    box-shadow:0 6px 18px rgba(0,0,0,.06);
+  }
+  .p .bubble::after{
+    content:""; position:absolute; left:50%; bottom:-7px; transform:translateX(-50%) rotate(45deg);
+    width:14px; height:14px; background:#fff; border-left:1px solid #ddd; border-bottom:1px solid #ddd;
+  }
+
+  /* 猫SVG（横向きシルエット：立ち/座り） */
+  .cat{width:72px; height:72px; display:block}
+  .stand .cat{transition:transform .18s ease}
+  .sit .cat{transition:transform .18s ease}
+  .face-left{transform:scaleX(-1)}
+
+  /* ふわっと移動補間（他人の見た目） */
+  .p{transition: left .25s ease, top .25s ease}
+
+  /* 入室モーダル */
+  #join{
+    position:fixed; inset:0; background:rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center; z-index:10;
+  }
+  #join .card{
+    width:min(92vw, 460px); border:1px solid #eee; border-radius:16px; background:#fff; padding:18px 16px 16px;
+    box-shadow:0 18px 60px rgba(0,0,0,.08);
+  }
+  #join h2{margin:0 0 8px; font-size:18px}
+  #join p{margin:0 0 12px; font-size:14px; color:#555; line-height:1.6}
+  #join input{
+    width:100%; font-size:18px; padding:12px 12px; border:1px solid #ddd; border-radius:12px; outline:none;
+  }
+  #join button{
+    margin-top:10px; width:100%; padding:12px; border-radius:12px; background:#111; color:#fff; font-weight:700; font-size:16px; border:1px solid #111; cursor:pointer;
+  }
+  #warn{color:#b40000; font-size:13px; min-height:1.4em}
+
+  /* 右下ヘルプ */
+  #hint{position:fixed; right:10px; bottom:calc(var(--barH) + 8px); background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.75}
+  @media (max-width:480px){
+    .p{width:64px; height:64px}
+    .cat{width:64px; height:64px}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>ゆるネコひろば</h1>
+    <div class="world" id="worldLabel"></div>
+  </header>
+
+  <div id="play" aria-label="play-area"></div>
+
+  <div id="bar">
+    <button id="poseBtn" title="立つ/座るの切替">座る</button>
+    <input id="msg" type="text" inputmode="text" autocomplete="off" placeholder="短いことば…（非英語10文字 / 英語10語）">
+    <button id="send" disabled>送信</button>
+  </div>
+
+  <div id="hint">画面をタップで自分の猫がゆっくり移動</div>
+</div>
+
+<!-- 入室モーダル -->
+<div id="join" role="dialog" aria-modal="true">
+  <div class="card">
+    <h2>名前を入れて参加</h2>
+    <p>名前は<strong>3文字まで</strong>。全員同じ場を共有する。ゆっくり遊ぶ場所。</p>
+    <input id="nameInput" maxlength="3" placeholder="たとえば『ララ』">
+    <div id="warn"></div>
+    <button id="enterBtn">はじめる</button>
+  </div>
+</div>
+
+<script type="module">
+/* ===========================
+   Firebase 初期化
+   ===========================
+
+   1) 下の firebaseConfig を自分の値に差し替え。
+   2) Firebase Authentication で「匿名認証」を有効化。
+   3) Realtime Database を作成（推奨: asia-southeast1など近いリージョン）。
+   4) RTDB ルール（例：緩め／試作用。必要に応じ強化してくれ）：
+
+{
+  "rules": {
+    ".read": true,
+    ".write": "auth != null"
+  }
+}
+
+※ 完全公開を避けたい場合は write で rate-limitや署名を工夫すること。
+*/
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_DB_URL.rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "YOUR_PROJECT_ID",
+  appId: "YOUR_APP_ID",
+};
+const WORLD_ID = "global-plaza-1"; // 同じWORLD_ID同士が同じ場で同期
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getDatabase, ref, onValue, set, update, remove, serverTimestamp, onDisconnect
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import {
+  getAuth, signInAnonymously, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
+
+/* ============ DOM refs ============ */
+const play = document.getElementById("play");
+const msgInput = document.getElementById("msg");
+const sendBtn = document.getElementById("send");
+const poseBtn = document.getElementById("poseBtn");
+const join = document.getElementById("join");
+const nameInput = document.getElementById("nameInput");
+const enterBtn = document.getElementById("enterBtn");
+const warn = document.getElementById("warn");
+const worldLabel = document.getElementById("worldLabel");
+
+/* ============ 状態 ============ */
+let uid = null;
+let me = {
+  name: "",
+  x: 0.5, // 0..1 (正規化座標)
+  y: 0.7,
+  dir: 1, // 1:右, -1:左
+  pose: "stand", // "stand" | "sit"
+  msg: "",
+};
+let target = {x: me.x, y: me.y};
+let lastSync = 0;
+let lastHeartbeat = 0;
+const SYNC_INTERVAL_MS = 80;   // 位置同期の最短間隔（RTDB書き込み）
+const HEARTBEAT_MS = 15000;    // lastActive更新
+const BUBBLE_MS = 8000;        // 吹き出しの表示時間
+const SPEED_PX_PER_S = 120;    // 移動速度（ゆっくり）
+
+worldLabel.textContent = `world: ${WORLD_ID}`;
+
+/* ============ ユーティリティ ============ */
+const now = () => performance.now();
+function clamp01(v){ return Math.max(0, Math.min(1, v)); }
+function escapeHTML(s){
+  return s.replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
+}
+function isASCIIish(s){ return /^[\x00-\x7F]+$/.test(s); }
+function countWordsASCII(s){
+  return s.trim().split(/\s+/).filter(Boolean).length;
+}
+
+/** メッセージ検証: 非英語=10文字まで / ASCII系=10語まで */
+function validateMessage(raw){
+  if(!raw) return {ok:false, reason:"空"};
+  if(isASCIIish(raw)){
+    const words = countWordsASCII(raw);
+    if(words > 10) return {ok:false, reason:"英語は10語まで"};
+    // いたずら防止に最大文字長も軽く制限
+    if(raw.length > 100) return {ok:false, reason:"ながすぎ"};
+  }else{
+    // 非ASCIIは10文字まで（結合文字をざっくり考慮）
+    const len = Array.from(raw).length;
+    if(len > 10) return {ok:false, reason:"10文字まで"};
+  }
+  return {ok:true};
+}
+
+/** 画面px→正規化座標 */
+function toNorm(clientX, clientY){
+  const r = play.getBoundingClientRect();
+  const x = clamp01((clientX - r.left) / r.width);
+  const y = clamp01((clientY - r.top) / r.height);
+  return {x,y};
+}
+
+/** 正規化座標→px */
+function toPx(nx, ny){
+  const r = play.getBoundingClientRect();
+  return {x: nx * r.width, y: ny * r.height};
+}
+
+/* ============ 参加モーダル ============ */
+nameInput.addEventListener("input", ()=>{
+  const n = nameInput.value.trim();
+  if([...n].length > 3){
+    // maxlengthで弾いているが念のため
+    nameInput.value = Array.from(n).slice(0,3).join("");
+  }
+});
+enterBtn.addEventListener("click", startJoin);
+nameInput.addEventListener("keydown", e=>{ if(e.key==="Enter") startJoin(); });
+
+function startJoin(){
+  const n = nameInput.value.trim();
+  if([...n].length === 0){ warn.textContent = "1〜3文字"; return; }
+  if([...n].length > 3){ warn.textContent = "3文字まで"; return; }
+  me.name = n;
+  join.style.display = "none";
+  localStorage.setItem("yuru_name", me.name);
+  initAuth();
+}
+
+/* 前回名があれば先に入れておく */
+const remembered = localStorage.getItem("yuru_name");
+if(remembered){
+  nameInput.value = remembered.slice(0,3);
+}
+
+/* ============ 認証 & 接続 ============ */
+async function initAuth(){
+  try{
+    await signInAnonymously(auth);
+  }catch(e){
+    alert("Firebase匿名認証に失敗。configを確認してくれ。");
+    console.error(e);
+  }
+}
+onAuthStateChanged(auth, user=>{
+  if(!user) return;
+  uid = user.uid;
+  // 参加初期位置を画面下寄りランダムに
+  me.x = Math.random()*0.8 + 0.1;
+  me.y = Math.random()*0.4 + 0.5;
+  target = {x: me.x, y: me.y};
+  mountPresence();
+  listenWorld();
+  loop();
+});
+
+/* ============ RTDB パス ============ */
+const playersRef = ref(db, `worlds/${WORLD_ID}/players`);
+function myRef(){ return ref(db, `worlds/${WORLD_ID}/players/${uid}`); }
+
+/* ============ プレゼンス ============ */
+async function mountPresence(){
+  // 自分のノード初期化
+  await set(myRef(), {
+    name: me.name,
+    x: me.x, y: me.y,
+    dir: me.dir,
+    pose: me.pose,
+    msg: "",
+    msgAt: 0,
+    lastActive: serverTimestamp()
+  });
+  // 退室時に自分のノードを消す
+  onDisconnect(myRef()).remove().catch(()=>{});
+}
+
+/* ============ 受信 & 描画 ============ */
+const domMap = new Map(); // uid -> {wrap,nameEl,bubbleEl,svg}
+onValue(playersRef, snap=>{
+  const data = snap.val() || {};
+  const seen = new Set(Object.keys(data));
+  // 生成・更新
+  for(const id in data){
+    let pdom = domMap.get(id);
+    if(!pdom){
+      pdom = createPlayerDom(id);
+      domMap.set(id, pdom);
+      play.appendChild(pdom.wrap);
+    }
+    renderPlayer(pdom, data[id]);
+  }
+  // 消えたプレイヤーのDOM削除
+  for(const [id,pdom] of domMap){
+    if(!seen.has(id)){
+      pdom.wrap.remove();
+      domMap.delete(id);
+    }
+  }
+});
+
+function createPlayerDom(id){
+  const wrap = document.createElement("div");
+  wrap.className = "p stand";
+  const nameEl = document.createElement("div");
+  nameEl.className = "name";
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.style.display = "none";
+
+  // 猫SVG（横向きシルエット2種）
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox","0 0 100 100");
+  svg.classList.add("cat");
+  // 立ち：胴体＋脚
+  const stand = document.createElementNS(svg.namespaceURI,"path");
+  stand.setAttribute("fill","#000");
+  stand.setAttribute("d",
+   "M15,70 Q25,45 45,45 L70,45 Q85,50 85,65 Q85,78 70,78 L40,78 Q30,78 25,72 Z"); // 胴
+  const head = document.createElementNS(svg.namespaceURI,"circle");
+  head.setAttribute("cx","20"); head.setAttribute("cy","45"); head.setAttribute("r","10"); head.setAttribute("fill","#000");
+  const ear1 = document.createElementNS(svg.namespaceURI,"path");
+  ear1.setAttribute("fill","#000"); ear1.setAttribute("d","M14,37 L18,32 L20,39 Z");
+  const ear2 = document.createElementNS(svg.namespaceURI,"path");
+  ear2.setAttribute("fill","#000"); ear2.setAttribute("d","M22,37 L26,32 L24,39 Z");
+  const tail = document.createElementNS(svg.namespaceURI,"path");
+  tail.setAttribute("fill","#000"); tail.setAttribute("d","M80,60 q15,-10 15,0 q-8,10 -20,5 Z");
+  const frontLeg = document.createElementNS(svg.namespaceURI,"rect");
+  frontLeg.setAttribute("x","48"); frontLeg.setAttribute("y","72"); frontLeg.setAttribute("width","6"); frontLeg.setAttribute("height","14"); frontLeg.setAttribute("fill","#000");
+  const backLeg = document.createElementNS(svg.namespaceURI,"rect");
+  backLeg.setAttribute("x","64"); backLeg.setAttribute("y","72"); backLeg.setAttribute("width","6"); backLeg.setAttribute("height","14"); backLeg.setAttribute("fill","#000");
+
+  // 座り：別グループ
+  const sitGroup = document.createElementNS(svg.namespaceURI,"g");
+  sitGroup.setAttribute("display","none");
+  const sBody = document.createElementNS(svg.namespaceURI,"path");
+  sBody.setAttribute("fill","#000");
+  sBody.setAttribute("d","M18,70 Q25,50 45,50 Q65,50 70,65 Q72,80 50,82 Q25,84 18,70 Z");
+  const sHead = document.createElementNS(svg.namespaceURI,"circle");
+  sHead.setAttribute("cx","20"); sHead.setAttribute("cy","50"); sHead.setAttribute("r","10"); sHead.setAttribute("fill","#000");
+  const sEar1 = document.createElementNS(svg.namespaceURI,"path");
+  sEar1.setAttribute("fill","#000"); sEar1.setAttribute("d","M14,42 L18,37 L20,44 Z");
+  const sEar2 = document.createElementNS(svg.namespaceURI,"path");
+  sEar2.setAttribute("fill","#000"); sEar2.setAttribute("d","M22,42 L26,37 L24,44 Z");
+  const sTail = document.createElementNS(svg.namespaceURI,"path");
+  sTail.setAttribute("fill","#000"); sTail.setAttribute("d","M70,68 q18,-2 14,10 q-6,10 -20,3 Z");
+
+  svg.appendChild(stand); svg.appendChild(head); svg.appendChild(ear1); svg.appendChild(ear2);
+  svg.appendChild(tail); svg.appendChild(frontLeg); svg.appendChild(backLeg);
+  sitGroup.appendChild(sBody); sitGroup.appendChild(sHead); sitGroup.appendChild(sEar1); sitGroup.appendChild(sEar2); sitGroup.appendChild(sTail);
+  svg.appendChild(sitGroup);
+
+  wrap.appendChild(nameEl);
+  wrap.appendChild(bubble);
+  wrap.appendChild(svg);
+
+  return {wrap, nameEl, bubbleEl: bubble, svg, sitGroup, standParts:[stand,head,ear1,ear2,tail,frontLeg,backLeg]};
+}
+
+function renderPlayer(pdom, data){
+  const r = play.getBoundingClientRect();
+  const px = data.x * r.width;
+  const py = data.y * r.height;
+  pdom.wrap.style.left = `${px}px`;
+  pdom.wrap.style.top  = `${py}px`;
+  pdom.nameEl.textContent = data.name || "";
+
+  // 向き
+  if(data.dir === -1) pdom.svg.classList.add("face-left");
+  else pdom.svg.classList.remove("face-left");
+
+  // 姿勢
+  if(data.pose === "sit"){
+    pdom.wrap.classList.remove("stand"); pdom.wrap.classList.add("sit");
+    // 表示切替
+    pdom.sitGroup.setAttribute("display","block");
+    pdom.standParts.forEach(n=>n.setAttribute("display","none"));
+  }else{
+    pdom.wrap.classList.add("stand"); pdom.wrap.classList.remove("sit");
+    pdom.sitGroup.setAttribute("display","none");
+    pdom.standParts.forEach(n=>n.setAttribute("display","block"));
+  }
+
+  // 吹き出し
+  const text = data.msg || "";
+  if(text){
+    pdom.bubbleEl.style.display = "block";
+    pdom.bubbleEl.innerHTML = escapeHTML(text);
+    // 一定時間で自動で消える（ローカル側で制御）
+    clearTimeout(pdom._bubbleTimer);
+    pdom._bubbleTimer = setTimeout(()=>{
+      pdom.bubbleEl.style.display = "none";
+    }, BUBBLE_MS);
+  }
+}
+
+/* ============ 入力UI ============ */
+let lastSentAt = 0;
+msgInput.addEventListener("input", ()=>{
+  const v = msgInput.value;
+  const {ok} = validateMessage(v);
+  sendBtn.disabled = !ok;
+});
+sendBtn.addEventListener("click", sendMsg);
+msgInput.addEventListener("keydown", e=>{
+  if(e.key==="Enter") sendMsg();
+});
+poseBtn.addEventListener("click", ()=>{
+  me.pose = (me.pose === "stand") ? "sit" : "stand";
+  poseBtn.textContent = (me.pose === "stand") ? "座る" : "立つ";
+  safeUpdate({pose: me.pose});
+});
+
+/* ============ タップ/クリックで移動 ============ */
+function setTargetFromEvent(e){
+  const pt = (e.touches && e.touches[0]) ? e.touches[0] : e;
+  const {x,y} = toNorm(pt.clientX, pt.clientY);
+  target.x = x; target.y = y;
+  const pxNow = toPx(me.x, me.y).x;
+  const pxNext = toPx(target.x, target.y).x;
+  me.dir = (pxNext >= pxNow) ? 1 : -1;
+  safeUpdate({dir: me.dir});
+}
+play.addEventListener("pointerdown", setTargetFromEvent);
+play.addEventListener("touchstart", setTargetFromEvent, {passive:true});
+
+/* ============ ループ（自キャラ移動＆同期） ============ */
+let lastT = now();
+function loop(){
+  const t = now();
+  const dt = Math.max(0, Math.min(0.05, (t - lastT)/1000)); // 秒
+  lastT = t;
+
+  // 物理移動（px基準の速度を正規化に換算）
+  const r = play.getBoundingClientRect();
+  const pxPos = toPx(me.x, me.y);
+  const pxTarget = toPx(target.x, target.y);
+  const dx = pxTarget.x - pxPos.x;
+  const dy = pxTarget.y - pxPos.y;
+  const dist = Math.hypot(dx,dy);
+  const step = SPEED_PX_PER_S * dt;
+
+  if(dist > 1){
+    const nx = pxPos.x + (dx/dist)*step;
+    const ny = pxPos.y + (dy/dist)*step;
+    const nn = toNorm(nx + r.left, ny + r.top);
+    me.x = nn.x; me.y = nn.y;
+  }else{
+    me.x = target.x; me.y = target.y;
+  }
+
+  // 自分の見た目はローカルDOMにも出す（他人と同じ描画系を流用）
+  const mineDom = domMap.get(uid) || createPlayerDom(uid);
+  domMap.set(uid, mineDom);
+  if(!mineDom.wrap.isConnected) play.appendChild(mineDom.wrap);
+  renderPlayer(mineDom, me);
+
+  // 同期スロットリング
+  if((t - lastSync) >= SYNC_INTERVAL_MS){
+    safeUpdate({x: me.x, y: me.y});
+    lastSync = t;
+  }
+
+  // ハートビート
+  if((t - lastHeartbeat) >= HEARTBEAT_MS){
+    safeUpdate({lastActive: serverTimestamp()});
+    lastHeartbeat = t;
+  }
+
+  requestAnimationFrame(loop);
+}
+
+async function safeUpdate(patch){
+  if(!uid) return;
+  try{
+    await update(myRef(), patch);
+  }catch(e){
+    // 初期化未完了やオフライン時など
+  }
+}
+
+/* ============ メッセージ送信 ============ */
+function sendMsg(){
+  const raw = msgInput.value.trim();
+  const chk = validateMessage(raw);
+  if(!chk.ok) return;
+  const nowMs = Date.now();
+  if(nowMs - lastSentAt < 500){ // スパム抑制
+    return;
+  }
+  lastSentAt = nowMs;
+  const text = raw;
+  msgInput.value = "";
+  sendBtn.disabled = true;
+
+  // 書き込み
+  safeUpdate({ msg: text, msgAt: serverTimestamp() });
+}
+
+/* ============ 世界の受信（初回に自分のDOMもできあがる） ============ */
+function listenWorld(){
+  // onValueは上で設定済み
+}
+
+/* ============ オフライン時の注意 ============ */
+window.addEventListener("online", ()=>{ document.getElementById("hint").textContent="オンライン"; });
+window.addEventListener("offline", ()=>{ document.getElementById("hint").textContent="オフライン：再接続待ち"; });
+
+/* ============ 起動前チェック ============ */
+(function checkConfig(){
+  const needs = ["apiKey","authDomain","databaseURL","projectId","appId"];
+  const bad = needs.some(k=>!firebaseConfig[k] || String(firebaseConfig[k]).includes("YOUR_"));
+  if(bad){
+    document.getElementById("hint").textContent = "Firebaseのconfigを入れてから使う";
+  }
+})();
+</script>
+</body>
+</html>

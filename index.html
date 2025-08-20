@@ -85,9 +85,14 @@
     background:#fff; color:#111; border:1px solid #e5e7eb; border-radius:14px; padding:9px 11px; font-size:14px; max-width:240px;
     box-shadow:0 10px 26px rgba(0,0,0,.06);
   }
+  /* ▼ ダイヤ型→自然な三角の尻尾（枠線＋白塗りの二重三角） */
+  .bubble::before{
+    content:""; position:absolute; left:50%; bottom:-9px; transform:translateX(-50%);
+    width:0; height:0; border-left:9px solid transparent; border-right:9px solid transparent; border-top:0; border-bottom:9px solid #e5e7eb;
+  }
   .bubble::after{
-    content:""; position:absolute; left:50%; bottom:-7px; transform:translateX(-50%) rotate(45deg);
-    width:14px; height:14px; background:#fff; border-left:1px solid #e5e7eb; border-bottom:1px solid #e5e7eb;
+    content:""; position:absolute; left:50%; bottom:-8px; transform:translateX(-50%);
+    width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:0; border-bottom:8px solid #fff;
   }
 
   .cat{width:78px; height:78px; display:block}
@@ -146,7 +151,6 @@
       <span class="chip" id="countLabel" aria-live="polite" title="いまいるネコの数">😺 0</span>
     </div>
     <div class="meta">
-      <!-- 追加: サウンドのオン/オフトグル -->
       <button id="muteBtn" class="btn ghost" title="音のオン/オフ"><span class="icon" aria-hidden="true">🔔</span> 音</button>
       <button id="shareBtn" class="btn ghost" title="URLをコピー"><span class="icon" aria-hidden="true">🔗</span> 共有</button>
       <button id="helpBtn" class="btn ghost" title="使い方"><span class="icon" aria-hidden="true">❔</span> ヘルプ</button>
@@ -173,13 +177,13 @@
 <div id="join" role="dialog" aria-modal="true" aria-label="名前入力">
   <div class="card">
     <h2>名前を入れて参加</h2>
-    <p>名前は<strong>3文字まで</strong>。全員同じ場を共有する。ゆっくり遊ぶ場所。</p>
+    <p>名前は<strong>3文字まで</strong>。このページを直接開くと<strong>新しいひろば</strong>を作成。URLを共有すると同じひろばに集まれる。</p>
     <div class="row">
       <input id="nameInput" maxlength="3" placeholder="たとえば『ララ』" aria-label="名前（3文字まで）">
       <button id="enterBtn">はじめる</button>
     </div>
     <div id="warn" role="status" aria-live="polite"></div>
-    <p class="subtle">ヒント：同じURLを開くと同じひろばに入る。共有ボタンでURLコピー。</p>
+    <p class="subtle">ヒント：共有ボタンでURLをコピーして配布すると同じインスタンスに入れる。</p>
   </div>
 </div>
 
@@ -190,7 +194,7 @@
       <li>画面をタップすると、ネコがゆっくり移動する</li>
       <li>座る/立つの切替はボタンかキーボードの <b>S</b></li>
       <li>メッセージは非英語10文字まで／英語10語まで。吹き出しは少しで消える</li>
-      <li>同じURLの人たち全員でプレイエリアを共有する</li>
+      <li>ベースURLを開くと新しい部屋（ランダムID）を作成。URLを配れば同じ部屋に入れる</li>
     </ul>
     <div style="display:flex; gap:8px; justify-content:flex-end">
       <button id="helpClose" class="btn">OK</button>
@@ -210,12 +214,25 @@ const firebaseConfig = {
   measurementId: "G-R47HW00266"
 };
 
-// WORLD_ID: ?room=xxx または #room=xxx、無ければ既定
+/* ========= ルームID：最初の訪問でランダム生成 → URLを?room=...に整形 ========= */
+function genRoomId(){
+  const a = ["neko","tora","kuro","shiro","mike","saba","tama","momo","chibi","mikan"];
+  const r = crypto.getRandomValues(new Uint32Array(2));
+  const slug = (r[0].toString(36) + r[1].toString(36)).slice(0,8);
+  return `${a[r[0] % a.length]}-${slug}`;
+}
 const url = new URL(location.href);
-const qp = url.searchParams.get("room");
-const hp = (location.hash.match(/room=([^&]+)/)||[])[1];
-const WORLD_ID = qp || hp || "global-plaza-1";
+let roomParam = url.searchParams.get("room") || (location.hash.match(/room=([^&]+)/)||[])[1];
+if(!roomParam){
+  roomParam = genRoomId();
+  url.searchParams.set("room", roomParam);
+  // ハッシュ側のroom指定は廃止（衝突回避）
+  url.hash = url.hash.replace(/room=[^&]+&?/,'').replace(/[#&]$/,'');
+  history.replaceState(null, "", url.toString());
+}
+const WORLD_ID = roomParam;
 
+/* ===== Firebase ===== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, onValue, set, update, serverTimestamp, onDisconnect }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -261,7 +278,7 @@ let muted = localStorage.getItem("yuru_mute")==="1";
 function unlockAudio(){
   if (!AC) {
     const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return; // 古いブラウザ
+    if (!Ctx) return;
     AC = new Ctx();
     masterGain = AC.createGain();
     masterGain.gain.value = muted ? 0 : 0.24;
@@ -270,7 +287,6 @@ function unlockAudio(){
   if (AC && AC.state === "suspended") AC.resume();
 }
 function setupAudioUnlock(){
-  // 最初のユーザー操作でAudioContextを起動
   const once = ()=>{ unlockAudio(); document.removeEventListener("pointerdown", once); document.removeEventListener("keydown", once); };
   document.addEventListener("pointerdown", once, {passive:true});
   document.addEventListener("keydown", once);
@@ -279,7 +295,7 @@ function setupAudioUnlock(){
 setupAudioUnlock();
 
 function tone({freq=880, dur=0.12, type="sine", vol=0.7, attack=0.005, release=0.12}={}){
-  if (!AC) return; // まだunlockされていない
+  if (!AC) return;
   const osc = AC.createOscillator();
   const g = AC.createGain();
   osc.type = type;
@@ -356,7 +372,6 @@ onAuthStateChanged(auth, user=>{
   if(!user) return;
   uid = user.uid;
   me.x = Math.random()*0.8 + 0.1; me.y = Math.random()*0.4 + 0.5; target={x:me.x,y:me.y};
-  // 自分DOMは即作る（DBが弾かれても見える）
   ensureMineDom();
   mountPresence();
   listenWorld();
@@ -460,14 +475,13 @@ function renderPlayer(pdom, data, isSelf){
     pdom.bubbleEl.style.display = "block";
     const age = typeof msgAt==="number" ? (Date.now()-msgAt) : 0; const remain = Math.max(1200, 12000 - Math.max(0,age));
     clearTimeout(pdom._bubbleTimer); pdom._bubbleTimer = setTimeout(()=>{ pdom.bubbleEl.style.display = "none"; }, remain);
-    // 受信メッセージ音（初回描画や自分の送信は鳴らさない）
     if (!firstRender && !isSelf) playMessage();
   }else if(!text){
     pdom.bubbleEl.style.display = "none";
   }
 }
 
-/* 自分DOMを保証（初期setに失敗しても出す） */
+/* 自分DOMを保証 */
 function ensureMineDom(){
   if(!uid) return;
   if(!domMap.get(uid)){ const d=createPlayerDom(uid); domMap.set(uid,d); play.appendChild(d.wrap); }
@@ -488,7 +502,6 @@ poseBtn.addEventListener("click", togglePose);
 window.addEventListener("keydown", e=>{ if(e.key.toLowerCase()==="s"){ togglePose(); }});
 function togglePose(){
   me.pose = (me.pose === "stand") ? "sit" : "stand";
-  // 既存の実装を尊重（アイコンは消えるが動作優先）
   poseBtn.textContent = (me.pose === "stand") ? "座る" : "立つ";
   poseBtn.setAttribute("aria-pressed", me.pose === "sit" ? "true":"false");
   safeUpdate({pose: me.pose});
@@ -523,7 +536,7 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
-/* 書き込み（ログ付き） */
+/* 書き込み */
 async function safeUpdate(patch){
   if(!uid) return;
   try{ await update(myRef(), patch); }
@@ -537,13 +550,12 @@ function sendMsg(){
   me.msg = raw; me.msgAt = nowMs; ensureMineDom();
   msgInput.value=""; sendBtn.disabled=true;
   safeUpdate({ msg: raw, msgAt: serverTimestamp() });
-  // 自分は音を鳴らさない（必要ならここで鳴らす）
 }
 
-/* 購読 */
+/* 購読（部屋用に追加処理があればここへ） */
 function listenWorld(){}
 
-/* 共有ボタン：常に ?room= を付与 */
+/* 共有ボタン：常に ?room= を付与（ハッシュ側roomは排除） */
 shareBtn.addEventListener("click", async ()=>{
   const invite = new URL(location.href);
   invite.searchParams.set("room", WORLD_ID);

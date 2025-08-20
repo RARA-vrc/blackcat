@@ -81,12 +81,12 @@
   .p{position:absolute; width:78px; height:78px; transform:translate(-50%, -80%); transition: left .25s ease, top .25s ease}
   .p.self .name{background: var(--accent)}
   .name{
-    position:absolute; left:50%; top:-22px; transform:translateX(-50%);
+    position:absolute; left:50%; top:78px; transform:translateX(-50%);   /* ← 猫の下に配置 */
     background:#111; color:#fff; font-size:12px; padding:2px 8px; border-radius:999px; white-space:nowrap;
     max-width:160px; text-overflow:ellipsis; overflow:hidden; letter-spacing:.2px;
   }
   .bubble{
-    position:absolute; left:50%; bottom:90px; transform:translateX(-50%);
+    position:absolute; left:50%; bottom:94px; transform:translateX(-50%); /* ← 吹き出しは上 */
     background:#fff; color:#111; border:1px solid #e5e7eb; border-radius:14px; padding:9px 11px; font-size:14px; max-width:240px;
     box-shadow:0 10px 26px rgba(0,0,0,.06);
   }
@@ -98,8 +98,7 @@
   .cat{width:78px; height:78px; display:block}
   .stand .cat{transition:transform .18s ease}
   .sit .cat{transition:transform .18s ease; opacity:.96}
-  .face-left{transform:scaleX(-1)} /* 右向きが標準。左へ進むときだけ反転する */
-  /* しっぽパタパタ（控えめ） */
+  .face-left{transform:scaleX(-1)} /* 右向きが標準。左へ進むときだけ反転 */
   @keyframes wag { 0%,100%{ transform: rotate(0deg) } 50%{ transform: rotate(-6deg) } }
   .wag { transform-origin: 24px 60px; animation: wag 1.2s ease-in-out infinite }
 
@@ -130,11 +129,11 @@
     background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.75; z-index:1;
   }
 
-  /* ------- メディアクエリ ------- */
   @media (max-width:480px){
     .p{width:70px; height:70px}
     .cat{width:70px; height:70px}
-    .bubble{font-size:13px; bottom:82px}
+    .bubble{font-size:13px; bottom:86px}
+    .name{top:70px}
   }
   @media (prefers-reduced-motion: reduce){
     .p{transition:none}
@@ -221,9 +220,15 @@ const firebaseConfig = {
   measurementId: "G-R47HW00266"
 };
 
-/* 同じURLを同じWORLDに使う。URLに ?room=xxx があればそれを使う */
+/* --- WORLDの決め方 ---
+   1) ?room=xxx があればそれを使う
+   2) なければ #room=xxx でも可（互換）
+   3) どちらもなければ "global-plaza-1"
+*/
 const url = new URL(location.href);
-const WORLD_ID = url.searchParams.get("room") || "global-plaza-1";
+const qp = url.searchParams.get("room");
+const hp = (location.hash.match(/room=([^&]+)/)||[])[1];
+const WORLD_ID = qp || hp || "global-plaza-1";
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
@@ -270,7 +275,7 @@ let lastHeartbeat = 0;
 let SPEED_PX_PER_S = 120;
 const SYNC_INTERVAL_MS = 80;
 const HEARTBEAT_MS = 15000;
-const BUBBLE_MS = 12000;   // 長めに
+const BUBBLE_MS = 12000;
 const TAP_PING = true;
 
 worldLabel.textContent = `room: ${WORLD_ID}`;
@@ -402,12 +407,12 @@ function createPlayerDom(id){
   bubble.className = "bubble";
   bubble.style.display = "none";
 
-  // 🐈 かわいい右向きシルエット（立ち/座り）
+  // 🐈 右向きシルエット（立ち/座り）
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox","0 0 100 100");
   svg.classList.add("cat");
 
-  // ---- 立ち（右向きが標準） ----
+  // ---- 立ち ----
   const body = document.createElementNS(svg.namespaceURI,"path");
   body.setAttribute("fill","#000");
   body.setAttribute("d","M28,68 Q40,48 58,46 Q78,46 84,60 Q86,74 64,80 Q42,82 28,68 Z");
@@ -426,7 +431,7 @@ function createPlayerDom(id){
   const frontLeg = document.createElementNS(svg.namespaceURI,"rect");
   frontLeg.setAttribute("x","66"); frontLeg.setAttribute("y","72"); frontLeg.setAttribute("width","6"); frontLeg.setAttribute("height","14"); frontLeg.setAttribute("fill","#000");
 
-  // ---- 座り（右向きが標準） ----
+  // ---- 座り ----
   const sitGroup = document.createElementNS(svg.namespaceURI,"g");
   sitGroup.setAttribute("display","none");
   const sBody = document.createElementNS(svg.namespaceURI,"path");
@@ -464,11 +469,9 @@ function renderPlayer(pdom, data, isSelf){
   pdom.nameEl.textContent = data.name || "";
   pdom.wrap.classList.toggle("self", !!isSelf);
 
-  // 向き：右向きが標準。左へ動くときにだけ反転（face-left）
   if(data.dir === -1) pdom.svg.classList.add("face-left");
   else pdom.svg.classList.remove("face-left");
 
-  // 姿勢
   if(data.pose === "sit"){
     pdom.wrap.classList.remove("stand"); pdom.wrap.classList.add("sit");
     pdom.sitGroup.setAttribute("display","block");
@@ -603,7 +606,7 @@ function sendMsg(){
   if(nowMs - lastSentAt < 500){ return; } // スパム抑止
   lastSentAt = nowMs;
 
-  // ローカル即時表示（他クライアントはこの後のserverTimestampで受信）
+  // ローカル即時表示
   me.msg = raw;
   me.msgAt = nowMs;
   const mineDom = domMap.get(uid);
@@ -617,15 +620,22 @@ function sendMsg(){
 }
 
 /* ============ 世界購読 ============ */
-function listenWorld(){ /* onValueは上でセット済み */ }
+function listenWorld(){ /* onValueは上で設定済み */ }
 
 /* ============ 共有 / ヘルプ ============ */
 shareBtn.addEventListener("click", async ()=>{
-  const ok = navigator.clipboard && typeof navigator.clipboard.writeText === "function";
+  const invite = new URL(location.href);
+  // 常に ?room= を付けてコピー（同じ部屋に確実に入れる）
+  invite.searchParams.set("room", WORLD_ID);
+  // ハッシュにroomが残っていれば削除
+  invite.hash = invite.hash.replace(/room=[^&]+&?/,'').replace(/[#&]$/,'');
   try{
-    const link = location.href;
-    if(ok){ await navigator.clipboard.writeText(link); toast("URLをコピーした"); }
-    else{ prompt("このURLをコピーして共有してね", link); }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(invite.toString());
+      toast("URLをコピーした（同じ部屋に入れる）");
+    }else{
+      prompt("このURLをコピーして共有してね", invite.toString());
+    }
   }catch{}
 });
 helpBtn.addEventListener("click", ()=> helpDialog.showModal());
@@ -650,8 +660,6 @@ function toast(text){
   const bad = needs.some(k=>!firebaseConfig[k]);
   if(bad){ toast("Firebaseのconfigを入れてから使う"); }
 })();
-
-/* ============ 入力の初期状態反映 ============ */
 msgInput.dispatchEvent(new Event("input"));
 </script>
 </body>

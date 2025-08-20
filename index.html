@@ -35,7 +35,7 @@
   .meta{display:flex; align-items:center; gap:8px; flex:0 0 auto}
   .btn{appearance:none; border:0; background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:10px 12px; font-size:14px; font-weight:800; cursor:pointer; min-height:40px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; flex:0 0 auto}
   .btn.ghost{background:transparent; color:var(--ink); border:1px solid var(--border)}
-  .btn.iconOnly{padding:10px; min-width:44px} /* ←下部のアイコン専用ボタン */
+  .btn.iconOnly{padding:10px; min-width:44px}
   .btn:focus-visible{outline:var(--ring) solid var(--ringColor); outline-offset:2px}
   .icon{font-variant-emoji:emoji; font-size:16px}
   .txt{display:inline-block}
@@ -57,7 +57,7 @@
   .ping{position:absolute; width:10px; height:10px; border-radius:999px; border:2px solid var(--accent); opacity:.7; pointer-events:none; transform:translate(-50%,-50%) scale(.2); animation:ping .8s ease-out forwards}
   @keyframes ping{80%{opacity:.15; transform:translate(-50%,-50%) scale(2.0)} 100%{opacity:0; transform:translate(-50%,-50%) scale(2.6)}}
 
-  /* ==== 書き置きパネル（部屋永続） ==== */
+  /* ==== 書き置きパネル ==== */
   #notesPanel{
     position:absolute; left:8px; top:8px; z-index:2;
     display:flex; flex-direction:column; gap:6px; max-width:min(92vw, 360px); pointer-events:none;
@@ -71,7 +71,7 @@
   .note .by{font-size:12px; color:#444}
   .note .txt{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600}
 
-  /* ==== 下部バー：入力を最優先で広く ==== */
+  /* ==== 下部バー（入力を最優先で広く） ==== */
   #bar{
     height:var(--barH); display:flex; align-items:center; gap:8px;
     border-top:1px solid var(--border); background:var(--panel);
@@ -182,7 +182,7 @@
       </div>
     </div>
     <button id="pinBtn"  class="btn iconOnly" title="ピン留め"><span class="icon" aria-hidden="true">📌</span></button>
-    <button id="noteBtn" class="btn iconOnly" title="部屋に書き置き"><span class="icon" aria-hidden="true">🖋️</span></button>
+    <button id="noteBtn" class="btn iconOnly" title="部屋に書き置き（1人1件、上書き更新）"><span class="icon" aria-hidden="true">🖋️</span></button>
     <button id="send"    class="btn iconOnly" disabled title="メッセージ送信"><span class="icon" aria-hidden="true">📨</span></button>
   </div>
 
@@ -213,14 +213,18 @@
       <li>英語は10語、非英語は15文字まで</li>
       <li>座る/立つは上部の <b>🪑</b> か <b>S</b> キー（入力中は無効）</li>
       <li><b>📌ピン</b>で自分の頭上に固定（淡いピンク・2/3サイズ）／再度で解除</li>
-      <li><b>🖋️書き置き</b>で部屋に残す（作者名付き、左上に一覧）</li>
+      <li><b>🖋️書き置き</b>は部屋に残る・<b>1人1件まで</b>・何度でも<b>更新</b>できる（8時間で自動消滅）</li>
       <li>左上の <b>🐱</b> を押すと参加者名を2.5秒表示</li>
       <li>同じ部屋は最大10人まで</li>
     </ul>
     <div style="background:#f8fafc; border:1px solid #e5e7eb; padding:10px; border-radius:10px; font-size:13px; color:#374151; margin-bottom:12px">
       音が出ない場合：ページを一度タップしてから、ブラウザのサイト設定で「音声を許可」。iOSは本体のサイレントスイッチも確認。
     </div>
-    <div style="display:flex; gap:8px; justify-content:flex-end">
+    <!-- 作者Xリンク：定数 AUTHOR_X_LINK が空なら非表示 -->
+    <p id="authorXLine" class="subtle" style="margin:6px 0 0; text-align:right; opacity:.7; display:none">
+      作者X: <a id="authorX" href="#" target="_blank" rel="noopener" style="color:#6b7280; text-decoration:underline dotted">link</a>
+    </p>
+    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px">
       <button id="helpClose" class="btn">OK</button>
     </div>
   </div>
@@ -238,9 +242,15 @@
 </div>
 
 <script type="module">
-/* ===== 画像URL（左向き画像） ===== */
+/* ===== 画像URL（左向き） ===== */
 const CAT_STAND_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png";
 const CAT_SIT_URL   = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png";
+
+/* ===== 作者Xリンク（空なら非表示） ===== */
+const AUTHOR_X_LINK = ""; // 例: "https://x.com/your_handle"
+
+/* ===== 書き置きTTL（8時間） ===== */
+const NOTE_TTL_MS = 8 * 60 * 60 * 1000;
 
 /* ===== Firebase config ===== */
 const firebaseConfig = {
@@ -263,7 +273,7 @@ function setURLRoom(id){ const u=new URL(location.href); u.searchParams.set("roo
 let WORLD_ID = qp || hp || null; if(!WORLD_ID){ WORLD_ID = makeRoomId(); setURLRoom(WORLD_ID); }
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, set, update, serverTimestamp, onDisconnect, get, push }
+import { getDatabase, ref, onValue, set, update, serverTimestamp, onDisconnect, get, remove }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { getAuth, signInAnonymously, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -297,8 +307,15 @@ const playersBtn = document.getElementById("playersBtn");
 const namesPeek = document.getElementById("namesPeek");
 const full = document.getElementById("full");
 const newRoomBtn = document.getElementById("newRoomBtn");
+const authorXLine = document.getElementById("authorXLine");
+const authorX = document.getElementById("authorX");
 
 worldLabel.textContent = `room: ${WORLD_ID}`;
+if(AUTHOR_X_LINK){
+  authorX.href = AUTHOR_X_LINK;
+  authorX.textContent = AUTHOR_X_LINK.replace(/^https?:\/\/(www\.)?/, "");
+  authorXLine.style.display = "block";
+}
 
 /* ===== サウンド ===== */
 let AC=null, masterGain=null; let muted=localStorage.getItem("yuru_mute")==="1";
@@ -336,7 +353,8 @@ function toast(text){ const el=document.getElementById("hint"); el.textContent=t
 /* ===== Refs ===== */
 function playersRefOf(room){ return ref(db, `worlds/${room}/players`); }
 function myRef(){ return ref(db, `worlds/${WORLD_ID}/players/${uid}`); }
-function notesRef(){ return ref(db, `worlds/${WORLD_ID}/notes`); }
+function notesRootRef(){ return ref(db, `worlds/${WORLD_ID}/notes`); }          // notes は「uidキー」で1人1件
+function noteRefOf(u){ return ref(db, `worlds/${WORLD_ID}/notes/${u}`); }
 const playersRef = playersRefOf(WORLD_ID);
 
 /* ===== 参加 ===== */
@@ -402,7 +420,7 @@ async function mountPresence(forceStand=false){
   try{ onDisconnect(myRef()).remove(); }catch(e){ console.warn("[rtdb] onDisconnect set failed:", e); }
 }
 
-/* ===== 購読 ===== */
+/* ===== 購読（プレイヤー） ===== */
 const domMap=new Map();
 let initialPlayersLoaded=false;
 let latestPlayers = {};
@@ -435,15 +453,27 @@ function subscribePlayers(){
   });
 }
 
-/* ===== 書き置き購読 ===== */
+/* ===== 購読（書き置き：8時間TTL・1人1件） ===== */
 function subscribeNotes(){
-  onValue(notesRef(), snap=>{
+  onValue(notesRootRef(), snap=>{
+    const nowMs = Date.now();
     const list = [];
     snap.forEach(child=>{
       const v = child.val();
-      if(v && v.text) list.push({id:child.key, ...v});
+      if(!v) return;
+      const ts = Number(v.updatedAt || v.at || 0);
+      const alive = ts>0 && (nowMs - ts) <= NOTE_TTL_MS;
+      if(alive){
+        list.push({ id: child.key, ...v, ts });
+      }else{
+        // 期限切れ。自分の分だけ掃除（権限の都合で全削除はしない）
+        if(child.key === uid){
+          remove(noteRefOf(uid)).catch(()=>{});
+        }
+      }
     });
-    list.sort((a,b)=>(a.at||0)-(b.at||0));
+    // 新しい順で並べる（更新が上）
+    list.sort((a,b)=>a.ts - b.ts);
     renderNotes(list);
   });
 }
@@ -534,19 +564,39 @@ pinBtn.addEventListener("click", ()=>{
   safeUpdate({pinMsg: pick, pinAt: serverTimestamp()});
 });
 
-/* ===== 書き置き（部屋に永続） ===== */
+/* ===== 書き置き（1人1件、更新可、8hTTL） ===== */
 noteBtn.addEventListener("click", async ()=>{
   const typed = msgInput.value.trim();
   const pick = typed ? typed : (me.msg ? me.msg : "");
   if(!pick){ toast("書き置きする文がない"); return; }
   if(typed && !validateMessage(typed).ok){ toast("文字数制限を超えている"); return; }
   try{
-    await push(notesRef(), { text: pick, author: me.name || "ななし", uid: uid || "", at: serverTimestamp() });
-    toast("書き置きを残した");
+    // すでに自分の書き置きがあるか確認（uidキー）
+    const r = noteRefOf(uid);
+    const snap = await get(r);
+    if(snap.exists()){
+      // 更新
+      await update(r, {
+        text: pick,
+        author: me.name || "ななし",
+        uid: uid || "",
+        updatedAt: serverTimestamp()
+      });
+      toast("書き置きを更新した");
+    }else{
+      // 新規作成
+      await set(r, {
+        text: pick,
+        author: me.name || "ななし",
+        uid: uid || "",
+        at: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      toast("書き置きを残した");
+    }
   }catch(e){
-    console.error("note push failed:", e);
+    console.error("note set/update failed:", e);
     const msg = (e && (e.code || e.message || e.name)) ? String(e.code || e.message || e.name) : "unknown";
-    // よくある：PERMISSION_DENIED（ルール不許可）／ネットワーク一時障害
     toast(`書き置きに失敗: ${msg}`);
   }
 });
@@ -609,7 +659,7 @@ function sendMsg(){
 /* ===== 名簿（2.5秒表示） ===== */
 function peekNames(){
   let names = Object.values(latestPlayers).map(p=>p && p.name ? p.name : null).filter(Boolean);
-  if(names.length===0 && (me.name || uid)){ names = [me.name || "ななし"]; } // ←1人のときは自分だけ
+  if(names.length===0 && (me.name || uid)){ names = [me.name || "ななし"]; }
   namesPeek.textContent = names.length ? `いまの参加者：${names.join(" / ")}` : "いまは誰もいない";
   namesPeek.style.display = "block";
   clearTimeout(peekNames._t); peekNames._t = setTimeout(()=> namesPeek.style.display="none", 2500);
@@ -639,7 +689,11 @@ window.addEventListener("online",  ()=> toast("オンライン"));
 window.addEventListener("offline", ()=> toast("オフライン：再接続待ち"));
 
 /* ===== 起動前チェック ===== */
-(function(){ const needs=["apiKey","authDomain","databaseURL","projectId","appId"]; if(needs.some(k=>!firebaseConfig[k])) toast("Firebaseのconfigを入れてから使う"); worldLabel.textContent=`room: ${WORLD_ID}`; })();
+(function(){
+  const needs=["apiKey","authDomain","databaseURL","projectId","appId"];
+  if(needs.some(k=>!firebaseConfig[k])) toast("Firebaseのconfigを入れてから使う");
+  worldLabel.textContent=`room: ${WORLD_ID}`;
+})();
 msgInput.dispatchEvent(new Event("input"));
 startLoop();
 </script>

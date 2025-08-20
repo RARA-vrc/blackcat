@@ -2,113 +2,221 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>ゆるネコひろば</title>
+<meta name="color-scheme" content="light only">
 <style>
   :root{
-    --bg:#fff;
-    --ink:#111;
-    --muted:#777;
-    --barH:72px;
+    --bg: #fffdf9;
+    --panel: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #6b7280;
+    --accent: #ff7aa2;      /* かわいくて視認性の良いピンク */
+    --accent-ink:#fff;
+    --barH: 74px;
+    --ring: 3px;
+    --ringColor: rgba(255,122,162,.45);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent}
-  html,body{height:100%; margin:0; font-family:ui-sans-serif,system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink)}
+  html,body{height:100%; margin:0; font-family: ui-sans-serif, system-ui, -apple-system, "Hiragino Kaku Gothic ProN", Meiryo, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--ink)}
   #app{position:fixed; inset:0; display:flex; flex-direction:column}
 
-  header{height:48px; display:flex; align-items:center; gap:8px; padding:0 12px; border-bottom:1px solid #eee}
-  header h1{font-size:16px; font-weight:700; margin:0}
-  header .world{font-size:12px; color:var(--muted)}
+  /* ------- ヘッダ ------- */
+  header{
+    height:56px; display:flex; align-items:center; justify-content:space-between;
+    gap:8px; padding:0 12px; border-bottom:1px solid #eee; background:var(--panel);
+    position:relative; z-index:2;
+  }
+  .brand{display:flex; align-items:center; gap:10px}
+  .brand .dot{width:14px; height:14px; border-radius:50%; background:#000}
+  .brand h1{font-size:16px; font-weight:800; margin:0}
+  .meta{display:flex; align-items:center; gap:10px; color:var(--muted); font-size:12px}
+  .chip{border:1px solid #eee; background:#fafafa; border-radius:999px; padding:6px 10px}
+  .btn{
+    appearance:none; border:0; background:var(--accent); color:var(--accent-ink);
+    border-radius:12px; padding:10px 12px; font-size:13px; font-weight:800; cursor:pointer;
+  }
+  .btn:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
+  .ghost{
+    background:transparent; color:var(--ink); border:1px solid #e5e7eb;
+  }
+  .icon{font-variant-emoji: emoji; font-size:16px}
 
-  #play{position:relative; flex:1; overflow:hidden; touch-action:none; cursor:crosshair;}
-  #play::before{
-    content:""; position:absolute; inset:0;
+  /* ------- プレイエリア ------- */
+  #play{
+    position:relative; flex:1; overflow:hidden; touch-action:none; cursor:crosshair;
     background:
-      radial-gradient(1000px 400px at 50% 120%, #f7f7f7 0%, transparent 60%) no-repeat,
+      radial-gradient(1200px 420px at 50% 120%, #f7f7f7 0%, transparent 60%) no-repeat,
       linear-gradient(#fff 0 0) no-repeat;
-    pointer-events:none;
+    /* ドットグリッド（薄め） */
+    --grid:#f1f3f5;
+    background-image:
+      radial-gradient(circle at 1px 1px, var(--grid) 1px, transparent 0),
+      radial-gradient(1200px 420px at 50% 120%, #f7f7f7 0%, transparent 60%);
+    background-size: 18px 18px, auto;
+    background-position: 0 0, 0 0;
   }
 
-  #bar{height:var(--barH); display:flex; align-items:center; gap:8px; padding:8px 10px; border-top:1px solid #eee; background:#fafafa}
-  #msg{flex:1; font-size:16px; padding:12px 12px; border:1px solid #ddd; border-radius:12px; outline:none}
-  #send, #poseBtn{
-    appearance:none; border:1px solid #111; background:#111; color:#fff;
-    border-radius:12px; padding:12px 14px; font-size:14px; font-weight:700; cursor:pointer;
+  /* タップ波紋 */
+  .ping{
+    position:absolute; width:10px; height:10px; border-radius:999px;
+    border:2px solid var(--accent); opacity:.7; pointer-events:none;
+    transform:translate(-50%,-50%) scale(.2); animation:ping .8s ease-out forwards;
   }
-  #poseBtn{background:#444; border-color:#444}
+  @keyframes ping{
+    80%{ opacity:.15; transform:translate(-50%,-50%) scale(2.0); }
+    100%{ opacity:0; transform:translate(-50%,-50%) scale(2.6); }
+  }
+
+  /* ------- 下部バー ------- */
+  #bar{
+    height:var(--barH); display:flex; align-items:center; gap:8px; padding:8px 10px;
+    border-top:1px solid #eee; background:var(--panel);
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+  #poseBtn{min-width:74px}
+  #msgWrap{flex:1; display:flex; flex-direction:column; gap:6px}
+  #msg{
+    width:100%; font-size:16px; padding:12px 12px; border:1px solid #e5e7eb; border-radius:12px; outline:none; background:#fff;
+  }
+  #msg:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
+  #helper{display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--muted); padding:0 4px}
+  #send{min-width:74px}
   #send:disabled{opacity:.5; cursor:not-allowed}
 
-  .p{position:absolute; width:72px; height:72px; transform:translate(-50%, -80%); transition: left .25s ease, top .25s ease}
-  .p .name{
-    position:absolute; left:50%; top:-18px; transform:translateX(-50%);
-    background:#000; color:#fff; font-size:12px; padding:2px 6px; border-radius:10px; white-space:nowrap;
-    max-width:120px; text-overflow:ellipsis; overflow:hidden;
+  /* ------- プレイヤーDOM ------- */
+  .p{position:absolute; width:76px; height:76px; transform:translate(-50%, -80%); transition: left .25s ease, top .25s ease}
+  .p.self .name{background: var(--accent)}
+  .name{
+    position:absolute; left:50%; top:-22px; transform:translateX(-50%);
+    background:#111; color:#fff; font-size:12px; padding:2px 8px; border-radius:999px; white-space:nowrap;
+    max-width:160px; text-overflow:ellipsis; overflow:hidden; letter-spacing:.2px;
   }
-  .p .bubble{
-    position:absolute; left:50%; bottom:86px; transform:translateX(-50%);
-    background:#fff; color:#111; border:1px solid #ddd; border-radius:14px; padding:8px 10px; font-size:14px; max-width:220px;
-    box-shadow:0 6px 18px rgba(0,0,0,.06);
+  .bubble{
+    position:absolute; left:50%; bottom:88px; transform:translateX(-50%);
+    background:#fff; color:#111; border:1px solid #e5e7eb; border-radius:14px; padding:9px 11px; font-size:14px; max-width:240px;
+    box-shadow:0 10px 26px rgba(0,0,0,.06);
   }
-  .p .bubble::after{
+  .bubble::after{
     content:""; position:absolute; left:50%; bottom:-7px; transform:translateX(-50%) rotate(45deg);
-    width:14px; height:14px; background:#fff; border-left:1px solid #ddd; border-bottom:1px solid #ddd;
+    width:14px; height:14px; background:#fff; border-left:1px solid #e5e7eb; border-bottom:1px solid #e5e7eb;
   }
 
-  .cat{width:72px; height:72px; display:block}
+  .cat{width:76px; height:76px; display:block}
   .stand .cat{transition:transform .18s ease}
-  .sit .cat{transition:transform .18s ease}
+  .sit .cat{transition:transform .18s ease; opacity:.95}
   .face-left{transform:scaleX(-1)}
+  /* しっぽパタパタ（控えめ） */
+  @keyframes wag { 0%,100%{ transform: rotate(0deg) } 50%{ transform: rotate(-6deg) } }
+  .wag { transform-origin: 82px 60px; animation: wag 1.2s ease-in-out infinite }
 
+  /* ------- 入室モーダル ------- */
+  dialog{ border: none; padding: 0; }
   #join{
     position:fixed; inset:0; background:rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center; z-index:10;
   }
   #join .card{
-    width:min(92vw, 460px); border:1px solid #eee; border-radius:16px; background:#fff; padding:18px 16px 16px;
+    width:min(92vw, 520px); border:1px solid #eee; border-radius:18px; background:#fff; padding:18px 16px 16px;
     box-shadow:0 18px 60px rgba(0,0,0,.08);
   }
   #join h2{margin:0 0 8px; font-size:18px}
   #join p{margin:0 0 12px; font-size:14px; color:#555; line-height:1.6}
+  #join .row{display:flex; gap:10px}
   #join input{
-    width:100%; font-size:18px; padding:12px 12px; border:1px solid #ddd; border-radius:12px; outline:none;
+    flex:1; font-size:18px; padding:12px 12px; border:1px solid #e5e7eb; border-radius:12px; outline:none; background:#fff;
   }
+  #join input:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
   #join button{
-    margin-top:10px; width:100%; padding:12px; border-radius:12px; background:#111; color:#fff; font-weight:700; font-size:16px; border:1px solid #111; cursor:pointer;
+    padding:12px 14px; border-radius:12px; background:var(--accent); color:#fff; font-weight:800; font-size:16px; border:0; cursor:pointer; white-space:nowrap;
   }
   #warn{color:#b40000; font-size:13px; min-height:1.4em}
+  .subtle{font-size:12px; color:var(--muted)}
 
-  #hint{position:fixed; right:10px; bottom:calc(var(--barH) + 8px); background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.75}
+  /* ------- 小さなヒント ------- */
+  #hint{
+    position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom));
+    background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.75; z-index:1;
+  }
+
+  /* ------- フォーカス見やすく ------- */
+  :focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
+
+  /* ------- メディアクエリ ------- */
   @media (max-width:480px){
-    .p{width:64px; height:64px}
-    .cat{width:64px; height:64px}
+    .p{width:68px; height:68px}
+    .cat{width:68px; height:68px}
+    .bubble{font-size:13px; bottom:80px}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .p{transition:none}
+    .cat, .sit .cat, .stand .cat{transition:none}
+    .wag{animation:none}
+    .ping{animation:none; display:none}
   }
 </style>
 </head>
 <body>
 <div id="app">
   <header>
-    <h1>ゆるネコひろば</h1>
-    <div class="world" id="worldLabel"></div>
+    <div class="brand">
+      <div class="dot" aria-hidden="true"></div>
+      <h1>ゆるネコひろば</h1>
+      <span class="chip" id="worldLabel" aria-live="polite"></span>
+      <span class="chip" id="countLabel" aria-live="polite" title="いまいるネコの数">😺 0</span>
+    </div>
+    <div class="meta">
+      <button id="shareBtn" class="btn ghost" title="URLをコピー"><span class="icon" aria-hidden="true">🔗</span> 共有</button>
+      <button id="helpBtn" class="btn ghost" title="使い方"><span class="icon" aria-hidden="true">❔</span> ヘルプ</button>
+    </div>
   </header>
 
   <div id="play" aria-label="play-area"></div>
 
   <div id="bar">
-    <button id="poseBtn" title="立つ/座るの切替">座る</button>
-    <input id="msg" type="text" inputmode="text" autocomplete="off" placeholder="短いことば…（非英語10文字 / 英語10語）">
-    <button id="send" disabled>送信</button>
+    <button id="poseBtn" class="btn" title="立つ/座るの切替" aria-pressed="false"><span class="icon" aria-hidden="true">🪑</span> 座る</button>
+    <div id="msgWrap">
+      <input id="msg" type="text" inputmode="text" autocomplete="off" placeholder="短いことば…（非英語10文字 / 英語10語）" aria-label="メッセージ入力。非英語は10文字まで、英語は10語まで">
+      <div id="helper">
+        <span id="hintLang">非英語モード：0 / 10</span>
+        <span>Enterで送信 / Sで座る</span>
+      </div>
+    </div>
+    <button id="send" class="btn" disabled title="メッセージ送信"><span class="icon" aria-hidden="true">📨</span> 送信</button>
   </div>
 
-  <div id="hint">画面をタップで自分の猫がゆっくり移動</div>
+  <div id="hint" aria-live="polite">画面をタップで自分の猫がゆっくり移動</div>
 </div>
 
-<div id="join" role="dialog" aria-modal="true">
+<!-- 入室モーダル -->
+<div id="join" role="dialog" aria-modal="true" aria-label="名前入力">
   <div class="card">
     <h2>名前を入れて参加</h2>
     <p>名前は<strong>3文字まで</strong>。全員同じ場を共有する。ゆっくり遊ぶ場所。</p>
-    <input id="nameInput" maxlength="3" placeholder="たとえば『ララ』">
-    <div id="warn"></div>
-    <button id="enterBtn">はじめる</button>
+    <div class="row">
+      <input id="nameInput" maxlength="3" placeholder="たとえば『ララ』" aria-label="名前（3文字まで）">
+      <button id="enterBtn">はじめる</button>
+    </div>
+    <div id="warn" role="status" aria-live="polite"></div>
+    <p class="subtle">ヒント：同じURLを開くと同じひろばに入る。共有ボタンでURLコピー。</p>
   </div>
 </div>
+
+<!-- ヘルプ（簡易） -->
+<dialog id="helpDialog">
+  <div style="padding:16px 16px 12px; max-width:560px">
+    <h3 style="margin:0 0 8px">使い方</h3>
+    <ul style="margin:0 0 12px 18px; line-height:1.7; color:#374151; font-size:14px">
+      <li>画面をタップすると、ネコがゆっくり移動する</li>
+      <li>座る/立つの切替はボタンかキーボードの <b>S</b></li>
+      <li>メッセージは非英語10文字まで／英語10語まで。吹き出しは少しで消える</li>
+      <li>同じURLの人たち全員でプレイエリアを共有する</li>
+    </ul>
+    <div style="display:flex; gap:8px; justify-content:flex-end">
+      <button id="helpClose" class="btn">OK</button>
+    </div>
+  </div>
+</dialog>
 
 <script type="module">
 /* ===========================
@@ -124,7 +232,10 @@ const firebaseConfig = {
   appId: "1:124690483795:web:73b5b2ba28f4e4d503d4a6",
   measurementId: "G-R47HW00266"
 };
-const WORLD_ID = "global-plaza-1"; // 同じURLなら同じ場で同期
+
+/* 同じURLを同じWORLDに使う。URLに ?room=xxx があればそれを使う */
+const url = new URL(location.href);
+const WORLD_ID = url.searchParams.get("room") || "global-plaza-1";
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
@@ -148,6 +259,12 @@ const nameInput = document.getElementById("nameInput");
 const enterBtn = document.getElementById("enterBtn");
 const warn = document.getElementById("warn");
 const worldLabel = document.getElementById("worldLabel");
+const countLabel = document.getElementById("countLabel");
+const shareBtn = document.getElementById("shareBtn");
+const helpBtn = document.getElementById("helpBtn");
+const helpDialog = document.getElementById("helpDialog");
+const helpClose = document.getElementById("helpClose");
+const hintLang = document.getElementById("hintLang");
 
 /* ============ 状態 ============ */
 let uid = null;
@@ -158,25 +275,42 @@ let me = {
   dir: 1, // 1:右, -1:左
   pose: "stand", // "stand" | "sit"
   msg: "",
+  msgAt: 0
 };
 let target = {x: me.x, y: me.y};
 let lastSync = 0;
 let lastHeartbeat = 0;
-const SYNC_INTERVAL_MS = 80;
-const HEARTBEAT_MS = 15000;
-const BUBBLE_MS = 8000;
-const SPEED_PX_PER_S = 120;
+let SPEED_PX_PER_S = 120;      // 移動速度（ゆっくり）
+const SYNC_INTERVAL_MS = 80;   // 位置同期の最短間隔
+const HEARTBEAT_MS = 15000;    // lastActive更新
+const BUBBLE_MS = 8000;        // 吹き出しの表示寿命
+const TAP_PING = true;         // タップ波紋ON/OFF
 
-worldLabel.textContent = `world: ${WORLD_ID}`;
+worldLabel.textContent = `room: ${WORLD_ID}`;
 
 /* ============ ユーティリティ ============ */
 const now = () => performance.now();
 function clamp01(v){ return Math.max(0, Math.min(1, v)); }
-function escapeHTML(s){
-  return s.replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
-}
+function escapeHTML(s){ return s.replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m])); }
 function isASCIIish(s){ return /^[\x00-\x7F]+$/.test(s); }
 function countWordsASCII(s){ return s.trim().split(/\s+/).filter(Boolean).length; }
+function toNorm(clientX, clientY){
+  const r = play.getBoundingClientRect();
+  return { x: clamp01((clientX - r.left) / r.width), y: clamp01((clientY - r.top) / r.height) };
+}
+function toPx(nx, ny){
+  const r = play.getBoundingClientRect();
+  return { x: nx * r.width, y: ny * r.height };
+}
+function pingAt(nx, ny){
+  if(!TAP_PING) return;
+  const {x,y} = toPx(nx, ny);
+  const s = document.createElement("span");
+  s.className = "ping";
+  s.style.left = `${x}px`; s.style.top = `${y}px`;
+  play.appendChild(s);
+  s.addEventListener("animationend", ()=> s.remove());
+}
 
 /** メッセージ検証: 非英語=10文字 / ASCII=10語 */
 function validateMessage(raw){
@@ -190,19 +324,6 @@ function validateMessage(raw){
     if(len > 10) return {ok:false, reason:"10文字まで"};
   }
   return {ok:true};
-}
-
-/** 画面px→正規化座標 */
-function toNorm(clientX, clientY){
-  const r = play.getBoundingClientRect();
-  const x = clamp01((clientX - r.left) / r.width);
-  const y = clamp01((clientY - r.top) / r.height);
-  return {x,y};
-}
-/** 正規化座標→px */
-function toPx(nx, ny){
-  const r = play.getBoundingClientRect();
-  return {x: nx * r.width, y: ny * r.height};
 }
 
 /* ============ 参加モーダル ============ */
@@ -230,9 +351,9 @@ if(remembered){ nameInput.value = remembered.slice(0,3); }
 /* ============ 認証 & 接続 ============ */
 async function initAuth(){
   try{
-    await signInAnonymously(auth);
+    await signInAnonymously(auth); // 匿名認証
   }catch(e){
-    alert("Firebase匿名認証に失敗。configと認証設定を確認してくれ。");
+    alert("Firebase匿名認証に失敗。Authentication設定とAPIキー/ドメインを確認。");
     console.error(e);
   }
 }
@@ -249,7 +370,7 @@ onAuthStateChanged(auth, user=>{
 
 /* ============ RTDB パス ============ */
 const playersRef = ref(db, `worlds/${WORLD_ID}/players`);
-function myRef(){ return ref(db, `worlds/${WORLD_ID}/players/${uid}`); }
+const myRef   = ()=> ref(db, `worlds/${WORLD_ID}/players/${uid}`);
 
 /* ============ プレゼンス ============ */
 async function mountPresence(){
@@ -262,23 +383,28 @@ async function mountPresence(){
     msgAt: 0,
     lastActive: serverTimestamp()
   });
+  // 切断時に自分のデータを消す
   onDisconnect(myRef()).remove().catch(()=>{});
 }
 
 /* ============ 受信 & 描画 ============ */
-const domMap = new Map(); // uid -> {wrap,nameEl,bubbleEl,svg, ...}
+const domMap = new Map(); // uid -> {wrap,nameEl,bubbleEl,svg,...}
 onValue(playersRef, snap=>{
   const data = snap.val() || {};
-  const seen = new Set(Object.keys(data));
-  for(const id in data){
+  const ids = Object.keys(data);
+  countLabel.textContent = `😺 ${ids.length}`;
+  const seen = new Set(ids);
+
+  for(const id of ids){
     let pdom = domMap.get(id);
     if(!pdom){
       pdom = createPlayerDom(id);
       domMap.set(id, pdom);
       play.appendChild(pdom.wrap);
     }
-    renderPlayer(pdom, data[id]);
+    renderPlayer(pdom, data[id], id===uid);
   }
+  // 不在のDOMを掃除
   for(const [id,pdom] of domMap){
     if(!seen.has(id)){
       pdom.wrap.remove();
@@ -296,9 +422,12 @@ function createPlayerDom(id){
   bubble.className = "bubble";
   bubble.style.display = "none";
 
+  // 猫SVG（横向きシルエット：立ち/座り）——軽量・コントラスト強め
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox","0 0 100 100");
   svg.classList.add("cat");
+
+  // 立ち：胴体＋脚
   const stand = document.createElementNS(svg.namespaceURI,"path");
   stand.setAttribute("fill","#000");
   stand.setAttribute("d","M15,70 Q25,45 45,45 L70,45 Q85,50 85,65 Q85,78 70,78 L40,78 Q30,78 25,72 Z");
@@ -310,11 +439,13 @@ function createPlayerDom(id){
   ear2.setAttribute("fill","#000"); ear2.setAttribute("d","M22,37 L26,32 L24,39 Z");
   const tail = document.createElementNS(svg.namespaceURI,"path");
   tail.setAttribute("fill","#000"); tail.setAttribute("d","M80,60 q15,-10 15,0 q-8,10 -20,5 Z");
+  tail.classList.add("wag");
   const frontLeg = document.createElementNS(svg.namespaceURI,"rect");
   frontLeg.setAttribute("x","48"); frontLeg.setAttribute("y","72"); frontLeg.setAttribute("width","6"); frontLeg.setAttribute("height","14"); frontLeg.setAttribute("fill","#000");
   const backLeg = document.createElementNS(svg.namespaceURI,"rect");
   backLeg.setAttribute("x","64"); backLeg.setAttribute("y","72"); backLeg.setAttribute("width","6"); backLeg.setAttribute("height","14"); backLeg.setAttribute("fill","#000");
 
+  // 座り
   const sitGroup = document.createElementNS(svg.namespaceURI,"g");
   sitGroup.setAttribute("display","none");
   const sBody = document.createElementNS(svg.namespaceURI,"path");
@@ -328,6 +459,7 @@ function createPlayerDom(id){
   sEar2.setAttribute("fill","#000"); sEar2.setAttribute("d","M22,42 L26,37 L24,44 Z");
   const sTail = document.createElementNS(svg.namespaceURI,"path");
   sTail.setAttribute("fill","#000"); sTail.setAttribute("d","M70,68 q18,-2 14,10 q-6,10 -20,3 Z");
+  sTail.classList.add("wag");
 
   svg.appendChild(stand); svg.appendChild(head); svg.appendChild(ear1); svg.appendChild(ear2);
   svg.appendChild(tail); svg.appendChild(frontLeg); svg.appendChild(backLeg);
@@ -338,20 +470,23 @@ function createPlayerDom(id){
   wrap.appendChild(bubble);
   wrap.appendChild(svg);
 
-  return {wrap, nameEl, bubbleEl: bubble, svg, sitGroup, standParts:[stand,head,ear1,ear2,tail,frontLeg,backLeg]};
+  return {wrap, nameEl, bubbleEl: bubble, svg, sitGroup, standParts:[stand,head,ear1,ear2,tail,frontLeg,backLeg], _lastMsgAt:0};
 }
 
-function renderPlayer(pdom, data){
+function renderPlayer(pdom, data, isSelf){
   const r = play.getBoundingClientRect();
   const px = data.x * r.width;
   const py = data.y * r.height;
   pdom.wrap.style.left = `${px}px`;
   pdom.wrap.style.top  = `${py}px`;
   pdom.nameEl.textContent = data.name || "";
+  pdom.wrap.classList.toggle("self", !!isSelf);
 
+  // 向き
   if(data.dir === -1) pdom.svg.classList.add("face-left");
   else pdom.svg.classList.remove("face-left");
 
+  // 姿勢
   if(data.pose === "sit"){
     pdom.wrap.classList.remove("stand"); pdom.wrap.classList.add("sit");
     pdom.sitGroup.setAttribute("display","block");
@@ -362,14 +497,30 @@ function renderPlayer(pdom, data){
     pdom.standParts.forEach(n=>n.setAttribute("display","block"));
   }
 
+  // 吹き出し（msgAtで寿命管理）
   const text = data.msg || "";
-  if(text){
-    pdom.bubbleEl.style.display = "block";
-    pdom.bubbleEl.innerHTML = escapeHTML(text);
-    clearTimeout(pdom._bubbleTimer);
-    pdom._bubbleTimer = setTimeout(()=>{
-      pdom.bubbleEl.style.display = "none";
-    }, BUBBLE_MS);
+  const msgAt = data.msgAt || 0;
+  const nowMs = Date.now();
+
+  if(text && msgAt){
+    // 新しいメッセージなら出す
+    if(pdom._lastMsgAt !== msgAt){
+      pdom._lastMsgAt = msgAt;
+      pdom.bubbleEl.innerHTML = escapeHTML(text);
+      pdom.bubbleEl.style.display = "block";
+      // 残り時間で消える
+      const age = nowMs - msgAt;
+      const remain = Math.max(0, BUBBLE_MS - age);
+      clearTimeout(pdom._bubbleTimer);
+      pdom._bubbleTimer = setTimeout(()=>{ pdom.bubbleEl.style.display = "none"; }, remain);
+    }else{
+      // 既に表示済み。寿命切れなら隠す
+      if(nowMs - msgAt >= BUBBLE_MS){
+        pdom.bubbleEl.style.display = "none";
+      }
+    }
+  }else{
+    pdom.bubbleEl.style.display = "none";
   }
 }
 
@@ -377,16 +528,32 @@ function renderPlayer(pdom, data){
 let lastSentAt = 0;
 msgInput.addEventListener("input", ()=>{
   const v = msgInput.value;
+  const ascii = isASCIIish(v);
+  if(ascii){
+    const w = countWordsASCII(v);
+    hintLang.textContent = `英語モード：${Math.min(w,10)} / 10 語`;
+  }else{
+    const len = Array.from(v).length;
+    hintLang.textContent = `非英語モード：${Math.min(len,10)} / 10 文字`;
+  }
   const {ok} = validateMessage(v);
   sendBtn.disabled = !ok;
 });
 sendBtn.addEventListener("click", sendMsg);
-msgInput.addEventListener("keydown", e=>{ if(e.key==="Enter") sendMsg(); });
-poseBtn.addEventListener("click", ()=>{
+msgInput.addEventListener("keydown", e=>{
+  if(e.key==="Enter"){ e.preventDefault(); sendMsg(); }
+});
+poseBtn.addEventListener("click", togglePose);
+window.addEventListener("keydown", e=>{
+  if(e.key.toLowerCase()==="s"){ togglePose(); }
+});
+
+function togglePose(){
   me.pose = (me.pose === "stand") ? "sit" : "stand";
   poseBtn.textContent = (me.pose === "stand") ? "座る" : "立つ";
+  poseBtn.setAttribute("aria-pressed", me.pose === "sit" ? "true":"false");
   safeUpdate({pose: me.pose});
-});
+}
 
 /* ============ タップ/クリックで移動 ============ */
 function setTargetFromEvent(e){
@@ -397,6 +564,7 @@ function setTargetFromEvent(e){
   const pxNext = toPx(target.x, target.y).x;
   me.dir = (pxNext >= pxNow) ? 1 : -1;
   safeUpdate({dir: me.dir});
+  pingAt(x,y);
 }
 play.addEventListener("pointerdown", setTargetFromEvent);
 play.addEventListener("touchstart", setTargetFromEvent, {passive:true});
@@ -425,15 +593,18 @@ function loop(){
     me.x = target.x; me.y = target.y;
   }
 
-  const mineDom = domMap.get(uid) || createPlayerDom(uid);
-  domMap.set(uid, mineDom);
-  if(!mineDom.wrap.isConnected) play.appendChild(mineDom.wrap);
-  renderPlayer(mineDom, me);
+  // 自分の見た目はローカルにも描画
+  let mineDom = domMap.get(uid);
+  if(!mineDom){ mineDom = createPlayerDom(uid); domMap.set(uid, mineDom); play.appendChild(mineDom.wrap); }
+  renderPlayer(mineDom, me, true);
 
+  // 同期スロットリング
   if((t - lastSync) >= SYNC_INTERVAL_MS){
     safeUpdate({x: me.x, y: me.y});
     lastSync = t;
   }
+
+  // ハートビート
   if((t - lastHeartbeat) >= HEARTBEAT_MS){
     safeUpdate({lastActive: serverTimestamp()});
     lastHeartbeat = t;
@@ -447,7 +618,7 @@ async function safeUpdate(patch){
   try{
     await update(myRef(), patch);
   }catch(e){
-    // オフラインや初期化前などは無視
+    // 初期化未完了やオフライン時などは無視
   }
 }
 
@@ -457,29 +628,52 @@ function sendMsg(){
   const chk = validateMessage(raw);
   if(!chk.ok) return;
   const nowMs = Date.now();
-  if(nowMs - lastSentAt < 500){ return; } // 簡易スパム抑止
+  if(nowMs - lastSentAt < 500){ return; } // スパム抑止
   lastSentAt = nowMs;
 
   msgInput.value = "";
   sendBtn.disabled = true;
+
   safeUpdate({ msg: raw, msgAt: serverTimestamp() });
 }
 
-/* ============ 世界の受信（onValueは上で設定済み） ============ */
-function listenWorld(){}
+/* ============ 世界購読 ============ */
+function listenWorld(){ /* onValueは上でセット済み */ }
+
+/* ============ 共有 / ヘルプ ============ */
+shareBtn.addEventListener("click", async ()=>{
+  const ok = navigator.clipboard && typeof navigator.clipboard.writeText === "function";
+  try{
+    const link = location.href;
+    if(ok){ await navigator.clipboard.writeText(link); toast("URLをコピーした"); }
+    else{ prompt("このURLをコピーして共有してね", link); }
+  }catch{ /* noop */ }
+});
+helpBtn.addEventListener("click", ()=> helpDialog.showModal());
+helpClose.addEventListener("click", ()=> helpDialog.close());
 
 /* ============ オフライン時の注意 ============ */
-window.addEventListener("online", ()=>{ document.getElementById("hint").textContent="オンライン"; });
-window.addEventListener("offline", ()=>{ document.getElementById("hint").textContent="オフライン：再接続待ち"; });
+window.addEventListener("online",  ()=> toast("オンライン"));
+window.addEventListener("offline", ()=> toast("オフライン：再接続待ち"));
+
+/* ============ トースト ============ */
+function toast(text){
+  const el = document.getElementById("hint");
+  el.textContent = text;
+  el.style.opacity = .95;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=> el.style.opacity = .75, 1500);
+}
 
 /* ============ 起動前チェック ============ */
 (function checkConfig(){
   const needs = ["apiKey","authDomain","databaseURL","projectId","appId"];
   const bad = needs.some(k=>!firebaseConfig[k]);
-  if(bad){
-    document.getElementById("hint").textContent = "Firebaseのconfigを入れてから使う";
-  }
+  if(bad){ toast("Firebaseのconfigを入れてから使う"); }
 })();
+
+/* ============ 入力の初期状態反映 ============ */
+msgInput.dispatchEvent(new Event("input"));
 </script>
 </body>
 </html>

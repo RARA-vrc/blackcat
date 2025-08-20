@@ -40,7 +40,8 @@
   .btn{
     appearance:none; border:0; background:var(--accent); color:var(--accent-ink);
     border-radius:12px; padding:10px 12px; font-size:14px; font-weight:800; cursor:pointer; min-height:40px;
-    display:inline-flex; align-items:center; gap:6px;
+    display:inline-flex; align-items:center; gap:6px; white-space:nowrap;  /* ← ボタン内も折り返さない */
+    flex:0 0 auto;  /* ← 幅固定化（バーの改行を防ぐ） */
   }
   .btn.ghost{ background:transparent; color:var(--ink); border:1px solid var(--border); }
   .btn:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
@@ -68,30 +69,40 @@
     100%{ opacity:0; transform:translate(-50%,-50%) scale(2.6); }
   }
 
-  /* ====== 下部バー：横長チャット ====== */
+  /* ====== 下部バー：横長チャット（絶対に改行しない） ====== */
   #bar{
-    height:var(--barH); display:flex; align-items:center; gap:8px; padding:8px 10px;
+    height:var(--barH); display:flex; align-items:center; gap:8px;
     border-top:1px solid var(--border); background:var(--panel);
-    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    padding:8px 10px; padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    flex-wrap: nowrap;       /* ← 行折返し禁止 */
+    white-space: nowrap;     /* ← テキストも折返し禁止 */
+    overflow:hidden;         /* ← はみ出しは隠す（1行死守） */
   }
   #poseBtn{min-width:74px}
 
-  /* 入力ラッパーを横並びに変更（縦方向の要素を排除） */
+  /* 入力ラッパーを横並び固定。中で縮むのは input のみ */
   #msgWrap{
-    flex:1; display:flex; flex-direction:row; align-items:center; gap:8px; min-width:0;
+    flex:1 1 auto; display:flex; flex-direction:row; align-items:center; gap:8px; min-width:0;
+    overflow:hidden; white-space:nowrap; flex-wrap:nowrap;  /* ← ここも折返し禁止 */
   }
   #msg{
-    flex:1; min-width:0; font-size:16px; padding:8px 10px;
+    flex:1 1 auto; min-width:120px; font-size:16px; padding:8px 10px;
     border:1px solid var(--border); border-radius:12px; outline:none; background:#fff;
-    height:38px; /* 低背・1行 */
+    height:38px; white-space:nowrap;  /* ← 1行固定 */
   }
   #msg:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
   #helper{
-    display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted);
-    white-space:nowrap; user-select:none;
+    flex:0 0 auto; display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted);
+    white-space:nowrap; max-width:34%; overflow:hidden; text-overflow:ellipsis;  /* ← 幅が足りなければ省略 */
+    user-select:none;
   }
   #send{min-width:74px}
-  #send:disabled{opacity:.5; cursor:not-allowed}
+
+  /* スマホや狭幅では文字ラベルを落として横幅確保（常に1行） */
+  @media (max-width:900px){
+    #bar .btn .txt{display:none}
+    #helper{display:none}
+  }
 
   /* プレイヤー要素：transformで移動（左上→平行移動→定位置オフセット） */
   .p{
@@ -145,29 +156,11 @@
     padding:12px 14px; border-radius:12px; background:var(--accent); color:#fff; font-weight:800; font-size:16px; border:0; cursor:pointer; white-space:nowrap;
   }
   #warn{color:#b40000; font-size:13px; min-height:1.4em}
-  .subtle{font-size:12px; color:var(--muted)}
+  .subtle{font-size:12px; color:#6b7280}
 
   #hint{
     position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom));
     background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.75; z-index:1;
-  }
-
-  @media (max-width:480px){
-    .brand h1{font-size:15px}
-    .chip{max-width:30vw}
-    .meta{gap:6px}
-    .btn.ghost .txt{display:none}     /* スマホはアイコンのみ */
-    .btn.ghost{padding:10px}
-    .p{width:70px; height:70px}
-    .cat{width:70px; height:70px}
-    .bubble{font-size:13px; bottom:86px; max-width:78vw}
-    .name{top:70px}
-    #helper{display:none}            /* スマホは補助情報を隠す（横幅優先） */
-  }
-  @media (prefers-reduced-motion: reduce){
-    .cat, .sit .cat, .stand .cat{transition:none}
-    .wag{animation:none}
-    .ping{animation:none; display:none}
   }
 </style>
 </head>
@@ -235,6 +228,22 @@
 </dialog>
 
 <script type="module">
+/* ===== （開発向け）securetoken タイムアウトの重複エラーを間引くオプション ===== */
+(function(){
+  const DEDUPE_WINDOW_MS = 10000; // 同じメッセージを10秒に1回だけ通す
+  const orgErr = console.error;
+  let last = 0;
+  console.error = (...args)=>{
+    const s = (args && args.length ? String(args[0]) : "");
+    if(s.includes("securetoken.googleapis.com") || s.includes("ERR_CONNECTION_TIMED_OUT")){
+      const now = Date.now();
+      if(now - last < DEDUPE_WINDOW_MS) return; // 間引き
+      last = now;
+    }
+    orgErr(...args);
+  };
+})();
+
 /* ===== Firebase config ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyCUpt4XLfSSZLt0VhJon926--c-I2tRMkE",
@@ -421,7 +430,7 @@ async function startJoin(){
 
 async function initAuth(){
   try{ await signInAnonymously(auth); }
-  catch(e){ alert("匿名認証に失敗。Authentication設定を確認。"); console.error("[auth] signIn failed:", e); }
+  catch(e){ alert("匿名認証に失敗。Authentication設定やネットワークを確認。"); console.error("[auth] signIn failed:", e); }
 }
 onAuthStateChanged(auth, user=>{
   if(!user) return;

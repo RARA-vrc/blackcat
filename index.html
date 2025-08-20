@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1">
 <title>ゆるネコひろば</title>
 <meta name="color-scheme" content="light only">
 <style>
@@ -16,36 +16,41 @@
     --barH: 74px;
     --ring: 3px;
     --ringColor: rgba(255,122,162,.45);
+    --border:#e5e7eb;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent}
   html,body{height:100%; margin:0; font-family: ui-sans-serif, system-ui, -apple-system, "Hiragino Kaku Gothic ProN", Meiryo, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--ink)}
+  body, button, input { touch-action: manipulation; }
   #app{position:fixed; inset:0; display:flex; flex-direction:column}
 
   header{
     height:56px; display:flex; align-items:center; justify-content:space-between;
-    gap:8px; padding:0 12px; border-bottom:1px solid #eee; background:var(--panel);
+    gap:8px; padding:0 12px; border-bottom:1px solid var(--border); background:var(--panel);
     position:relative; z-index:2;
   }
-  .brand{display:flex; align-items:center; gap:10px}
+  .brand{display:flex; align-items:center; gap:10px; min-width:0}
   .brand .dot{width:14px; height:14px; border-radius:50%; background:#000}
-  .brand h1{font-size:16px; font-weight:800; margin:0}
-  .meta{display:flex; align-items:center; gap:10px; color:var(--muted); font-size:12px}
-  .chip{border:1px solid #eee; background:#fafafa; border-radius:999px; padding:6px 10px}
+  .brand h1{font-size:16px; font-weight:800; margin:0; white-space:nowrap}
+  .meta{display:flex; align-items:center; gap:8px; color:var(--muted); font-size:12px}
+  .chip{border:1px solid var(--border); background:#fafafa; border-radius:999px; padding:6px 10px; white-space:nowrap; max-width:40vw; overflow:hidden; text-overflow:ellipsis}
   .btn{
     appearance:none; border:0; background:var(--accent); color:var(--accent-ink);
-    border-radius:12px; padding:10px 12px; font-size:13px; font-weight:800; cursor:pointer;
+    border-radius:12px; padding:10px 12px; font-size:14px; font-weight:800; cursor:pointer; min-height:40px;
   }
+  .btn.ghost{ background:transparent; color:var(--ink); border:1px solid var(--border); }
   .btn:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
-  .ghost{ background:transparent; color:var(--ink); border:1px solid #e5e7eb; }
   .icon{font-variant-emoji: emoji; font-size:16px}
 
   #play{
-    position:relative; flex:1; overflow:hidden; touch-action:none; cursor:crosshair;
+    position:relative; flex:1; overflow:hidden; cursor:crosshair;
     background-image:
       radial-gradient(circle at 1px 1px, #f1f3f5 1px, transparent 0),
       radial-gradient(1200px 420px at 50% 120%, #f7f7f7 0%, transparent 60%);
     background-size: 18px 18px, auto;
     background-position: 0 0, 0 0;
+    /* スマホの誤選択・ダブルタップ拡大抑止 */
+    user-select:none;
+    touch-action:none;
   }
 
   .ping{
@@ -60,13 +65,13 @@
 
   #bar{
     height:var(--barH); display:flex; align-items:center; gap:8px; padding:8px 10px;
-    border-top:1px solid #eee; background:var(--panel);
+    border-top:1px solid var(--border); background:var(--panel);
     padding-bottom: calc(8px + env(safe-area-inset-bottom));
   }
   #poseBtn{min-width:74px}
-  #msgWrap{flex:1; display:flex; flex-direction:column; gap:6px}
+  #msgWrap{flex:1; display:flex; flex-direction:column; gap:6px; min-width:0}
   #msg{
-    width:100%; font-size:16px; padding:12px 12px; border:1px solid #e5e7eb; border-radius:12px; outline:none; background:#fff;
+    width:100%; font-size:16px; padding:12px 12px; border:1px solid var(--border); border-radius:12px; outline:none; background:#fff;
   }
   #msg:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
   #helper{display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--muted); padding:0 4px}
@@ -80,19 +85,16 @@
     background:#111; color:#fff; font-size:12px; padding:2px 8px; border-radius:999px; white-space:nowrap;
     max-width:160px; text-overflow:ellipsis; overflow:hidden; letter-spacing:.2px;
   }
+
+  /* 吹き出しを廃止し「枠のみ」のタグに修正（尾なし） */
   .bubble{
     position:absolute; left:50%; bottom:94px; transform:translateX(-50%);
-    background:#fff; color:#111; border:1px solid #e5e7eb; border-radius:14px; padding:9px 11px; font-size:14px; max-width:240px;
-    box-shadow:0 10px 26px rgba(0,0,0,.06);
-  }
-  /* ▼ ダイヤ型→自然な三角の尻尾（枠線＋白塗りの二重三角） */
-  .bubble::before{
-    content:""; position:absolute; left:50%; bottom:-9px; transform:translateX(-50%);
-    width:0; height:0; border-left:9px solid transparent; border-right:9px solid transparent; border-top:0; border-bottom:9px solid #e5e7eb;
-  }
-  .bubble::after{
-    content:""; position:absolute; left:50%; bottom:-8px; transform:translateX(-50%);
-    width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:0; border-bottom:8px solid #fff;
+    background:#fff; color:#111; border:1px solid var(--border); border-radius:12px; padding:8px 10px; font-size:14px;
+    max-width:min(64vw, 320px);
+    box-shadow:0 8px 22px rgba(0,0,0,.06);
+    white-space:pre-wrap;           /* 改行・スペース維持 */
+    word-break:break-word;          /* 長い英語等も折り返し */
+    overflow-wrap: anywhere;        /* どこでも折り返し保険 */
   }
 
   .cat{width:78px; height:78px; display:block}
@@ -106,14 +108,14 @@
     position:fixed; inset:0; background:rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center; z-index:10;
   }
   #join .card{
-    width:min(92vw, 520px); border:1px solid #eee; border-radius:18px; background:#fff; padding:18px 16px 16px;
+    width:min(92vw, 520px); border:1px solid var(--border); border-radius:18px; background:#fff; padding:18px 16px 16px;
     box-shadow:0 18px 60px rgba(0,0,0,.08);
   }
   #join h2{margin:0 0 8px; font-size:18px}
   #join p{margin:0 0 12px; font-size:14px; color:#555; line-height:1.6}
   #join .row{display:flex; gap:10px}
   #join input{
-    flex:1; font-size:18px; padding:12px 12px; border:1px solid #e5e7eb; border-radius:12px; outline:none; background:#fff;
+    flex:1; font-size:18px; padding:12px 12px; border:1px solid var(--border); border-radius:12px; outline:none; background:#fff;
   }
   #join input:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
   #join button{
@@ -128,9 +130,12 @@
   }
 
   @media (max-width:480px){
+    header{gap:6px}
+    .meta{gap:6px}
+    .btn.ghost{padding:10px}
     .p{width:70px; height:70px}
     .cat{width:70px; height:70px}
-    .bubble{font-size:13px; bottom:86px}
+    .bubble{font-size:13px; bottom:86px; max-width:78vw}
     .name{top:70px}
   }
   @media (prefers-reduced-motion: reduce){
@@ -162,9 +167,9 @@
   <div id="bar">
     <button id="poseBtn" class="btn" title="立つ/座るの切替" aria-pressed="false"><span class="icon" aria-hidden="true">🪑</span> 座る</button>
     <div id="msgWrap">
-      <input id="msg" type="text" inputmode="text" autocomplete="off" placeholder="短いことば…（非英語10文字 / 英語10語）" aria-label="メッセージ入力。非英語は10文字まで、英語は10語まで">
+      <input id="msg" type="text" inputmode="text" autocomplete="off" placeholder="短いことば…（非英語15文字 / 英語10語）" aria-label="メッセージ入力。非英語は15文字まで、英語は10語まで">
       <div id="helper">
-        <span id="hintLang">非英語モード：0 / 10</span>
+        <span id="hintLang">非英語モード：0 / 15</span>
         <span>Enterで送信 / Sで座る</span>
       </div>
     </div>
@@ -177,13 +182,13 @@
 <div id="join" role="dialog" aria-modal="true" aria-label="名前入力">
   <div class="card">
     <h2>名前を入れて参加</h2>
-    <p>名前は<strong>3文字まで</strong>。このページを直接開くと<strong>新しいひろば</strong>を作成。URLを共有すると同じひろばに集まれる。</p>
+    <p>名前は<strong>3文字まで</strong>。全員同じ場を共有する。ゆっくり遊ぶ場所。</p>
     <div class="row">
       <input id="nameInput" maxlength="3" placeholder="たとえば『ララ』" aria-label="名前（3文字まで）">
       <button id="enterBtn">はじめる</button>
     </div>
     <div id="warn" role="status" aria-live="polite"></div>
-    <p class="subtle">ヒント：共有ボタンでURLをコピーして配布すると同じインスタンスに入れる。</p>
+    <p class="subtle">ヒント：このURLを共有すると同じひろばに入れる。</p>
   </div>
 </div>
 
@@ -193,8 +198,8 @@
     <ul style="margin:0 0 12px 18px; line-height:1.7; color:#374151; font-size:14px">
       <li>画面をタップすると、ネコがゆっくり移動する</li>
       <li>座る/立つの切替はボタンかキーボードの <b>S</b></li>
-      <li>メッセージは非英語10文字まで／英語10語まで。吹き出しは少しで消える</li>
-      <li>ベースURLを開くと新しい部屋（ランダムID）を作成。URLを配れば同じ部屋に入れる</li>
+      <li>メッセージは非英語15文字まで／英語10語まで。枠は少しで消える</li>
+      <li>同じURLの人たち全員でプレイエリアを共有する</li>
     </ul>
     <div style="display:flex; gap:8px; justify-content:flex-end">
       <button id="helpClose" class="btn">OK</button>
@@ -214,25 +219,25 @@ const firebaseConfig = {
   measurementId: "G-R47HW00266"
 };
 
-/* ========= ルームID：最初の訪問でランダム生成 → URLを?room=...に整形 ========= */
-function genRoomId(){
-  const a = ["neko","tora","kuro","shiro","mike","saba","tama","momo","chibi","mikan"];
-  const r = crypto.getRandomValues(new Uint32Array(2));
-  const slug = (r[0].toString(36) + r[1].toString(36)).slice(0,8);
-  return `${a[r[0] % a.length]}-${slug}`;
-}
+// ===== RoomID決定 =====
 const url = new URL(location.href);
-let roomParam = url.searchParams.get("room") || (location.hash.match(/room=([^&]+)/)||[])[1];
-if(!roomParam){
-  roomParam = genRoomId();
-  url.searchParams.set("room", roomParam);
-  // ハッシュ側のroom指定は廃止（衝突回避）
-  url.hash = url.hash.replace(/room=[^&]+&?/,'').replace(/[#&]$/,'');
-  history.replaceState(null, "", url.toString());
-}
-const WORLD_ID = roomParam;
+const qp = url.searchParams.get("room");
+const hp = (location.hash.match(/room=([^&]+)/)||[])[1];
 
-/* ===== Firebase ===== */
+function makeRoomId(){
+  const t = Date.now().toString(36).slice(-6);
+  const r = crypto.getRandomValues(new Uint32Array(1))[0].toString(36).slice(-5);
+  return `plaza-${t}-${r}`;
+}
+function setURLRoom(id){
+  const u = new URL(location.href);
+  u.searchParams.set("room", id);
+  u.hash = u.hash.replace(/room=[^&]+&?/,'').replace(/[#&]$/,'');
+  history.replaceState({}, "", u.toString());
+}
+let WORLD_ID = qp || hp || null;
+if(!WORLD_ID){ WORLD_ID = makeRoomId(); setURLRoom(WORLD_ID); }
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, onValue, set, update, serverTimestamp, onDisconnect }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -260,14 +265,6 @@ const helpDialog = document.getElementById("helpDialog");
 const helpClose = document.getElementById("helpClose");
 const hintLang = document.getElementById("hintLang");
 const muteBtn = document.getElementById("muteBtn");
-
-/* 状態 */
-let uid = null;
-let me = { name:"", x:0.5, y:0.7, dir:1, pose:"stand", msg:"", msgAt:0 };
-let target = {x: me.x, y: me.y};
-let lastSync = 0, lastHeartbeat = 0;
-let SPEED_PX_PER_S = 120;
-const SYNC_INTERVAL_MS = 80, HEARTBEAT_MS = 15000, BUBBLE_MS = 12000;
 
 worldLabel.textContent = `room: ${WORLD_ID}`;
 
@@ -309,18 +306,9 @@ function tone({freq=880, dur=0.12, type="sine", vol=0.7, attack=0.005, release=0
   osc.start(t);
   osc.stop(t + dur + 0.25);
 }
-function playLogin(){
-  if (muted || !AC) return;
-  tone({freq:880, type:"triangle", vol:0.55, dur:0.12});
-  setTimeout(()=> tone({freq:1320, type:"triangle", vol:0.55, dur:0.12}), 140);
-}
-function playMessage(){
-  if (muted || !AC) return;
-  tone({freq:700, type:"sine", vol:0.5, dur:0.09});
-}
-function renderMuteButton(){
-  muteBtn.innerHTML = `<span class="icon" aria-hidden="true">${muted ? "🔇" : "🔔"}</span> ${muted ? "ミュート" : "音オン"}`;
-}
+function playLogin(){ if (!muted && AC) { tone({freq:880, type:"triangle", vol:0.55, dur:0.12}); setTimeout(()=> tone({freq:1320, type:"triangle", vol:0.55, dur:0.12}), 140); } }
+function playMessage(){ if (!muted && AC) { tone({freq:700, type:"sine", vol:0.5, dur:0.09}); } }
+function renderMuteButton(){ muteBtn.innerHTML = `<span class="icon" aria-hidden="true">${muted ? "🔇" : "🔔"}</span> ${muted ? "ミュート" : "音オン"}`; }
 muteBtn.addEventListener("click", ()=>{
   muted = !muted;
   if (masterGain) masterGain.gain.value = muted ? 0 : 0.24;
@@ -328,6 +316,15 @@ muteBtn.addEventListener("click", ()=>{
   renderMuteButton();
 });
 renderMuteButton();
+
+/* 状態 */
+let uid = null;
+let me = { name:"", x:0.5, y:0.7, dir:1, pose:"stand", msg:"", msgAt:0 };
+let target = {x: me.x, y: me.y};
+let lastSync = 0, lastHeartbeat = 0;
+let SPEED_PX_PER_S = 120;
+const SYNC_INTERVAL_MS = 80, HEARTBEAT_MS = 15000, BUBBLE_MS = 12000;
+const NON_ASCII_LIMIT = 15;  // ← 日本語は15文字で改行
 
 /* ユーティリティ */
 const now = ()=>performance.now();
@@ -338,32 +335,44 @@ const countWordsASCII = s => s.trim().split(/\s+/).filter(Boolean).length;
 function toNorm(cx,cy){ const r=play.getBoundingClientRect(); return {x:clamp01((cx-r.left)/r.width), y:clamp01((cy-r.top)/r.height)}; }
 function toPx(nx,ny){ const r=play.getBoundingClientRect(); return {x:nx*r.width, y:ny*r.height}; }
 function pingAt(nx,ny){ const {x,y}=toPx(nx,ny); const s=document.createElement("span"); s.className="ping"; s.style.left=`${x}px`; s.style.top=`${y}px`; play.appendChild(s); s.addEventListener("animationend",()=>s.remove());}
+
+function wrapCJKByLimit(text, limit=NON_ASCII_LIMIT){
+  const arr = Array.from(text);
+  let out = "", n = 0;
+  for(const ch of arr){
+    out += ch;
+    if(ch !== "\n"){ n++; }
+    if(n >= limit){ out += "\u200B"; n = 0; }
+  }
+  return out;
+}
+
 function validateMessage(raw){
   if(!raw) return {ok:false}; 
   if(isASCIIish(raw)){ if(countWordsASCII(raw)>10 || raw.length>100) return {ok:false}; }
-  else { if(Array.from(raw).length>10) return {ok:false}; }
+  else { if(Array.from(raw).length>NON_ASCII_LIMIT) return {ok:false}; }
   return {ok:true};
 }
 
-/* 参加 */
+/* 認証＆参加 */
+const remembered = localStorage.getItem("yuru_name"); if(remembered) nameInput.value = remembered.slice(0,3);
 nameInput.addEventListener("input", ()=>{
   const n = nameInput.value.trim();
   if([...n].length>3) nameInput.value = Array.from(n).slice(0,3).join("");
 });
 enterBtn.addEventListener("click", startJoin);
 nameInput.addEventListener("keydown", e=>{ if(e.key==="Enter") startJoin(); });
-function startJoin(){
+
+async function startJoin(){
   const n = nameInput.value.trim();
   if([...n].length===0){ warn.textContent="1〜3文字"; return; }
   if([...n].length>3){ warn.textContent="3文字まで"; return; }
   me.name = n;
   join.style.display = "none";
   localStorage.setItem("yuru_name", me.name);
-  initAuth();
+  await initAuth();
 }
-const remembered = localStorage.getItem("yuru_name"); if(remembered) nameInput.value = remembered.slice(0,3);
 
-/* 認証 */
 async function initAuth(){
   try{ await signInAnonymously(auth); }
   catch(e){ alert("匿名認証に失敗。Authentication設定を確認。"); console.error("[auth] signIn failed:", e); }
@@ -379,8 +388,9 @@ onAuthStateChanged(auth, user=>{
 });
 
 /* DB refs */
-const playersRef = ref(db, `worlds/${WORLD_ID}/players`);
-const myRef = ()=> ref(db, `worlds/${WORLD_ID}/players/${uid}`);
+function playersRefOf(room){ return ref(db, `worlds/${room}/players`); }
+function myRef(){ return ref(db, `worlds/${WORLD_ID}/players/${uid}`); }
+const playersRef = playersRefOf(WORLD_ID);
 
 /* プレゼンス */
 async function mountPresence(){
@@ -389,9 +399,7 @@ async function mountPresence(){
       name: me.name, x: me.x, y: me.y, dir: me.dir, pose: me.pose,
       msg: "", msgAt: 0, lastActive: serverTimestamp()
     });
-  }catch(e){
-    console.error("[rtdb] initial set failed:", e);
-  }
+  }catch(e){ console.error("[rtdb] initial set failed:", e); }
   try{ onDisconnect(myRef()).remove(); }catch(e){ console.warn("[rtdb] onDisconnect set failed:", e); }
 }
 
@@ -404,7 +412,6 @@ onValue(playersRef, snap=>{
   const ids = Object.keys(data);
   countLabel.textContent = `😺 ${ids.length}`;
 
-  // 新規参加の検出（初期ロード後のみ音を鳴らす）
   if (initialPlayersLoaded) {
     for (const id of ids) {
       if (!domMap.has(id) && id !== uid) playLogin();
@@ -466,17 +473,17 @@ function renderPlayer(pdom, data, isSelf){
   if(data.pose === "sit"){ pdom.wrap.classList.remove("stand"); pdom.wrap.classList.add("sit"); pdom.sitGroup.setAttribute("display","block"); pdom.standParts.forEach(n=>n.setAttribute("display","none")); }
   else { pdom.wrap.classList.add("stand"); pdom.wrap.classList.remove("sit"); pdom.sitGroup.setAttribute("display","none"); pdom.standParts.forEach(n=>n.setAttribute("display","block")); }
 
-  const text = data.msg || ""; const msgAt = data.msgAt || 0; const key = `${text}|${msgAt}`;
-  if(text && key !== pdom._lastMsgKey){
-    const firstRender = !pdom._ready;
-    pdom._ready = true;
-    pdom._lastMsgKey = key;
-    pdom.bubbleEl.innerHTML = escapeHTML(text);
+  const raw = data.msg || ""; const msgAt = data.msgAt || 0; const key = `${raw}|${msgAt}`;
+  if(raw && key !== pdom._lastMsgKey){
+    const firstRender = !pdom._ready; pdom._ready = true; pdom._lastMsgKey = key;
+    const textEscaped = escapeHTML(raw);
+    const processed = isASCIIish(raw) ? textEscaped : escapeHTML(wrapCJKByLimit(raw, NON_ASCII_LIMIT));
+    pdom.bubbleEl.innerHTML = processed;
     pdom.bubbleEl.style.display = "block";
-    const age = typeof msgAt==="number" ? (Date.now()-msgAt) : 0; const remain = Math.max(1200, 12000 - Math.max(0,age));
+    const age = typeof msgAt==="number" ? (Date.now()-msgAt) : 0; const remain = Math.max(1200, BUBBLE_MS - Math.max(0,age));
     clearTimeout(pdom._bubbleTimer); pdom._bubbleTimer = setTimeout(()=>{ pdom.bubbleEl.style.display = "none"; }, remain);
     if (!firstRender && !isSelf) playMessage();
-  }else if(!text){
+  }else if(!raw){
     pdom.bubbleEl.style.display = "none";
   }
 }
@@ -493,7 +500,7 @@ let lastSentAt = 0;
 msgInput.addEventListener("input", ()=>{
   const v = msgInput.value;
   if(isASCIIish(v)){ const w=countWordsASCII(v); hintLang.textContent=`英語モード：${Math.min(w,10)} / 10 語`; }
-  else { const len=Array.from(v).length; hintLang.textContent=`非英語モード：${Math.min(len,10)} / 10 文字`; }
+  else { const len=Array.from(v).length; hintLang.textContent=`非英語モード：${Math.min(len,NON_ASCII_LIMIT)} / ${NON_ASCII_LIMIT} 文字`; }
   sendBtn.disabled = !validateMessage(v).ok;
 });
 sendBtn.addEventListener("click", sendMsg);
@@ -517,6 +524,9 @@ function setTargetFromEvent(e){
 }
 play.addEventListener("pointerdown", setTargetFromEvent);
 play.addEventListener("touchstart", setTargetFromEvent, {passive:true});
+
+/* iOSのダブルタップ拡大を抑止 */
+play.addEventListener("dblclick", (e)=>{ e.preventDefault(); }, {passive:false});
 
 /* ループ */
 let lastT = now();
@@ -550,12 +560,10 @@ function sendMsg(){
   me.msg = raw; me.msgAt = nowMs; ensureMineDom();
   msgInput.value=""; sendBtn.disabled=true;
   safeUpdate({ msg: raw, msgAt: serverTimestamp() });
+  // 自分の送信音を鳴らしたい場合はここで playMessage();
 }
 
-/* 購読（部屋用に追加処理があればここへ） */
-function listenWorld(){}
-
-/* 共有ボタン：常に ?room= を付与（ハッシュ側roomは排除） */
+/* 共有ボタン：常に ?room= を付与 */
 shareBtn.addEventListener("click", async ()=>{
   const invite = new URL(location.href);
   invite.searchParams.set("room", WORLD_ID);
@@ -569,6 +577,8 @@ shareBtn.addEventListener("click", async ()=>{
     }
   }catch(e){ console.warn("clipboard failed:", e); }
 });
+
+/* ヘルプ */
 helpBtn.addEventListener("click", ()=> helpDialog.showModal());
 helpClose.addEventListener("click", ()=> helpDialog.close());
 
@@ -578,7 +588,11 @@ window.addEventListener("offline", ()=> toast("オフライン：再接続待ち
 function toast(text){ const el=document.getElementById("hint"); el.textContent=text; el.style.opacity=.95; clearTimeout(toast._t); toast._t=setTimeout(()=> el.style.opacity=.75,1500); }
 
 /* 起動前チェック */
-(function(){ const needs=["apiKey","authDomain","databaseURL","projectId","appId"]; if(needs.some(k=>!firebaseConfig[k])) toast("Firebaseのconfigを入れてから使う"); })();
+(function(){
+  const needs=["apiKey","authDomain","databaseURL","projectId","appId"];
+  if(needs.some(k=>!firebaseConfig[k])) toast("Firebaseのconfigを入れてから使う");
+  worldLabel.textContent = `room: ${WORLD_ID}`;
+})();
 msgInput.dispatchEvent(new Event("input"));
 </script>
 </body>

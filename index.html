@@ -48,7 +48,6 @@
       radial-gradient(1200px 420px at 50% 120%, #f7f7f7 0%, transparent 60%);
     background-size: 18px 18px, auto;
     background-position: 0 0, 0 0;
-    /* スマホの誤選択・ダブルタップ拡大抑止 */
     user-select:none;
     touch-action:none;
   }
@@ -86,15 +85,14 @@
     max-width:160px; text-overflow:ellipsis; overflow:hidden; letter-spacing:.2px;
   }
 
-  /* 吹き出しを廃止し「枠のみ」のタグに修正（尾なし） */
   .bubble{
     position:absolute; left:50%; bottom:94px; transform:translateX(-50%);
     background:#fff; color:#111; border:1px solid var(--border); border-radius:12px; padding:8px 10px; font-size:14px;
     max-width:min(64vw, 320px);
     box-shadow:0 8px 22px rgba(0,0,0,.06);
-    white-space:pre-wrap;           /* 改行・スペース維持 */
-    word-break:break-word;          /* 長い英語等も折り返し */
-    overflow-wrap: anywhere;        /* どこでも折り返し保険 */
+    white-space:pre-wrap;
+    word-break:break-word;
+    overflow-wrap: anywhere;
   }
 
   .cat{width:78px; height:78px; display:block}
@@ -208,6 +206,7 @@
 </dialog>
 
 <script type="module">
+/* ===== Firebase config ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyCUpt4XLfSSZLt0VhJon926--c-I2tRMkE",
   authDomain: "blackcat-67716.firebaseapp.com",
@@ -219,7 +218,7 @@ const firebaseConfig = {
   measurementId: "G-R47HW00266"
 };
 
-// ===== RoomID決定 =====
+/* ===== RoomID決定 ===== */
 const url = new URL(location.href);
 const qp = url.searchParams.get("room");
 const hp = (location.hash.match(/room=([^&]+)/)||[])[1];
@@ -317,24 +316,43 @@ muteBtn.addEventListener("click", ()=>{
 });
 renderMuteButton();
 
-/* 状態 */
+/* ===== 状態 ===== */
 let uid = null;
 let me = { name:"", x:0.5, y:0.7, dir:1, pose:"stand", msg:"", msgAt:0 };
 let target = {x: me.x, y: me.y};
 let lastSync = 0, lastHeartbeat = 0;
 let SPEED_PX_PER_S = 120;
 const SYNC_INTERVAL_MS = 80, HEARTBEAT_MS = 15000, BUBBLE_MS = 12000;
-const NON_ASCII_LIMIT = 15;  // ← 日本語は15文字で改行
+const NON_ASCII_LIMIT = 15;
 
-/* ユーティリティ */
+/* ===== ユーティリティ ===== */
 const now = ()=>performance.now();
 const clamp01 = v => Math.max(0, Math.min(1, v));
 const escapeHTML = s => s.replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
 const isASCIIish = s => /^[\x00-\x7F]+$/.test(s);
 const countWordsASCII = s => s.trim().split(/\s+/).filter(Boolean).length;
-function toNorm(cx,cy){ const r=play.getBoundingClientRect(); return {x:clamp01((cx-r.left)/r.width), y:clamp01((cy-r.top)/r.height)}; }
-function toPx(nx,ny){ const r=play.getBoundingClientRect(); return {x:nx*r.width, y:ny*r.height}; }
-function pingAt(nx,ny){ const {x,y}=toPx(nx,ny); const s=document.createElement("span"); s.className="ping"; s.style.left=`${x}px`; s.style.top=`${y}px`; play.appendChild(s); s.addEventListener("animationend",()=>s.remove());}
+
+/* ここ重要：レイアウト未確定時（幅高が0）には更新しないガード */
+function getPlayRect(){
+  const r = play.getBoundingClientRect();
+  if (r.width <= 0 || r.height <= 0) return null;
+  return r;
+}
+function toNorm(cx,cy){
+  const r = getPlayRect(); if(!r) return {x: target.x, y: target.y};
+  return {x:clamp01((cx-r.left)/r.width), y:clamp01((cy-r.top)/r.height)};
+}
+function toPx(nx,ny){
+  const r = getPlayRect(); if(!r) return {x:0, y:0};
+  return {x:nx*r.width, y:ny*r.height};
+}
+function pingAt(nx,ny){
+  const r = getPlayRect(); if(!r) return;
+  const {x,y}=toPx(nx,ny);
+  const s=document.createElement("span");
+  s.className="ping"; s.style.left=`${x}px`; s.style.top=`${y}px`;
+  play.appendChild(s); s.addEventListener("animationend",()=>s.remove());
+}
 
 function wrapCJKByLimit(text, limit=NON_ASCII_LIMIT){
   const arr = Array.from(text);
@@ -348,13 +366,13 @@ function wrapCJKByLimit(text, limit=NON_ASCII_LIMIT){
 }
 
 function validateMessage(raw){
-  if(!raw) return {ok:false}; 
+  if(!raw) return {ok:false};
   if(isASCIIish(raw)){ if(countWordsASCII(raw)>10 || raw.length>100) return {ok:false}; }
   else { if(Array.from(raw).length>NON_ASCII_LIMIT) return {ok:false}; }
   return {ok:true};
 }
 
-/* 認証＆参加 */
+/* ===== 認証＆参加 ===== */
 const remembered = localStorage.getItem("yuru_name"); if(remembered) nameInput.value = remembered.slice(0,3);
 nameInput.addEventListener("input", ()=>{
   const n = nameInput.value.trim();
@@ -383,16 +401,16 @@ onAuthStateChanged(auth, user=>{
   me.x = Math.random()*0.8 + 0.1; me.y = Math.random()*0.4 + 0.5; target={x:me.x,y:me.y};
   ensureMineDom();
   mountPresence();
-  listenWorld();
-  loop();
+  /* 以前はここで listenWorld() を呼んで例外→loop未起動になっていた。削除済み。 */
+  startLoop(); // 念のためここでも起動（重複起動はガード）
 });
 
-/* DB refs */
+/* ===== DB refs ===== */
 function playersRefOf(room){ return ref(db, `worlds/${room}/players`); }
 function myRef(){ return ref(db, `worlds/${WORLD_ID}/players/${uid}`); }
 const playersRef = playersRefOf(WORLD_ID);
 
-/* プレゼンス */
+/* ===== プレゼンス ===== */
 async function mountPresence(){
   try{
     await set(myRef(), {
@@ -403,7 +421,7 @@ async function mountPresence(){
   try{ onDisconnect(myRef()).remove(); }catch(e){ console.warn("[rtdb] onDisconnect set failed:", e); }
 }
 
-/* 購読＆描画 */
+/* ===== 購読＆描画 ===== */
 const domMap = new Map(); // uid -> {wrap,...}
 let initialPlayersLoaded = false;
 
@@ -463,7 +481,7 @@ function createPlayerDom(id){
 }
 
 function renderPlayer(pdom, data, isSelf){
-  const r = play.getBoundingClientRect();
+  const r = getPlayRect(); if (!r) return; // レイアウト未確定時は描画しない
   pdom.wrap.style.left = `${data.x * r.width}px`;
   pdom.wrap.style.top  = `${data.y * r.height}px`;
   pdom.nameEl.textContent = data.name || "";
@@ -505,12 +523,19 @@ msgInput.addEventListener("input", ()=>{
 });
 sendBtn.addEventListener("click", sendMsg);
 msgInput.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); sendMsg(); }});
+
+/* ボタンのラベルを崩さない renderer */
+function renderPoseBtn(){
+  poseBtn.innerHTML = `<span class="icon" aria-hidden="true">🪑</span> ${me.pose === "stand" ? "座る" : "立つ"}`;
+  poseBtn.setAttribute("aria-pressed", me.pose === "sit" ? "true":"false");
+}
+renderPoseBtn();
+
 poseBtn.addEventListener("click", togglePose);
 window.addEventListener("keydown", e=>{ if(e.key.toLowerCase()==="s"){ togglePose(); }});
 function togglePose(){
   me.pose = (me.pose === "stand") ? "sit" : "stand";
-  poseBtn.textContent = (me.pose === "stand") ? "座る" : "立つ";
-  poseBtn.setAttribute("aria-pressed", me.pose === "sit" ? "true":"false");
+  renderPoseBtn();
   safeUpdate({pose: me.pose});
 }
 
@@ -524,15 +549,24 @@ function setTargetFromEvent(e){
 }
 play.addEventListener("pointerdown", setTargetFromEvent);
 play.addEventListener("touchstart", setTargetFromEvent, {passive:true});
-
-/* iOSのダブルタップ拡大を抑止 */
 play.addEventListener("dblclick", (e)=>{ e.preventDefault(); }, {passive:false});
 
-/* ループ */
+/* ===== ループ ===== */
+let loopStarted = false;
 let lastT = now();
+function startLoop(){
+  if(loopStarted) return;
+  loopStarted = true;
+  requestAnimationFrame(loop);
+}
 function loop(){
   const t=now(); const dt=Math.max(0, Math.min(0.05,(t-lastT)/1000)); lastT=t;
-  const r=play.getBoundingClientRect();
+  const r=getPlayRect();
+  if (!r){
+    // レイアウト未確定なら次フレームへ
+    requestAnimationFrame(loop);
+    return;
+  }
   const pxPos=toPx(me.x,me.y), pxTarget=toPx(target.x,target.y);
   const dx=pxTarget.x-pxPos.x, dy=pxTarget.y-pxPos.y, dist=Math.hypot(dx,dy);
   const step=SPEED_PX_PER_S*dt;
@@ -546,7 +580,7 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
-/* 書き込み */
+/* ===== 書き込み ===== */
 async function safeUpdate(patch){
   if(!uid) return;
   try{ await update(myRef(), patch); }
@@ -560,7 +594,7 @@ function sendMsg(){
   me.msg = raw; me.msgAt = nowMs; ensureMineDom();
   msgInput.value=""; sendBtn.disabled=true;
   safeUpdate({ msg: raw, msgAt: serverTimestamp() });
-  // 自分の送信音を鳴らしたい場合はここで playMessage();
+  // playMessage(); // 自分の送信音を鳴らしたいなら有効化
 }
 
 /* 共有ボタン：常に ?room= を付与 */
@@ -593,7 +627,10 @@ function toast(text){ const el=document.getElementById("hint"); el.textContent=t
   if(needs.some(k=>!firebaseConfig[k])) toast("Firebaseのconfigを入れてから使う");
   worldLabel.textContent = `room: ${WORLD_ID}`;
 })();
+
+/* 初期化：入力UI初期表示とループ起動 */
 msgInput.dispatchEvent(new Event("input"));
+startLoop(); // 認証完了前でも移動は可能（DB書き込みはuid無くskip）
 </script>
 </body>
 </html>

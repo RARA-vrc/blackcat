@@ -2,195 +2,144 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalalable=no, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1">
 <title>ゆるネコひろば</title>
 <meta name="color-scheme" content="light only">
 <style>
   :root{
-    --bg: #fffdf9;
-    --panel: #ffffff;
-    --ink: #1a1a1a;
-    --muted: #6b7280;
-    --accent: #ff7aa2;
-    --accent-ink:#fff;
-    --barH: 60px;
-    --ring: 3px;
-    --ringColor: rgba(255,122,162,.45);
-    --border:#e5e7eb;
+    --bg:#fffdf9; --panel:#ffffff; --ink:#1a1a1a; --muted:#6b7280;
+    --accent:#ff7aa2; --accent-ink:#fff; --barH:74px;
+    --ring:3px; --ringColor:rgba(255,122,162,.45); --border:#e5e7eb;
   }
-  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent}
-  html,body{height:100%; margin:0; font-family: ui-sans-serif, system-ui, -apple-system, "Hiragino Kaku Gothic ProN", Meiryo, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--ink); writing-mode: horizontal-tb;}
-  body, button, input { touch-action: manipulation; }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{height:100%; margin:0; font-family:ui-sans-serif,system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink)}
+  body,button,input{touch-action:manipulation}
   #app{position:fixed; inset:0; display:flex; flex-direction:column}
 
-  /* ==== 上部ヘッダ：小画面では自然に2段まで折返しOK ==== */
+  /* ===== ヘッダ（2行可・横書き固定） ===== */
   header{
-    padding: calc(env(safe-area-inset-top) + 4px) 12px 8px;
-    border-bottom:1px solid var(--border); background:var(--panel); position:relative; z-index:2;
+    display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px;
+    padding:8px 12px; border-bottom:1px solid var(--border); background:var(--panel);
+    position:relative; z-index:2;
   }
-  header .row{
-    display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; row-gap:6px;
-  }
-  .brand{display:flex; align-items:center; gap:10px; min-width:0; flex:1 1 260px}
+  .brand{display:flex; align-items:center; gap:10px; min-width:0; flex:1 1 auto}
   .brand .dot{width:14px; height:14px; border-radius:50%; background:#000}
-  .brand h1{font-size:clamp(14px, 2.6vw, 16px); font-weight:800; margin:0; white-space:nowrap}
-  .chip{border:1px solid var(--border); background:#fafafa; border-radius:999px; padding:6px 10px; white-space:nowrap; max-width:50vw; overflow:hidden; text-overflow:ellipsis}
-  .meta{display:flex; align-items:center; gap:8px; flex:0 0 auto}
-  .btn{
-    appearance:none; border:0; background:var(--accent); color:var(--accent-ink);
-    border-radius:12px; padding:10px 12px; font-size:14px; font-weight:800; cursor:pointer; min-height:40px;
-    display:inline-flex; align-items:center; gap:6px; white-space:nowrap; flex:0 0 auto;
-  }
-  .btn.ghost{ background:transparent; color:var(--ink); border:1px solid var(--border); }
-  .btn:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
-  .icon{font-variant-emoji: emoji; font-size:16px}
-  .txt{display:inline-block}
+  .brand h1{font-size:16px; font-weight:800; margin:0; white-space:nowrap}
+  .chip{border:1px solid var(--border); background:#fafafa; border-radius:999px; padding:6px 10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  #worldLabel{max-width:44vw}
+  #countLabel{max-width:26vw}
+  .meta{display:flex; align-items:center; gap:8px; flex:1 1 100%; flex-wrap:wrap}
+  .btn{appearance:none; border:0; background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:10px 12px; font-size:14px; font-weight:800; cursor:pointer; min-height:40px}
+  .btn.ghost{background:transparent; color:var(--ink); border:1px solid var(--border)}
+  .btn:focus-visible{outline:var(--ring) solid var(--ringColor); outline-offset:2px}
+  .icon{font-variant-emoji:emoji; font-size:16px}
+  .meta .btn{min-width:92px} /* 文字が必ず横で読める幅 */
 
-  @media (max-width:560px){
-    .chip{max-width:60vw; font-size:12px}
-    .btn.ghost .txt{display:none}
-    .btn.ghost{padding:10px}
-  }
-
-  /* ==== プレイエリア ==== */
+  /* ===== プレイエリア ===== */
   #play{
     position:relative; flex:1; overflow:hidden; cursor:crosshair;
     background-image:
-      radial-gradient(circle at 1px 1px, #f1f3f5 1px, transparent 0),
-      radial-gradient(1200px 420px at 50% 120%, #f7f7f7 0%, transparent 60%);
-    background-size: 18px 18px, auto;
-    background-position: 0 0, 0 0;
+      radial-gradient(circle at 1px 1px,#f1f3f5 1px,transparent 0),
+      radial-gradient(1200px 420px at 50% 120%,#f7f7f7 0%,transparent 60%);
+    background-size:18px 18px,auto; background-position:0 0,0 0;
     user-select:none; touch-action:none;
   }
 
   .ping{
-    position:absolute; width:10px; height:10px; border-radius:999px;
-    border:2px solid var(--accent); opacity:.7; pointer-events:none;
+    position:absolute; width:10px; height:10px; border-radius:999px; border:2px solid var(--accent); opacity:.7; pointer-events:none;
     transform:translate(-50%,-50%) scale(.2); animation:ping .8s ease-out forwards;
   }
-  @keyframes ping{
-    80%{ opacity:.15; transform:translate(-50%,-50%) scale(2.0); }
-    100%{ opacity:0; transform:translate(-50%,-50%) scale(2.6); }
-  }
+  @keyframes ping{ 80%{opacity:.15; transform:translate(-50%,-50%) scale(2.0)} 100%{opacity:0; transform:translate(-50%,-50%) scale(2.6)} }
 
-  /* ==== 下部バー：絶対に1行（横書き固定） ==== */
-  #bar{
-    height:var(--barH);
-    display:flex; align-items:center; gap:8px;
-    border-top:1px solid var(--border); background:var(--panel);
-    padding:8px 10px; padding-bottom: calc(8px + env(safe-area-inset-bottom));
-    flex-wrap:nowrap; white-space:nowrap; overflow:hidden;
-  }
+  /* ===== 入力バー ===== */
+  #bar{height:var(--barH); display:flex; align-items:center; gap:8px; padding:8px 10px; border-top:1px solid var(--border); background:var(--panel); padding-bottom:calc(8px + env(safe-area-inset-bottom))}
   #poseBtn{min-width:74px}
-  #msgWrap{
-    flex:1 1 auto; display:flex; align-items:center; gap:8px; min-width:0; overflow:hidden; white-space:nowrap;
-  }
-  #msg{
-    flex:1 1 auto; min-width:120px; font-size:16px; padding:8px 10px;
-    border:1px solid var(--border); border-radius:12px; outline:none; background:#fff;
-    height:38px; line-height:22px; writing-mode:horizontal-tb; white-space:nowrap;
-  }
-  #msg:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
-  #helper{
-    flex:0 0 auto; display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted);
-    white-space:nowrap; max-width:34%; overflow:hidden; text-overflow:ellipsis; user-select:none;
-  }
+  #msgWrap{flex:1; display:flex; flex-direction:column; gap:6px; min-width:0}
+  #msg{width:100%; font-size:16px; padding:12px 12px; border:1px solid var(--border); border-radius:12px; outline:none; background:#fff}
+  #msg:focus-visible{outline:var(--ring) solid var(--ringColor); outline-offset:2px}
+  #helper{display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--muted); padding:0 4px}
   #send{min-width:74px}
-  @media (max-width:900px){
-    #bar .btn .txt{display:none}
-    #helper{display:none}
-  }
+  #send:disabled{opacity:.5; cursor:not-allowed}
 
-  /* ==== プレイヤー（transform移動。名札は自動フリップ） ==== */
-  .p{
-    position:absolute; left:0; top:0;
-    transform: translate3d(0,0,0) translate(-50%, -80%);
-    will-change: transform; backface-visibility:hidden;
-    width:78px; height:78px;
-  }
-  .p.self .name{background: var(--accent)}
-
+  /* ===== プレイヤー ===== */
+  .p{position:absolute; width:78px; height:78px; transform:translate(-50%, -80%); will-change:left,top}
+  .p.self .name{background:var(--accent); color:#fff}
   .name{
     position:absolute; left:50%; top:78px; transform:translateX(-50%);
-    background:rgba(17,17,17,.95); color:#fff; font-size:12px; padding:2px 8px; border-radius:999px; white-space:nowrap;
-    max-width:180px; text-overflow:ellipsis; overflow:hidden; letter-spacing:.2px; border:1px solid rgba(0,0,0,.6);
-    z-index:2; pointer-events:none;
+    background:#111; color:#fff; font-size:12px; padding:2px 8px; border-radius:999px; white-space:nowrap;
+    max-width:220px; text-overflow:ellipsis; overflow:hidden; letter-spacing:.2px;
+    z-index:3; box-shadow:0 1px 0 rgba(255,255,255,.25), 0 6px 16px rgba(0,0,0,.12)
   }
-  .name.flip{ top:auto; bottom:84px; } /* 画面下端やバーに近いときは上側へ */
 
+  /* ===== チャット枠（横書き固定＋最小幅） ===== */
   .bubble{
     position:absolute; left:50%; bottom:94px; transform:translateX(-50%);
-    background:#fff; color:#111; border:1px solid var(--border); border-radius:12px; padding:8px 10px; font-size:14px;
-    /* 横書き固定・1行のみ。長い場合は省略。 */
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; writing-mode:horizontal-tb;
-    max-width:min(86vw, 520px);
-    box-shadow:0 8px 22px rgba(0,0,0,.06); z-index:1; display:none; pointer-events:none;
+    background:#fff; color:#111; border:1px solid var(--border); border-radius:12px; padding:10px 12px; font-size:14px; line-height:1.5;
+    writing-mode:horizontal-tb; text-orientation:mixed;
+    display:inline-block; width:auto; min-width:12em; max-width:min(80vw, 28em);
+    white-space:normal; word-break:normal; overflow-wrap:anywhere; text-align:left;
+    box-shadow:0 8px 22px rgba(0,0,0,.06); z-index:2;
   }
 
-  .cat{width:78px; height:78px; display:block; will-change:transform}
-  .stand .cat{transition:transform .18s ease}
-  .sit .cat{transition:transform .18s ease; opacity:.96}
+  .cat{width:78px; height:78px; display:block}
+  .sit .cat{opacity:.96}
   .face-left{transform:scaleX(-1)}
-  @keyframes wag { 0%,100%{ transform: rotate(0deg) } 50%{ transform: rotate(-6deg) } }
-  .wag { transform-origin: 24px 60px; animation: wag 1.2s ease-in-out infinite }
 
-  #join{
-    position:fixed; inset:0; background:rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center; z-index:10;
-  }
-  #join .card{
-    width:min(92vw, 520px); border:1px solid var(--border); border-radius:18px; background:#fff; padding:18px 16px 16px;
-    box-shadow:0 18px 60px rgba(0,0,0,.08);
-  }
+  /* ===== join ===== */
+  #join{position:fixed; inset:0; background:rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center; z-index:10}
+  #join .card{width:min(92vw,520px); border:1px solid var(--border); border-radius:18px; background:#fff; padding:18px 16px 16px; box-shadow:0 18px 60px rgba(0,0,0,.08)}
   #join h2{margin:0 0 8px; font-size:18px}
   #join p{margin:0 0 12px; font-size:14px; color:#555; line-height:1.6}
   #join .row{display:flex; gap:10px}
-  #join input{
-    flex:1; font-size:18px; padding:12px 12px; border:1px solid var(--border); border-radius:12px; outline:none; background:#fff;
-  }
-  #join input:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
-  #join button{
-    padding:12px 14px; border-radius:12px; background:var(--accent); color:#fff; font-weight:800; font-size:16px; border:0; cursor:pointer; white-space:nowrap;
-  }
+  #join input{flex:1; font-size:18px; padding:12px 12px; border:1px solid var(--border); border-radius:12px; outline:none; background:#fff}
+  #join input:focus-visible{outline:var(--ring) solid var(--ringColor); outline-offset:2px}
+  #join button{padding:12px 14px; border-radius:12px; background:var(--accent); color:#fff; font-weight:800; font-size:16px; border:0; cursor:pointer; white-space:nowrap}
   #warn{color:#b40000; font-size:13px; min-height:1.4em}
-  .subtle{font-size:12px; color:#6b7280}
+  .subtle{font-size:12px; color:var(--muted)}
 
-  #hint{
-    position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom));
-    background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.85; z-index:3;
+  #hint{position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom)); background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.75; z-index:1; pointer-events:none}
+
+  @media (max-width:480px){
+    .meta{gap:8px}
+    #worldLabel{max-width:56vw}
+    .p{width:70px; height:70px}
+    .cat{width:70px; height:70px}
+    .bubble{font-size:13px; bottom:86px; max-width:86vw; min-width:11em}
+    .name{top:70px; max-width:180px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .ping{animation:none; display:none}
   }
 </style>
 </head>
 <body>
 <div id="app">
   <header>
-    <div class="row">
-      <div class="brand">
-        <div class="dot" aria-hidden="true"></div>
-        <h1>ゆるネコひろば</h1>
-        <span class="chip" id="worldLabel" aria-live="polite"></span>
-        <span class="chip" id="countLabel" aria-live="polite" title="いまいるネコの数">😺 0</span>
-      </div>
-      <div class="meta">
-        <button id="muteBtn" class="btn ghost" title="音のオン/オフ"><span class="icon" aria-hidden="true">🔔</span><span class="txt"> 音</span></button>
-        <button id="shareBtn" class="btn ghost" title="URLをコピー"><span class="icon" aria-hidden="true">🔗</span><span class="txt"> 共有</span></button>
-        <button id="helpBtn" class="btn ghost" title="使い方"><span class="icon" aria-hidden="true">❔</span><span class="txt"> ヘルプ</span></button>
-      </div>
+    <div class="brand">
+      <div class="dot" aria-hidden="true"></div>
+      <h1>ゆるネコひろば</h1>
+      <span class="chip" id="worldLabel" aria-live="polite"></span>
+      <span class="chip" id="countLabel" aria-live="polite" title="いまいるネコの数">😺 0</span>
+    </div>
+    <div class="meta">
+      <button id="muteBtn" class="btn ghost" title="音のオン/オフ"><span class="icon" aria-hidden="true">🔔</span> 音オン</button>
+      <button id="shareBtn" class="btn ghost" title="URLをコピー"><span class="icon" aria-hidden="true">🔗</span> 共有</button>
+      <button id="helpBtn" class="btn ghost" title="使い方"><span class="icon" aria-hidden="true">❔</span> ヘルプ</button>
     </div>
   </header>
 
   <div id="play" aria-label="play-area"></div>
 
-  <!-- 1行固定の横長チャット -->
   <div id="bar">
-    <button id="poseBtn" class="btn" title="立つ/座るの切替" aria-pressed="false"><span class="icon" aria-hidden="true">🪑</span><span class="txt"> 座る</span></button>
+    <button id="poseBtn" class="btn" title="立つ/座るの切替" aria-pressed="false"><span class="icon" aria-hidden="true">🪑</span> 座る</button>
     <div id="msgWrap">
-      <input id="msg" type="text" inputmode="text" autocomplete="off" placeholder="短いことば…（非英語15 / 英語10語）" aria-label="メッセージ入力（1行）">
+      <input id="msg" type="text" inputmode="text" autocomplete="off" placeholder="短いことば…（非英語15文字 / 英語10語）" aria-label="メッセージ入力。非英語は15文字まで、英語は10語まで">
       <div id="helper">
-        <span id="hintLang">非英語：0/15</span>
-        <span aria-hidden="true">Enterで送信 / Sで座る</span>
+        <span id="hintLang">非英語モード：0 / 15</span>
+        <span>Enterで送信 / Sで座る</span>
       </div>
     </div>
-    <button id="send" class="btn" disabled title="メッセージ送信"><span class="icon" aria-hidden="true">📨</span><span class="txt"> 送信</span></button>
+    <button id="send" class="btn" disabled title="メッセージ送信"><span class="icon" aria-hidden="true">📨</span> 送信</button>
   </div>
 
   <div id="hint" aria-live="polite">画面をタップで自分の猫がゆっくり移動</div>
@@ -242,91 +191,98 @@ const url = new URL(location.href);
 const qp = url.searchParams.get("room");
 const hp = (location.hash.match(/room=([^&]+)/)||[])[1];
 function makeRoomId(){ const t=Date.now().toString(36).slice(-6); const r=crypto.getRandomValues(new Uint32Array(1))[0].toString(36).slice(-5); return `plaza-${t}-${r}`; }
-function setURLRoom(id){ const u=new URL(location.href); u.searchParams.set("room",id); u.hash=u.hash.replace(/room=[^&]+&?/,'').replace(/[#&]$/,''); history.replaceState({}, "", u.toString()); }
+function setURLRoom(id){ const u=new URL(location.href); u.searchParams.set("room", id); u.hash=u.hash.replace(/room=[^&]+&?/,'').replace(/[#&]$/,''); history.replaceState({}, "", u.toString()); }
 let WORLD_ID = qp || hp || null; if(!WORLD_ID){ WORLD_ID = makeRoomId(); setURLRoom(WORLD_ID); }
 
+/* ===== Firebase SDK ===== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, set, update, serverTimestamp, onDisconnect }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { getAuth, signInAnonymously, onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, onValue, set, update, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const db  = getDatabase(app);
 const auth = getAuth(app);
 
-/* DOM */
+/* ===== DOM ===== */
 const play = document.getElementById("play");
-const bar = document.getElementById("bar");
-const msgInput = document.getElementById("msg");
-const sendBtn = document.getElementById("send");
-const poseBtn = document.getElementById("poseBtn");
-const join = document.getElementById("join");
-const nameInput = document.getElementById("nameInput");
-const enterBtn = document.getElementById("enterBtn");
-const warn = document.getElementById("warn");
+const msgInput   = document.getElementById("msg");
+const sendBtn    = document.getElementById("send");
+const poseBtn    = document.getElementById("poseBtn");
+const join       = document.getElementById("join");
+const nameInput  = document.getElementById("nameInput");
+const enterBtn   = document.getElementById("enterBtn");
+const warn       = document.getElementById("warn");
 const worldLabel = document.getElementById("worldLabel");
 const countLabel = document.getElementById("countLabel");
-const shareBtn = document.getElementById("shareBtn");
-const helpBtn = document.getElementById("helpBtn");
+const shareBtn   = document.getElementById("shareBtn");
+const helpBtn    = document.getElementById("helpBtn");
 const helpDialog = document.getElementById("helpDialog");
-const helpClose = document.getElementById("helpClose");
-const hintLang = document.getElementById("hintLang");
-const muteBtn = document.getElementById("muteBtn");
-
+const helpClose  = document.getElementById("helpClose");
+const hintLang   = document.getElementById("hintLang");
+const muteBtn    = document.getElementById("muteBtn");
 worldLabel.textContent = `room: ${WORLD_ID}`;
 
-/* ===== サウンド ===== */
-let AC=null, masterGain=null; let muted=localStorage.getItem("yuru_mute")==="1";
-function unlockAudio(){ if(!AC){ const Ctx=window.AudioContext||window.webkitAudioContext; if(!Ctx) return; AC=new Ctx(); masterGain=AC.createGain(); masterGain.gain.value=muted?0:0.24; masterGain.connect(AC.destination); } if(AC&&AC.state==="suspended") AC.resume(); }
-function setupAudioUnlock(){ const once=()=>{unlockAudio(); document.removeEventListener("pointerdown", once); document.removeEventListener("keydown", once); }; document.addEventListener("pointerdown", once, {passive:true}); document.addEventListener("keydown", once); enterBtn.addEventListener("click", unlockAudio, {once:true}); }
+/* ===== Web Audio（通知音） ===== */
+let AC=null, masterGain=null; let muted = localStorage.getItem("yuru_mute")==="1";
+function unlockAudio(){ if(!AC){ const Ctx=window.AudioContext||window.webkitAudioContext; if(!Ctx) return; AC=new Ctx(); masterGain=AC.createGain(); masterGain.gain.value=muted?0:0.24; masterGain.connect(AC.destination);} if(AC.state==="suspended") AC.resume(); }
+function setupAudioUnlock(){ const once=()=>{unlockAudio(); document.removeEventListener("pointerdown",once); document.removeEventListener("keydown",once)}; document.addEventListener("pointerdown",once,{passive:true}); document.addEventListener("keydown",once); enterBtn.addEventListener("click",unlockAudio,{once:true}); }
 setupAudioUnlock();
-function tone({freq=880,dur=0.12,type="sine",vol=0.7,attack=0.005,release=0.12}={}){ if(!AC) return; const osc=AC.createOscillator(); const g=AC.createGain(); osc.type=type; osc.frequency.value=freq; osc.connect(g); g.connect(masterGain||AC.destination); const t=AC.currentTime; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+attack); g.gain.exponentialRampToValueAtTime(0.0001,t+attack+release); osc.start(t); osc.stop(t+dur+0.25); }
+function tone({freq=880,dur=0.12,type="sine",vol=0.7,attack=0.005,release=0.12}={}){ if(!AC) return; const o=AC.createOscillator(), g=AC.createGain(); o.type=type; o.frequency.value=freq; o.connect(g); g.connect(masterGain||AC.destination); const t=AC.currentTime; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+attack); g.gain.exponentialRampToValueAtTime(0.0001,t+attack+release); o.start(t); o.stop(t+dur+0.25); }
 function playLogin(){ if(!muted && AC){ tone({freq:880,type:"triangle",vol:0.55,dur:0.12}); setTimeout(()=>tone({freq:1320,type:"triangle",vol:0.55,dur:0.12}),140); } }
 function playMessage(){ if(!muted && AC){ tone({freq:700,type:"sine",vol:0.5,dur:0.09}); } }
-function renderMuteButton(){ muteBtn.innerHTML = `<span class="icon" aria-hidden="true">${muted ? "🔇" : "🔔"}</span><span class="txt"> ${muted ? "ミュート" : "音オン"}</span>`; }
-muteBtn.addEventListener("click", ()=>{ muted=!muted; if(masterGain) masterGain.gain.value=muted?0:0.24; localStorage.setItem("yuru_mute", muted ? "1":"0"); renderMuteButton(); });
-renderMuteButton();
+muteBtn.addEventListener("click", ()=>{ muted=!muted; if(masterGain) masterGain.gain.value = muted?0:0.24; localStorage.setItem("yuru_mute", muted?"1":"0"); });
+
+/* ===== 安全パディング ===== */
+const EDGE_PAD_PX_X=40, EDGE_PAD_PX_Y=60, NON_ASCII_LIMIT=15;
+function clampEdgePadded(nx,ny){ const r=play.getBoundingClientRect(); const px=EDGE_PAD_PX_X/Math.max(1,r.width), py=EDGE_PAD_PX_Y/Math.max(1,r.height); return {x:Math.max(px,Math.min(1-px,nx)), y:Math.max(py,Math.min(1-py,ny))}; }
 
 /* ===== 状態 ===== */
 let uid=null;
 let me={ name:"", x:0.5, y:0.7, dir:1, pose:"stand", msg:"", msgAt:0 };
 let target={x:me.x,y:me.y};
-let lastSync=0, lastHeartbeat=0; let SPEED_PX_PER_S=120;
+let lastSync=0, lastHeartbeat=0;
+let SPEED_PX_PER_S=120;
 const SYNC_INTERVAL_MS=80, HEARTBEAT_MS=15000, BUBBLE_MS=12000;
-const NON_ASCII_LIMIT=15;
+let loopRunning=false;
 
-/* ===== ユーティリティ ===== */
+/* ===== Util ===== */
 const now = ()=>performance.now();
-const clamp01 = v=>Math.max(0,Math.min(1,v));
-const escapeHTML = s=>s.replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
 const isASCIIish = s=>/^[\x00-\x7F]+$/.test(s);
 const countWordsASCII = s=>s.trim().split(/\s+/).filter(Boolean).length;
-function getPlayRect(){ const r=play.getBoundingClientRect(); if(r.width<=0||r.height<=0) return null; return r; }
-function toNorm(cx,cy){ const r=getPlayRect(); if(!r) return {x:target.x,y:target.y}; return {x:clamp01((cx-r.left)/r.width), y:clamp01((cy-r.top)/r.height)}; }
-function toPx(nx,ny){ const r=getPlayRect(); if(!r) return {x:0,y:0}; return {x:nx*r.width, y:ny*r.height}; }
-function pingAt(nx,ny){ const r=getPlayRect(); if(!r) return; const {x,y}=toPx(nx,ny); const s=document.createElement("span"); s.className="ping"; s.style.left=`${x}px`; s.style.top=`${y}px`; play.appendChild(s); s.addEventListener("animationend",()=>s.remove()); }
+function toNorm(cx,cy){ const r=play.getBoundingClientRect(); const nx=(cx-r.left)/Math.max(1,r.width); const ny=(cy-r.top)/Math.max(1,r.height); return clampEdgePadded(nx,ny); }
+function toPx(nx,ny){ const r=play.getBoundingClientRect(); return {x:nx*r.width, y:ny*r.height}; }
+function pingAt(nx,ny){ const {x,y}=toPx(nx,ny); const s=document.createElement("span"); s.className="ping"; s.style.left=`${x}px`; s.style.top=`${y}px`; play.appendChild(s); s.addEventListener("animationend",()=>s.remove()); }
+function validateMessage(raw){ if(!raw) return {ok:false}; if(isASCIIish(raw)){ if(countWordsASCII(raw)>10 || raw.length>100) return {ok:false}; } else { if(Array.from(raw).length>NON_ASCII_LIMIT) return {ok:false}; } return {ok:true}; }
 
-/* ===== 参加フロー ===== */
+/* ===== 参加（ここで即スポーン＆ループ起動） ===== */
 const remembered=localStorage.getItem("yuru_name"); if(remembered) nameInput.value=remembered.slice(0,3);
 nameInput.addEventListener("input", ()=>{ const n=nameInput.value.trim(); if([...n].length>3) nameInput.value=Array.from(n).slice(0,3).join(""); });
-enterBtn.addEventListener("click", startJoin);
-nameInput.addEventListener("keydown", e=>{ if(e.key==="Enter") startJoin(); });
+enterBtn.addEventListener("click", startJoin); nameInput.addEventListener("keydown", e=>{ if(e.key==="Enter") startJoin(); });
+
 async function startJoin(){
   const n=nameInput.value.trim();
   if([...n].length===0){ warn.textContent="1〜3文字"; return; }
   if([...n].length>3){ warn.textContent="3文字まで"; return; }
-  me.name=n; join.style.display="none"; localStorage.setItem("yuru_name", me.name);
+  me.name=n;
+  const seedX=0.25+Math.random()*0.50, seedY=0.65+Math.random()*0.23;
+  const p=clampEdgePadded(seedX,seedY); me.x=p.x; me.y=p.y; target={x:me.x,y:me.y};
+
+  // ここで即表示＆ループ開始（認証前でも動かせる）
+  ensureMineDom();
+  if(!loopRunning){ loopRunning=true; loop(); }
+
+  join.style.display="none";
+  localStorage.setItem("yuru_name", me.name);
   await initAuth();
 }
-async function initAuth(){ try{ await signInAnonymously(auth); }catch(e){ alert("匿名認証に失敗。ネットワークかAuthentication設定を確認。"); console.error("[auth] signIn failed:", e); } }
+
+/* ===== 認証 ===== */
+async function initAuth(){ try{ await signInAnonymously(auth); }catch(e){ alert("匿名認証に失敗。Authentication設定を確認。"); console.error(e); } }
 onAuthStateChanged(auth, user=>{
   if(!user) return;
   uid=user.uid;
-  me.x=Math.random()*0.8+0.1; me.y=Math.random()*0.4+0.5; target={x:me.x,y:me.y};
-  ensureMineDom();
   mountPresence();
-  startLoop();
+  listenWorld();
 });
 
 /* ===== DB refs ===== */
@@ -337,29 +293,18 @@ const playersRef = playersRefOf(WORLD_ID);
 /* ===== プレゼンス ===== */
 async function mountPresence(){
   try{
-    await set(myRef(), { name:me.name, x:me.x, y:me.y, dir:me.dir, pose:me.pose, msg:"", msgAt:0, lastActive: serverTimestamp() });
+    await set(myRef(), { name:me.name, x:me.x, y:me.y, dir:me.dir, pose:me.pose, msg:"", msgAt:0, lastActive:serverTimestamp() });
   }catch(e){ console.error("[rtdb] initial set failed:", e); }
   try{ onDisconnect(myRef()).remove(); }catch(e){ console.warn("[rtdb] onDisconnect set failed:", e); }
 }
 
 /* ===== 購読＆描画 ===== */
-const domMap=new Map();
-let initialPlayersLoaded=false;
-
+const domMap=new Map(); let initialPlayersLoaded=false;
 onValue(playersRef, snap=>{
-  const data=snap.val()||{};
-  const ids=Object.keys(data);
+  const data=snap.val()||{}; const ids=Object.keys(data);
   countLabel.textContent=`😺 ${ids.length}`;
 
-  if(initialPlayersLoaded){
-    for(const id of ids){
-      if(!domMap.has(id) && id!==uid){
-        playLogin();
-        const n=(data[id] && data[id].name) ? data[id].name : "ななし";
-        toast(`${n} が入室した`);
-      }
-    }
-  }
+  if(initialPlayersLoaded){ for(const id of ids){ if(!domMap.has(id) && id!==uid) playLogin(); } }
 
   const seen=new Set(ids);
   for(const id of ids){
@@ -368,136 +313,132 @@ onValue(playersRef, snap=>{
     renderPlayer(pdom, data[id], id===uid);
   }
   for(const [id,pdom] of domMap){ if(!seen.has(id)){ pdom.wrap.remove(); domMap.delete(id); } }
-
   initialPlayersLoaded=true;
 });
 
 function createPlayerDom(id){
   const wrap=document.createElement("div"); wrap.className="p stand";
   const nameEl=document.createElement("div"); nameEl.className="name";
-  const bubble=document.createElement("div"); bubble.className="bubble";
-  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
-  svg.setAttribute("viewBox","0 0 100 100"); svg.classList.add("cat");
+  const bubble=document.createElement("div"); bubble.className="bubble"; bubble.style.display="none";
+  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg"); svg.setAttribute("viewBox","0 0 100 100"); svg.classList.add("cat");
   const body=document.createElementNS(svg.namespaceURI,"path"); body.setAttribute("fill","#000"); body.setAttribute("d","M28,68 Q40,48 58,46 Q78,46 84,60 Q86,74 64,80 Q42,82 28,68 Z");
   const head=document.createElementNS(svg.namespaceURI,"circle"); head.setAttribute("cx","80"); head.setAttribute("cy","48"); head.setAttribute("r","11"); head.setAttribute("fill","#000");
   const ear1=document.createElementNS(svg.namespaceURI,"path"); ear1.setAttribute("fill","#000"); ear1.setAttribute("d","M75,40 L80,33 L82,42 Z");
   const ear2=document.createElementNS(svg.namespaceURI,"path"); ear2.setAttribute("fill","#000"); ear2.setAttribute("d","M85,40 L90,33 L88,42 Z");
-  const tail=document.createElementNS(svg.namespaceURI,"path"); tail.setAttribute("fill","#000"); tail.setAttribute("d","M24,62 C18,54 24,42 38,40 C50,38 56,44 56,50 C40,54 32,60 30,68 Z"); tail.classList.add("wag");
+  const tail=document.createElementNS(svg.namespaceURI,"path"); tail.setAttribute("fill","#000"); tail.setAttribute("d","M24,62 C18,54 24,42 38,40 C50,38 56,44 56,50 C40,54 32,60 30,68 Z");
   const backLeg=document.createElementNS(svg.namespaceURI,"rect"); backLeg.setAttribute("x","50"); backLeg.setAttribute("y","72"); backLeg.setAttribute("width","6"); backLeg.setAttribute("height","14"); backLeg.setAttribute("fill","#000");
   const frontLeg=document.createElementNS(svg.namespaceURI,"rect"); frontLeg.setAttribute("x","66"); frontLeg.setAttribute("y","72"); frontLeg.setAttribute("width","6"); frontLeg.setAttribute("height","14"); frontLeg.setAttribute("fill","#000");
-
   const sitGroup=document.createElementNS(svg.namespaceURI,"g"); sitGroup.setAttribute("display","none");
   const sBody=document.createElementNS(svg.namespaceURI,"path"); sBody.setAttribute("fill","#000"); sBody.setAttribute("d","M30,72 Q42,54 64,54 Q82,54 84,66 Q86,80 62,84 Q40,86 30,72 Z");
   const sHead=document.createElementNS(svg.namespaceURI,"circle"); sHead.setAttribute("cx","78"); sHead.setAttribute("cy","50"); sHead.setAttribute("r","11"); sHead.setAttribute("fill","#000");
   const sEar1=document.createElementNS(svg.namespaceURI,"path"); sEar1.setAttribute("fill","#000"); sEar1.setAttribute("d","M73,42 L78,35 L80,44 Z");
   const sEar2=document.createElementNS(svg.namespaceURI,"path"); sEar2.setAttribute("fill","#000"); sEar2.setAttribute("d","M83,42 L88,35 L86,44 Z");
-  const sTail=document.createElementNS(svg.namespaceURI,"path"); sTail.setAttribute("fill","#000"); sTail.setAttribute("d","M28,70 C20,66 22,56 32,52 C40,50 46,54 44,60 C38,66 34,70 30,74 Z"); sTail.classList.add("wag");
-
-  svg.appendChild(body); svg.appendChild(head); svg.appendChild(ear1); svg.appendChild(ear2);
-  svg.appendChild(tail); svg.appendChild(backLeg); svg.appendChild(frontLeg);
-  sitGroup.appendChild(sBody); sitGroup.appendChild(sHead); sitGroup.appendChild(sEar1); sitGroup.appendChild(sEar2); sitGroup.appendChild(sTail);
-  svg.appendChild(sitGroup);
-
-  wrap.appendChild(nameEl); wrap.appendChild(bubble); wrap.appendChild(svg);
+  const sTail=document.createElementNS(svg.namespaceURI,"path"); sTail.setAttribute("fill","#000"); sTail.setAttribute("d","M28,70 C20,66 22,56 32,52 C40,50 46,54 44,60 C38,66 34,70 30,74 Z");
+  svg.append(body,head,ear1,ear2,tail,backLeg,frontLeg); sitGroup.append(sBody,sHead,sEar1,sEar2,sTail); svg.appendChild(sitGroup);
+  wrap.append(nameEl,bubble,svg);
   return {wrap, nameEl, bubbleEl:bubble, svg, sitGroup, standParts:[body,head,ear1,ear2,tail,backLeg,frontLeg], _lastMsgKey:null, _ready:false};
 }
 
 function renderPlayer(pdom, data, isSelf){
-  const r=getPlayRect(); if(!r) return;
-  const px=data.x*r.width, py=data.y*r.height;
-  pdom.wrap.style.transform=`translate3d(${px}px, ${py}px, 0) translate(-50%, -80%)`;
+  const r=play.getBoundingClientRect();
+  const nx = (typeof data.x==="number")?data.x:0.5;
+  const ny = (typeof data.y==="number")?data.y:0.7;
+  const c = clampEdgePadded(nx,ny);
+  pdom.wrap.style.left = `${c.x * r.width}px`;
+  pdom.wrap.style.top  = `${c.y * r.height}px`;
 
-  /* 名札は常にテキスト横書き・1行。バーに隠れそうなら上側へフリップ */
   pdom.nameEl.textContent = data.name || "";
-  const barH = bar.getBoundingClientRect().height || 0;
-  const playBottomVisible = r.height - barH;
-  if(py + 90 > playBottomVisible){ pdom.nameEl.classList.add("flip"); } else { pdom.nameEl.classList.remove("flip"); }
-
   pdom.wrap.classList.toggle("self", !!isSelf);
-  if(data.dir===-1) pdom.svg.classList.add("face-left"); else pdom.svg.classList.remove("face-left");
-  if(data.pose==="sit"){ pdom.wrap.classList.remove("stand"); pdom.wrap.classList.add("sit"); pdom.sitGroup.setAttribute("display","block"); pdom.standParts.forEach(n=>n.setAttribute("display","none")); }
-  else{ pdom.wrap.classList.add("stand"); pdom.wrap.classList.remove("sit"); pdom.sitGroup.setAttribute("display","none"); pdom.standParts.forEach(n=>n.setAttribute("display","block")); }
 
-  /* 吹き出し：横1行固定（省略表示）。改行はしない */
-  const raw = data.msg || ""; const msgAt = data.msgAt || 0; const key = `${raw}|${msgAt}`;
-  if(raw && key !== pdom._lastMsgKey){
-    const firstRender = !pdom._ready; pdom._ready=true; pdom._lastMsgKey=key;
-    pdom.bubbleEl.innerHTML = escapeHTML(raw);
-    pdom.bubbleEl.style.display = "block";
-    const age = typeof msgAt==="number" ? (Date.now()-msgAt) : 0;
+  if(data.dir === -1) pdom.svg.classList.add("face-left"); else pdom.svg.classList.remove("face-left");
+  if(data.pose === "sit"){ pdom.wrap.classList.remove("stand"); pdom.wrap.classList.add("sit"); pdom.sitGroup.setAttribute("display","block"); pdom.standParts.forEach(n=>n.setAttribute("display","none")); }
+  else { pdom.wrap.classList.add("stand"); pdom.wrap.classList.remove("sit"); pdom.sitGroup.setAttribute("display","none"); pdom.standParts.forEach(n=>n.setAttribute("display","block")); }
+
+  const raw = data.msg || ""; const msgAt=data.msgAt||0; const key=`${raw}|${msgAt}`;
+  if(raw && key!==pdom._lastMsgKey){
+    const firstRender=!pdom._ready; pdom._ready=true; pdom._lastMsgKey=key;
+    pdom.bubbleEl.textContent = raw;
+    pdom.bubbleEl.style.display="inline-block";
+    const age = (typeof msgAt==="number") ? (Date.now()-msgAt) : 0;
     const remain = Math.max(1200, BUBBLE_MS - Math.max(0,age));
-    clearTimeout(pdom._bubbleTimer);
-    pdom._bubbleTimer = setTimeout(()=>{ pdom.bubbleEl.style.display="none"; }, remain);
+    clearTimeout(pdom._bubbleTimer); pdom._bubbleTimer=setTimeout(()=>{ pdom.bubbleEl.style.display="none"; }, remain);
     if(!firstRender && !isSelf) playMessage();
   }else if(!raw){
     pdom.bubbleEl.style.display="none";
   }
 }
 
-/* 自分DOM保証 */
-function ensureMineDom(){
-  if(!uid) return;
-  if(!domMap.get(uid)){ const d=createPlayerDom(uid); domMap.set(uid,d); play.appendChild(d.wrap); }
-  renderPlayer(domMap.get(uid), me, true);
-}
+/* ===== 自分DOM保証 ===== */
+function ensureMineDom(){ if(!domMap.get("self")){ const d=createPlayerDom("self"); domMap.set("self",d); play.appendChild(d.wrap); } renderPlayer(domMap.get("self"), me, true); }
 
-/* 入力UI（横1行固定） */
+/* ===== 入力UI ===== */
 let lastSentAt=0;
 msgInput.addEventListener("input", ()=>{
   const v=msgInput.value;
-  if(isASCIIish(v)){ const w=countWordsASCII(v); hintLang.textContent=`英語：${Math.min(w,10)}/10`; }
-  else{ const len=Array.from(v).length; hintLang.textContent=`非英語：${Math.min(len,NON_ASCII_LIMIT)}/${NON_ASCII_LIMIT}`; }
+  if(isASCIIish(v)){ const w=countWordsASCII(v); hintLang.textContent=`英語モード：${Math.min(w,10)} / 10 語`; }
+  else{ const len=Array.from(v).length; hintLang.textContent=`非英語モード：${Math.min(len,NON_ASCII_LIMIT)} / ${NON_ASCII_LIMIT} 文字`; }
   sendBtn.disabled=!validateMessage(v).ok;
 });
 sendBtn.addEventListener("click", sendMsg);
 msgInput.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); sendMsg(); }});
-function validateMessage(raw){
-  if(!raw) return {ok:false};
-  if(isASCIIish(raw)){ if(countWordsASCII(raw)>10 || raw.length>100) return {ok:false}; }
-  else{ if(Array.from(raw).length>NON_ASCII_LIMIT) return {ok:false}; }
-  return {ok:true};
-}
-
-/* ポーズ切替 */
-function renderPoseBtn(){ poseBtn.innerHTML=`<span class="icon" aria-hidden="true">🪑</span><span class="txt"> ${me.pose==="stand"?"座る":"立つ"}</span>`; poseBtn.setAttribute("aria-pressed", me.pose==="sit"?"true":"false"); }
-renderPoseBtn();
 poseBtn.addEventListener("click", togglePose);
 window.addEventListener("keydown", e=>{ if(e.key.toLowerCase()==="s"){ togglePose(); }});
-function togglePose(){ me.pose=(me.pose==="stand")?"sit":"stand"; renderPoseBtn(); safeUpdate({pose:me.pose}); }
+function togglePose(){ me.pose=(me.pose==="stand")?"sit":"stand"; poseBtn.textContent=(me.pose==="stand")?"座る":"立つ"; poseBtn.setAttribute("aria-pressed", me.pose==="sit"?"true":"false"); safeUpdate({pose:me.pose}); }
 
-/* タップ移動 */
+/* ===== タップ／ドラッグ移動 ===== */
+let isDragging=false;
+function startMove(e){
+  isDragging=true; setTargetFromEvent(e);
+}
+function moveMove(e){
+  if(!isDragging) return;
+  setTargetFromEvent(e);
+}
+function endMove(){ isDragging=false; }
+
 function setTargetFromEvent(e){
-  const pt=(e.touches && e.touches[0]) ? e.touches[0] : e;
+  const pt=(e.touches&&e.touches[0])?e.touches[0]:e;
   const {x,y}=toNorm(pt.clientX, pt.clientY);
-  const pxNow=toPx(me.x, me.y).x, pxNext=toPx(x,y).x;
+  const pxNow=toPx(me.x,me.y).x, pxNext=toPx(x,y).x;
   target.x=x; target.y=y; me.dir=(pxNext>=pxNow)?1:-1;
   safeUpdate({dir:me.dir}); pingAt(x,y);
 }
-play.addEventListener("pointerdown", setTargetFromEvent);
-play.addEventListener("touchstart", setTargetFromEvent, {passive:true});
-play.addEventListener("dblclick", e=>{ e.preventDefault(); }, {passive:false});
+play.addEventListener("pointerdown", startMove);
+play.addEventListener("pointermove", moveMove);
+window.addEventListener("pointerup", endMove);
+play.addEventListener("touchstart", e=>{startMove(e)}, {passive:true});
+play.addEventListener("touchmove", e=>{moveMove(e)}, {passive:true});
+window.addEventListener("touchend", endMove);
+play.addEventListener("dblclick", e=>{ e.preventDefault(); }, {passive:false}); // iOSズーム抑止
 
-/* ループ */
-let loopStarted=false; let lastT=now();
-function startLoop(){ if(loopStarted) return; loopStarted=true; requestAnimationFrame(loop); }
+/* ===== ループ ===== */
+let lastT=now();
 function loop(){
   const t=now(); const dt=Math.max(0, Math.min(0.05,(t-lastT)/1000)); lastT=t;
-  const r=getPlayRect(); if(!r){ requestAnimationFrame(loop); return; }
+  const r=play.getBoundingClientRect();
   const pxPos=toPx(me.x,me.y), pxTarget=toPx(target.x,target.y);
   const dx=pxTarget.x-pxPos.x, dy=pxTarget.y-pxPos.y, dist=Math.hypot(dx,dy);
   const step=SPEED_PX_PER_S*dt;
-  if(dist>1){ const nx=pxPos.x+(dx/dist)*step, ny=pxPos.y+(dy/dist)*step; const nn=toNorm(nx+r.left, ny+r.top); me.x=nn.x; me.y=nn.y; }
-  else{ me.x=target.x; me.y=target.y; }
+  if(dist>1){
+    const nx=pxPos.x+(dx/dist)*step, ny=pxPos.y+(dy/dist)*step;
+    const nn=toNorm(nx+r.left, ny+r.top);
+    me.x=nn.x; me.y=nn.y;
+  }else{
+    me.x=target.x; me.y=target.y;
+  }
   ensureMineDom();
-  if((t-lastSync)>=SYNC_INTERVAL_MS){ safeUpdate({x:me.x,y:me.y}); lastSync=t; }
-  if((t-lastHeartbeat)>=HEARTBEAT_MS){ safeUpdate({lastActive: serverTimestamp()}); lastHeartbeat=t; }
+
+  if(uid){ // 認証後のみ同期
+    if((t-lastSync)>=SYNC_INTERVAL_MS){ safeUpdate({x:me.x, y:me.y}); lastSync=t; }
+    if((t-lastHeartbeat)>=HEARTBEAT_MS){ safeUpdate({lastActive: serverTimestamp()}); lastHeartbeat=t; }
+  }
   requestAnimationFrame(loop);
 }
 
-/* 書き込み */
+/* ===== 書き込み ===== */
 async function safeUpdate(patch){ if(!uid) return; try{ await update(myRef(), patch); }catch(e){ console.error("[rtdb] update failed:", patch, e); } }
 
-/* 送信 */
+/* ===== 送信 ===== */
 function sendMsg(){
   const raw=msgInput.value.trim(); if(!validateMessage(raw).ok) return;
   const nowMs=Date.now(); if(nowMs-lastSentAt<500) return; lastSentAt=nowMs;
@@ -506,30 +447,28 @@ function sendMsg(){
   safeUpdate({ msg: raw, msgAt: serverTimestamp() });
 }
 
-/* 共有 */
+/* ===== 共有 ===== */
 shareBtn.addEventListener("click", async ()=>{
   const invite=new URL(location.href);
   invite.searchParams.set("room", WORLD_ID);
   invite.hash=invite.hash.replace(/room=[^&]+&?/,'').replace(/[#&]$/,'');
   try{
-    if(navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(invite.toString()); toast("URLをコピーした（同じ部屋に入れる）"); }
-    else{ prompt("このURLをコピーして共有してね", invite.toString()); }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(invite.toString());
+      toast("URLをコピーした（同じ部屋に入れる）");
+    }else{ prompt("このURLをコピーして共有してね", invite.toString()); }
   }catch(e){ console.warn("clipboard failed:", e); }
 });
-
-/* ヘルプ */
 helpBtn.addEventListener("click", ()=>helpDialog.showModal());
 helpClose.addEventListener("click", ()=>helpDialog.close());
 
-/* オンライン表示・トースト */
-window.addEventListener("online", ()=> toast("オンライン"));
-window.addEventListener("offline", ()=> toast("オフライン：再接続待ち"));
-function toast(text){ const el=document.getElementById("hint"); el.textContent=text; el.style.opacity=.95; clearTimeout(toast._t); toast._t=setTimeout(()=> el.style.opacity=.85, 1500); }
+/* ===== ヒント・オンライン ===== */
+window.addEventListener("online",  ()=>toast("オンライン"));
+window.addEventListener("offline", ()=>toast("オフライン：再接続待ち"));
+function toast(text){ const el=document.getElementById("hint"); el.textContent=text; el.style.opacity=.95; clearTimeout(toast._t); toast._t=setTimeout(()=>el.style.opacity=.75,1500); }
 
-/* 起動前チェック */
-(function(){ const needs=["apiKey","authDomain","databaseURL","projectId","appId"]; if(needs.some(k=>!firebaseConfig[k])) toast("Firebaseのconfigを入れてから使う"); worldLabel.textContent = `room: ${WORLD_ID}`; })();
-msgInput.dispatchEvent(new Event("input"));
-startLoop();
+/* ===== 起動前チェック ===== */
+(function(){ const needs=["apiKey","authDomain","databaseURL","projectId","appId"]; if(needs.some(k=>!firebaseConfig[k])) toast("Firebaseのconfigを入れてから使う"); worldLabel.textContent=`room: ${WORLD_ID}`; msgInput.dispatchEvent(new Event("input"));})();
 </script>
 </body>
 </html>

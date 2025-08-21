@@ -197,6 +197,7 @@ const CAT_ANGRY_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/
 const NOTE_TTL_MS = 8*60*60*1000;   // 8時間
 const EMO_SHOW_MS = 3000;
 const ROOM_CAP    = 10;
+const MIGRATE_TTL_MS = 30000;       // ★ 新部屋バナーの寿命 30秒
 
 /* ========= i18n ========= */
 const I18N = {
@@ -213,6 +214,10 @@ const I18N = {
     helperASCII:(w)=>`英語：${w}/10`,
     helperCJK:(n)=>`非英語：${n}/15`,
     hint:"画面をタップで自分の猫がゆっくり移動",
+    joinTitle:"名前を入れて参加",
+    joinDesc:"名前は3文字まで。URLが同じなら同じ部屋。落ち着いて遊ぶ場。",
+    joinStart:"はじめる",
+    joinHint:"音が出ないときは一度画面をタップしてからミュートを確かめる。",
 
     helpHtml:`<h3 style="margin:0 0 8px">使い方</h3>
       <ul style="margin:0 0 12px 18px; line-height:1.7; color:#374151; font-size:14px">
@@ -259,6 +264,10 @@ const I18N = {
     helperASCII:(w)=>`EN: ${w}/10`,
     helperCJK:(n)=>`Non‑EN: ${n}/15`,
     hint:"Tap to move your cat slowly",
+    joinTitle:"Enter your name",
+    joinDesc:"Up to 3 characters. Same URL joins the same room.",
+    joinStart:"Start",
+    joinHint:"No sound? Tap once and check mute.",
 
     helpHtml:`<h3 style="margin:0 0 8px">How to play</h3>
       <ul style="margin:0 0 12px 18px; line-height:1.7; color:#374151; font-size:14px">
@@ -425,7 +434,7 @@ function applyLang(){
   document.documentElement.lang = (LANG==="ja"?"ja":"en");
   brandTitle.textContent=T.brand;
   countLabel.textContent=T.roomCount((latestPlayers && Object.keys(latestPlayers).length)||0);
-  lblPose.textContent = me.pose==="stand" ? ` ${T.poseSit}` : ` ${T.poseStand}`;
+  lblPose.textContent = " " + (me.pose==="stand" ? T.poseSit : T.poseStand);
   lblAnger.textContent=` ${T.anger}`;
   renderMuteButton();
   lblNew.textContent=` ${T.newRoom}`;
@@ -439,7 +448,7 @@ function applyLang(){
   document.getElementById("hint").textContent=T.hint;
   joinTitle.textContent = T.joinTitle;
   joinDesc.innerHTML   = T.joinDesc;
-  enterBtn.textContent = T.joinStart || "はじめる";
+  enterBtn.textContent = T.joinStart;
   joinHint.textContent = T.joinHint;
   const v=msgInput.value;
   if(isASCIIish(v)){ hintLang.textContent=T.helperASCII(Math.min(countWordsASCII(v),10)); }
@@ -482,7 +491,7 @@ async function initAfterAuth(){
   startLoop();
   subscribePlayers();
   subscribeNotes();
-  subscribeMeta();
+  subscribeMeta();   // ★ ここでメタ購読（30秒TTL処理つき）
   mounted=true;
 }
 async function ensureCapacity(){
@@ -527,7 +536,6 @@ function subscribePlayers(){
         pdom=createPlayerDom(id);
         domMap.set(id,pdom);
         play.appendChild(pdom.wrap);
-        // 既にルームが走っている状態で他者が入ってきたら演出と音
         if(initialPlayersLoaded && id!==uid){
           const p=data[id];
           if(p){ joinBurstAt(p.x, p.y); }
@@ -556,7 +564,7 @@ function subscribePlayers(){
   }, (err)=>console.error("players onValue error:", err));
 }
 
-/* ========= 入室演出：光の輪＋スパーク＋猫グロー ========= */
+/* ========= 入室演出 ========= */
 function joinBurstAt(nx, ny){
   const r=getPlayRect(); if(!r) return;
   const {x,y}=toPx(nx,ny);
@@ -573,7 +581,6 @@ function joinBurstAt(nx, ny){
     s.className="spark";
     s.style.setProperty("--dx", `${dx.toFixed(1)}px`);
     s.style.setProperty("--dy", `${dy.toFixed(1)}px`);
-    // 小さなゆらぎ
     s.style.animationDelay = `${(Math.random()*0.06).toFixed(3)}s`;
     fx.appendChild(s);
   }
@@ -581,7 +588,6 @@ function joinBurstAt(nx, ny){
   setTimeout(()=>fx.remove(), 950);
 }
 function warpPulse(pdom){
-  // 位置固定のまま軽くスケールイン
   const r=getPlayRect(); if(!r) return;
   const mat = pdom.wrap.style.transform.match(/translate3d\(([^)]+)\)/);
   let px=0, py=0;
@@ -614,19 +620,29 @@ function upsertNoteDom(ownerUid,data){
 function positionNoteDom(el,nx,ny){ const r=getPlayRect(); if(!r) return; const px=roundPx(nx*r.width), py=roundPx(ny*r.height); const topSpace=py-130; if(topSpace<0){ el.classList.add("flip"); }else{ el.classList.remove("flip"); } el.style.transform=`translate3d(${px}px, ${py}px, 0) ${el.classList.contains("flip")?"translate(-50%, 18px)":"translate(-50%, -120%)"}`; }
 window.addEventListener("resize", ()=>{ for(const [,el] of notesDomMap){ positionNoteDom(el, Number(el.dataset.x), Number(el.dataset.y)); } });
 
-/* ========= メタ：新部屋通知 ========= */
+/* ========= メタ：新部屋通知（30秒TTL） ========= */
 let NEXT_ROOM_ID=null;
-onValue(metaRef(), snap=>{
-  const m=snap.val()||{};
-  if(m.nextRoom && m.at){
-    NEXT_ROOM_ID=m.nextRoom;
-    const byName=(latestPlayers[m.by]?.name)?resolveLabelName(m.by, latestPlayers[m.by].name):(LANG==="ja"?"だれか":"someone");
-    migrateText.textContent=`🆕 ${I18N[LANG].notify.newRoomBy(byName)}`;
-    migrate.style.display="block";
-  }else{
-    migrate.style.display="none";
-  }
-});
+let migrateHideTimer=null;
+
+function subscribeMeta(){
+  onValue(metaRef(), snap=>{
+    const m=snap.val()||{};
+    clearTimeout(migrateHideTimer);
+    const at=Number(m.at||0);
+    const fresh = m.nextRoom && at>0 && (Date.now() - at) <= MIGRATE_TTL_MS;
+    if(fresh){
+      NEXT_ROOM_ID=m.nextRoom;
+      const byName=(latestPlayers[m.by]?.name)?resolveLabelName(m.by, latestPlayers[m.by].name):(LANG==="ja"?"だれか":"someone");
+      migrateText.textContent=`🆕 ${I18N[LANG].notify.newRoomBy(byName)}`;
+      migrate.style.display="block";
+      const timeLeft=Math.max(0, MIGRATE_TTL_MS - (Date.now()-at));
+      migrateHideTimer=setTimeout(()=>{ migrate.style.display="none"; }, timeLeft + 50);
+    }else{
+      migrate.style.display="none";
+    }
+  });
+}
+
 migrateGo.addEventListener("click", ()=>{ if(!NEXT_ROOM_ID) return; const u=new URL(location.href); u.searchParams.set("room", NEXT_ROOM_ID); location.href=u.toString(); });
 
 /* ========= プレイヤーDOM ========= */
@@ -652,7 +668,6 @@ function renderPlayer(pdom, data, isSelf){
   const decidedName=resolveLabelName(pdom._id, data?.name);
   if(pdom.nameEl.textContent!==decidedName) pdom.nameEl.textContent=decidedName;
 
-  // 下端での重なり回避
   const barH=bar.getBoundingClientRect().height||0;
   const visibleBottom=r.height-barH;
   const wantFlip=(py+110 > visibleBottom);
@@ -661,7 +676,6 @@ function renderPlayer(pdom, data, isSelf){
   pdom.bubbleEl.classList.toggle("bump", pdom._flip);
   pdom.pinBubbleEl.classList.toggle("bump", pdom._flip);
 
-  // メッセージ（60秒）
   const raw=data.msg||""; const msgAt=Number(data.msgAt||0);
   if(raw && msgAt>0){
     const REPLAY_GUARD_MS=4000; const nowAbs=Date.now(); const isReplaySelf=isSelf && (msgAt - pdom._lastShownMsgAt < REPLAY_GUARD_MS);
@@ -742,7 +756,25 @@ function peekNames(){ const names=Object.entries(latestPlayers).map(([id,p])=>re
 /* ========= 共有/ヘルプ/新部屋 ========= */
 shareBtn.addEventListener("click", async ()=>{ const invite=new URL(location.href); invite.searchParams.set("room", WORLD_ID); invite.hash=invite.hash.replace(/room=[^&]+&?/,'').replace(/[#&]$/,''); try{ if(navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(invite.toString()); toast(I18N[LANG].notify.urlCopied); } else { prompt(LANG==="ja"?"このURLをコピーして共有してね":"Copy this URL", invite.toString()); } }catch(e){ console.warn("clipboard failed:", e); } });
 helpBtn.addEventListener("click", ()=>{ helpDialog.innerHTML=`<div style="padding:16px 16px 12px; max-width:560px">${I18N[LANG].helpHtml}<div style="display:flex; gap:8px; justify-content:flex-end"><button id="helpClose" class="btn">OK</button></div></div>`; helpDialog.showModal(); helpDialog.querySelector("#helpClose").addEventListener("click", ()=>helpDialog.close(), {once:true}); });
-newRoomBtn.addEventListener("click", async ()=>{ const id=makeRoomId(); try{ await update(metaRef(), {nextRoom:id, by:uid||"", at:serverTimestamp()}); toast(LANG==="ja"?"新しい部屋を作った":"New room created"); }catch(e){ console.error("set nextRoom failed:", e); toast(LANG==="ja"?"新しい部屋の作成に失敗":"Failed to create"); } });
+
+newRoomBtn.addEventListener("click", async ()=>{
+  const id=makeRoomId();
+  try{
+    await update(metaRef(), {nextRoom:id, by:uid||"", at:serverTimestamp()});
+    toast(LANG==="ja"?"新しい部屋を作った":"New room created");
+    // ★ 作成者側で30秒+α後にメタを掃除（残骸防止）
+    setTimeout(async ()=>{
+      try{
+        const snap=await get(metaRef());
+        const m=snap.val()||{};
+        if(m.nextRoom===id){ await update(metaRef(), {nextRoom:null, by:"", at:0}); }
+      }catch(_e){}
+    }, MIGRATE_TTL_MS + 1200);
+  }catch(e){
+    console.error("set nextRoom failed:", e);
+    toast(LANG==="ja"?"新しい部屋の作成に失敗":"Failed to create");
+  }
+});
 
 /* ========= ネットワーク表示 ========= */
 window.addEventListener("online", ()=>toast(I18N[LANG].notify.online));

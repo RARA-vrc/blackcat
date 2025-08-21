@@ -6,6 +6,7 @@
 <title>ゆるネコひろば</title>
 <meta name="color-scheme" content="light only">
 
+<!-- 猫画像をプリロード -->
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png" as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png"  as="image" crossorigin>
 
@@ -34,6 +35,7 @@
   .btn{appearance:none; border:0; background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:10px 12px; font-size:14px; font-weight:800; cursor:pointer; min-height:40px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; flex:0 0 auto}
   .btn.ghost{background:transparent; color:var(--ink); border:1px solid var(--border)}
   .btn.iconOnly{padding:10px; min-width:44px}
+  .btn:disabled{opacity:.5; cursor:not-allowed}
   .btn:focus-visible{outline:var(--ring) solid var(--ringColor); outline-offset:2px}
   .icon{font-variant-emoji:emoji; font-size:16px}
   .txt{display:inline-block}
@@ -70,40 +72,40 @@
   #helper{flex:0 0 auto; display:flex; align-items:center; gap:8px; font-size:12px; color:#6b7280; max-width:34%; overflow:hidden; text-overflow:ellipsis; user-select:none}
   @media (max-width:980px){ #helper{display:none} }
 
-  .p{position:absolute; left:0; top:0; transform:translate3d(0,0,0) translate(-50%, -80%); will-change:transform; width:78px; height:78px}
-  .catImg{width:78px; height:78px; display:block; object-fit:contain; image-rendering:auto; pointer-events:none; transition:transform .18s ease}
+  /* ===== レイヤー順（上→下） =====
+     一般チャット(.bubble.chat) > ネーム(.name) > 固定ピン(.bubble.pin) > 猫画像(.catImg) > 書き置き(#notesLayer)
+     これを確実にするため、.p 自体に z-index を与えてスタッキングコンテキストを作る
+  */
+  .p{position:absolute; left:0; top:0; transform:translate3d(0,0,0) translate(-50%, -80%); will-change:transform; width:78px; height:78px; z-index:10}
+  .catImg{width:78px; height:78px; display:block; object-fit:contain; image-rendering:auto; pointer-events:none; transition:transform .18s ease; position:relative; z-index:0}
   .catImg.right{transform:scaleX(-1)}
   .catImg.sit{display:none}
   .sit .catImg.stand{display:none}
   .sit .catImg.sit{display:block}
 
-  /* 名札を最前面に（書き置きより前） */
   .name{
     position:absolute; left:50%; top:78px; transform:translateX(-50%);
     background:rgba(17,17,17,.95); color:#fff; font-size:12px; padding:2px 8px; border-radius:999px; white-space:nowrap;
     max-width:180px; text-overflow:ellipsis; overflow:hidden; letter-spacing:.2px; border:1px solid rgba(0,0,0,.6);
-    z-index:4; pointer-events:none; will-change:transform;
+    z-index:20; pointer-events:none; will-change:transform;
   }
   .name.flip{top:auto; bottom:84px}
 
   .bubble{
-    position:absolute; left:50%; bottom:94px; transform:translateX(-50%);
-    background:#fff; color:#111; border:1px solid var(--border); border-radius:12px; padding:8px 10px; font-size:14px;
+    position:absolute; left:50%; transform:translateX(-50%);
+    background:#fff; color:#111; border:1px solid var(--border); border-radius:12px; padding:8px 10px;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:min(86vw, 520px);
-    box-shadow:0 8px 22px rgba(0,0,0,.06); z-index:2; display:none; pointer-events:none;
+    box-shadow:0 8px 22px rgba(0,0,0,.06); pointer-events:none; display:none;
   }
-  .bubble.pin{
-    display:none; bottom:122px; background:var(--pin-bg); border-color:var(--pin-bd);
-    font-size:0.66em; padding:6px 9px; z-index:2;
-  }
+  .bubble.chat{bottom:94px; font-size:14px; z-index:30}   /* 一般チャット（最前面） */
+  .bubble.pin {bottom:122px; background:var(--pin-bg); border-color:var(--pin-bd); font-size:0.66em; padding:6px 9px; z-index:10} /* ネームより下 */
 
-  /* 書き置きは名札より後ろ */
-  #notesLayer{position:absolute; inset:0; pointer-events:none; z-index:1}
+  /* 書き置きは猫より背面へ */
+  #notesLayer{position:absolute; inset:0; pointer-events:none; z-index:0}
   .noteItem{
     position:absolute; transform:translate3d(0,0,0) translate(-50%, -120%);
     background:var(--pin-bg); border:1px solid var(--pin-bd); border-radius:10px;
-    padding:4px 6px; font-size:0.5rem;
-    color:#111; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; max-width:50vw;
+    padding:4px 6px; font-size:0.5rem; color:#111; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; max-width:50vw;
     box-shadow:0 4px 12px rgba(0,0,0,.06);
   }
   .noteItem.flip{ transform:translate3d(0,0,0) translate(-50%, 18px); }
@@ -114,7 +116,7 @@
     font-size:13px; border-radius:12px; padding:8px 10px; max-width:90vw; white-space:normal; display:none;
   }
 
-  #join{position:fixed; inset:0; background:rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center; z-index:10}
+  #join{position:fixed; inset:0; background:rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center; z-index:100}
   #join .card{width:min(92vw,520px); border:1px solid var(--border); border-radius:18px; background:#fff; padding:18px 16px 16px; box-shadow:0 18px 60px rgba(0,0,0,.08)}
   #join h2{margin:0 0 8px; font-size:18px}
   #join p{margin:0 0 12px; font-size:14px; color:#555; line-height:1.6}
@@ -127,7 +129,7 @@
 
   #hint{position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom)); background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.85; z-index:4}
 
-  #full{position:fixed; inset:0; background:rgba(255,255,255,.9); display:none; align-items:center; justify-content:center; z-index:20}
+  #full{position:fixed; inset:0; background:rgba(255,255,255,.9); display:none; align-items:center; justify-content:center; z-index:200}
   #full .card{width:min(92vw,520px); border:1px solid var(--border); border-radius:18px; background:#fff; padding:18px 16px 16px; box-shadow:0 18px 60px rgba(0,0,0,.08)}
   #full .card h3{margin:0 0 8px}
 </style>
@@ -163,9 +165,11 @@
         <span aria-hidden="true">Enter送信 / Sで座る</span>
       </div>
     </div>
-    <button id="pinBtn"  class="btn iconOnly" title="ピン留め"><span class="icon" aria-hidden="true">📌</span></button>
-    <button id="noteBtn" class="btn iconOnly" title="猫の位置に書き置き（1人1件、更新可）"><span class="icon" aria-hidden="true">🖋️</span></button>
-    <button id="send"    class="btn iconOnly" disabled title="メッセージ送信"><span class="icon" aria-hidden="true">📨</span></button>
+    <button id="pinBtn"        class="btn iconOnly" title="ピン留め（頭上固定）"><span class="icon" aria-hidden="true">📌</span></button>
+    <button id="noteBtn"       class="btn iconOnly" title="書き置きを残す/更新"><span class="icon" aria-hidden="true">🖋️</span></button>
+    <!-- ★ 追加：書き置きクリア -->
+    <button id="noteClearBtn"  class="btn iconOnly" title="自分の書き置きを消す"><span class="icon" aria-hidden="true">🗑️</span></button>
+    <button id="send"          class="btn iconOnly" disabled title="メッセージ送信"><span class="icon" aria-hidden="true">📨</span></button>
   </div>
 
   <div id="hint" aria-live="polite">画面をタップで自分の猫がゆっくり移動</div>
@@ -196,15 +200,13 @@
       <li>座る/立つは上部の <b>🪑</b> か <b>S</b> キー（入力中は無効）</li>
       <li><b>📌ピン</b>は頭上に固定（淡ピンク・2/3サイズ）／再度で解除</li>
       <li><b>🖋️書き置き</b>は<b>猫のいた場所</b>に小さく残る（約1/2サイズ）／<b>1人1件</b>・更新可・<b>8時間</b>で消える</li>
+      <li><b>🗑️書き置きクリア</b>で自分の書き置きを削除</li>
       <li>左上の <b>🐈‍⬛</b> を押すと参加者名を2.5秒表示</li>
       <li>同じ部屋は最大10人まで</li>
     </ul>
     <div style="background:#f8fafc; border:1px solid #e5e7eb; padding:10px; border-radius:10px; font-size:13px; color:#374151; margin-bottom:12px">
       音が出ない場合：ページを一度タップしてから、ブラウザのサイト設定で「音声を許可」。iOSは本体のサイレントスイッチも確認。
     </div>
-    <p id="authorXLine" class="subtle" style="margin:6px 0 0; text-align:right; opacity:.7; display:none">
-      作者X: <a id="authorX" href="#" target="_blank" rel="noopener" style="color:#6b7280; text-decoration:underline dotted">link</a>
-    </p>
     <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px">
       <button id="helpClose" class="btn">OK</button>
     </div>
@@ -222,11 +224,10 @@
 </div>
 
 <script type="module">
+/* ====== 設定 ====== */
 const CAT_STAND_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png";
 const CAT_SIT_URL   = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png";
-
-const AUTHOR_X_LINK = ""; // 例: "https://x.com/your_handle"
-const NOTE_TTL_MS = 8 * 60 * 60 * 1000;
+const NOTE_TTL_MS = 8 * 60 * 60 * 1000;  // 8時間
 
 const firebaseConfig = {
   apiKey:"AIzaSyCUpt4XLfSSZLt0VhJon926--c-I2tRMkE",
@@ -239,6 +240,7 @@ const firebaseConfig = {
   measurementId:"G-R47HW00266"
 };
 
+/* ====== ルームID ====== */
 const url = new URL(location.href);
 const qp = url.searchParams.get("room");
 const hp = (location.hash.match(/room=([^&]+)/)||[])[1];
@@ -246,6 +248,7 @@ function makeRoomId(){ const t=Date.now().toString(36).slice(-6); const r=crypto
 function setURLRoom(id){ const u=new URL(location.href); u.searchParams.set("room",id); u.hash=u.hash.replace(/room=[^&]+&?/,'').replace(/[#&]$/,''); history.replaceState({}, "", u.toString()); }
 let WORLD_ID = qp || hp || null; if(!WORLD_ID){ WORLD_ID = makeRoomId(); setURLRoom(WORLD_ID); }
 
+/* ====== Firebase ====== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, onValue, set, update, serverTimestamp, onDisconnect, get, remove }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -256,7 +259,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-/* DOM refs */
+/* ====== DOM ====== */
 const play = document.getElementById("play");
 const notesLayer = document.getElementById("notesLayer");
 const bar = document.getElementById("bar");
@@ -264,6 +267,7 @@ const msgInput = document.getElementById("msg");
 const sendBtn = document.getElementById("send");
 const pinBtn = document.getElementById("pinBtn");
 const noteBtn = document.getElementById("noteBtn");
+const noteClearBtn = document.getElementById("noteClearBtn"); // ★ 追加
 const poseTopBtn = document.getElementById("poseTopBtn");
 const join = document.getElementById("join");
 const nameInput = document.getElementById("nameInput");
@@ -281,18 +285,11 @@ const playersBtn = document.getElementById("playersBtn");
 const namesPeek = document.getElementById("namesPeek");
 const full = document.getElementById("full");
 const newRoomBtn = document.getElementById("newRoomBtn");
-const authorXLine = document.getElementById("authorXLine");
-const authorX = document.getElementById("authorX");
 
 worldLabel.textContent = `room: ${WORLD_ID}`;
 countLabel.textContent = `🐈‍⬛ 0`;
-if(AUTHOR_X_LINK){
-  authorX.href = AUTHOR_X_LINK;
-  authorX.textContent = AUTHOR_X_LINK.replace(/^https?:\/\/(www\.)?/, "");
-  authorXLine.style.display = "block";
-}
 
-/* ===== サウンド ===== */
+/* ====== サウンド ====== */
 let AC=null, masterGain=null; let muted=localStorage.getItem("yuru_mute")==="1";
 function unlockAudio(){ if(!AC){ const Ctx=window.AudioContext||window.webkitAudioContext; if(!Ctx) return; AC=new Ctx(); masterGain=AC.createGain(); masterGain.gain.value=muted?0:0.24; masterGain.connect(AC.destination); } if(AC&&AC.state==="suspended") AC.resume(); }
 function setupAudioUnlock(){ const once=()=>{unlockAudio(); document.removeEventListener("pointerdown", once); document.removeEventListener("keydown", once); }; document.addEventListener("pointerdown", once, {passive:true}); document.addEventListener("keydown", once); enterBtn.addEventListener("click", unlockAudio, {once:true}); } setupAudioUnlock();
@@ -303,7 +300,10 @@ function renderMuteButton(){ muteBtn.innerHTML = `<span class="icon" aria-hidden
 muteBtn.addEventListener("click", ()=>{ muted=!muted; if(masterGain) masterGain.gain.value=muted?0:0.24; localStorage.setItem("yuru_mute", muted?"1":"0"); renderMuteButton(); });
 renderMuteButton();
 
-/* ===== 状態 ===== */
+/* ====== 状態 ====== */
+const lastShownName = new Map(); // uid -> last label
+let hasOwnNote=false;          // ★ 追加：自分の書き置き有無
+
 let uid=null;
 let me={ name:"", x:0.5, y:0.7, dir:1, pose:"stand", msg:"", msgAt:0, pinMsg:"" };
 let target={x:me.x,y:me.y};
@@ -313,7 +313,7 @@ const BUBBLE_MS=60000;
 const NON_ASCII_LIMIT=15;
 const ROOM_CAP = 10;
 
-/* ===== ユーティリティ ===== */
+/* ====== ユーティリティ ====== */
 const now = ()=>performance.now();
 const clamp01 = v=>Math.max(0,Math.min(1,v));
 const isASCIIish = s=>/^[\x00-\x7F]+$/.test(s);
@@ -324,21 +324,17 @@ function toPx(nx,ny){ const r=getPlayRect(); if(!r) return {x:0,y:0}; return {x:
 function pingAt(nx,ny){ const r=getPlayRect(); if(!r) return; const {x,y}=toPx(nx,ny); const s=document.createElement("span"); s.className="ping"; s.style.left=`${x}px`; s.style.top=`${y}px`; play.appendChild(s); s.addEventListener("animationend",()=>s.remove()); }
 function roundPx(v){ return Math.round(v); }
 function toast(text){ const el=document.getElementById("hint"); el.textContent=text; el.style.opacity=.95; clearTimeout(toast._t); toast._t=setTimeout(()=> el.style.opacity=.85, 1500); }
+function normalizeName(s){ if(typeof s!=="string") return ""; const t=s.trim(); return t.length?Array.from(t).slice(0,3).join(""):""; }
+function resolveLabelName(userId, incoming){ const prev=lastShownName.get(userId)||""; const n=normalizeName(incoming); const decided=n||prev||"ななし"; lastShownName.set(userId,decided); return decided; }
 
-/* ★ 名札用のフォールバック */
-function displayNameOf(obj){
-  const s = (obj && typeof obj.name === "string") ? obj.name.trim() : "";
-  return s.length ? s.slice(0,3) : "ななし";
-}
-
-/* ===== Refs ===== */
+/* ====== Refs ====== */
 function playersRefOf(room){ return ref(db, `worlds/${room}/players`); }
 function myRef(){ return ref(db, `worlds/${WORLD_ID}/players/${uid}`); }
 function notesRootRef(){ return ref(db, `worlds/${WORLD_ID}/notes`); }
 function noteRefOf(u){ return ref(db, `worlds/${WORLD_ID}/notes/${u}`); }
 const playersRef = playersRefOf(WORLD_ID);
 
-/* ===== 参加 ===== */
+/* ====== 参加 ====== */
 const remembered=localStorage.getItem("yuru_name"); if(remembered) nameInput.value=remembered.slice(0,3);
 nameInput.addEventListener("input", ()=>{ const n=nameInput.value.trim(); if([...n].length>3) nameInput.value=Array.from(n).slice(0,3).join(""); });
 enterBtn.addEventListener("click", startJoin);
@@ -368,28 +364,23 @@ onAuthStateChanged(auth, async user=>{
   subscribeNotes();
 });
 
-/* ===== 上限チェック ===== */
+/* ====== 入室上限 ====== */
 async function ensureCapacity(){
-  try{
-    const snap = await get(playersRef);
-    const n = snap.exists() ? snap.numChildren() : 0;
-    return n < ROOM_CAP;
-  }catch(e){ console.warn("capacity check failed:", e); return true; }
+  try{ const snap = await get(playersRef); const n = snap.exists()?snap.numChildren():0; return n < ROOM_CAP; }
+  catch(e){ console.warn("capacity check failed:", e); return true; }
 }
 function showFull(){
   full.style.display = "flex";
-  newRoomBtn.onclick = ()=>{
-    const nid = makeRoomId();
-    setURLRoom(nid);
-    location.reload();
-  };
+  newRoomBtn.onclick = ()=>{ const nid = makeRoomId(); setURLRoom(nid); location.reload(); };
 }
 
-/* ===== プレゼンス ===== */
+/* ====== プレゼンス ====== */
 async function mountPresence(forceStand=false){
   try{
+    const initialName = normalizeName(me.name) || "ななし";
+    lastShownName.set(uid, initialName);
     await set(myRef(), {
-      name: displayNameOf({name: me.name}),  // ★ 空なら「ななし」
+      name: initialName,
       x: me.x, y: me.y, dir: me.dir,
       pose: forceStand ? "stand" : me.pose,
       msg: "", msgAt: 0, pinMsg: "", pinAt: 0,
@@ -399,7 +390,7 @@ async function mountPresence(forceStand=false){
   try{ onDisconnect(myRef()).remove(); }catch(e){ console.warn("[rtdb] onDisconnect set failed:", e); }
 }
 
-/* ===== 購読（プレイヤー） ===== */
+/* ====== 購読（プレイヤー） ====== */
 const domMap=new Map();
 let initialPlayersLoaded=false;
 let latestPlayers = {};
@@ -414,7 +405,7 @@ function subscribePlayers(){
       for(const id of ids){
         if(!domMap.has(id) && id!==uid){
           playLogin();
-          toast(`${displayNameOf(data[id])} が入室した`);
+          toast(`${resolveLabelName(id, data[id]?.name)} が入室した`);
         }
       }
     }
@@ -423,38 +414,42 @@ function subscribePlayers(){
     for(const id of ids){
       let pdom=domMap.get(id);
       if(!pdom){ pdom=createPlayerDom(id); domMap.set(id,pdom); play.appendChild(pdom.wrap); }
+      if(id===uid){
+        const serverName = normalizeName(data[id]?.name);
+        if(serverName){ me.name = serverName; lastShownName.set(uid, serverName); }
+      }
       renderPlayer(pdom, data[id], id===uid);
     }
-    for(const [id,pdom] of domMap){ if(!seen.has(id)){ pdom.wrap.remove(); domMap.delete(id); } }
+    for(const [id,pdom] of domMap){ if(!seen.has(id)){ pdom.wrap.remove(); domMap.delete(id); lastShownName.delete(id); } }
 
     initialPlayersLoaded=true;
   }, (err)=>{ console.error("players onValue error:", err); });
 }
 
-/* ===== 購読（書き置き） ===== */
+/* ====== 購読（書き置き） ====== */
 const notesDomMap = new Map();
 function subscribeNotes(){
   onValue(notesRootRef(), snap=>{
     const nowMs = Date.now();
     const seen = new Set();
+    hasOwnNote = false; // ★ 自分の有無を毎回再計算
     snap.forEach(child=>{
-      const v = child.val();
-      if(!v) return;
+      const v = child.val(); if(!v) return;
       const ts = Number(v.updatedAt || v.at || 0);
       const alive = ts>0 && (nowMs - ts) <= NOTE_TTL_MS;
       const id = child.key;
       if(alive){
         upsertNoteDom(id, v);
         seen.add(id);
+        if(id === uid) hasOwnNote = true;
       }else{
-        if(id === uid){
-          remove(noteRefOf(uid)).catch(()=>{});
-        }
+        if(id === uid){ remove(noteRefOf(uid)).catch(()=>{}); }
       }
     });
     for(const [id, el] of notesDomMap){
       if(!seen.has(id)){ el.remove(); notesDomMap.delete(id); }
     }
+    renderNoteClearButton(); // ★ クリアボタンの有効/無効
   }, (err)=>{ console.error("notes onValue error:", err); });
 }
 function upsertNoteDom(ownerUid, data){
@@ -475,29 +470,35 @@ function positionNoteDom(el, nx, ny){
   const px = roundPx(nx * r.width);
   const py = roundPx(ny * r.height);
   const topSpace = py - 130;
-  if(topSpace < 0){ el.classList.add("flip"); }
-  else{ el.classList.remove("flip"); }
+  if(topSpace < 0){ el.classList.add("flip"); } else{ el.classList.remove("flip"); }
   el.style.transform = `translate3d(${px}px, ${py}px, 0) ${el.classList.contains("flip") ? "translate(-50%, 18px)" : "translate(-50%, -120%)"}`;
 }
 window.addEventListener("resize", ()=>{
-  for(const [, el] of notesDomMap){
-    positionNoteDom(el, Number(el.dataset.x), Number(el.dataset.y));
-  }
+  for(const [, el] of notesDomMap){ positionNoteDom(el, Number(el.dataset.x), Number(el.dataset.y)); }
 });
 
-/* ===== 画像猫DOM ===== */
+/* ====== クリアボタン ====== */
+function renderNoteClearButton(){ noteClearBtn.disabled = !hasOwnNote; }
+renderNoteClearButton();
+noteClearBtn.addEventListener("click", async ()=>{
+  if(!uid) return;
+  try{ await remove(noteRefOf(uid)); toast("書き置きを消した"); }
+  catch(e){ console.error("note clear failed:", e); toast("書き置きの削除に失敗"); }
+});
+
+/* ====== プレイヤーDOM ====== */
 function createPlayerDom(id){
   const wrap=document.createElement("div"); wrap.className="p stand";
   const nameEl=document.createElement("div"); nameEl.className="name";
-  const bubble=document.createElement("div"); bubble.className="bubble";
+  const bubble=document.createElement("div"); bubble.className="bubble chat";
   const pinBubble=document.createElement("div"); pinBubble.className="bubble pin";
   const standImg=new Image(); standImg.src=CAT_STAND_URL; standImg.alt="cat standing"; standImg.decoding="async"; standImg.className="catImg stand";
   const sitImg  =new Image(); sitImg.src  =CAT_SIT_URL;   sitImg.alt  ="cat sitting";  sitImg.decoding="async";  sitImg.className="catImg sit";
   wrap.appendChild(nameEl); wrap.appendChild(pinBubble); wrap.appendChild(bubble); wrap.appendChild(standImg); wrap.appendChild(sitImg);
-  return {wrap, nameEl, bubbleEl:bubble, pinBubbleEl:pinBubble, standImg, sitImg, _lastShownMsgAt:0, _flip:false};
+  return {wrap, nameEl, bubbleEl:bubble, pinBubbleEl:pinBubble, standImg, sitImg, _lastShownMsgAt:0, _flip:false, _id:id};
 }
 
-/* ===== 描画 ===== */
+/* ====== 描画 ====== */
 function renderPlayer(pdom, data, isSelf){
   const r=getPlayRect(); if(!r) return;
   const px=roundPx(data.x*r.width), py=roundPx(data.y*r.height);
@@ -506,8 +507,8 @@ function renderPlayer(pdom, data, isSelf){
   else{ pdom.wrap.classList.add("stand"); pdom.wrap.classList.remove("sit"); }
   const right=(data.dir===1); pdom.standImg.classList.toggle("right", right); pdom.sitImg.classList.toggle("right", right);
 
-  /* ★ 名札：空/未定義なら「ななし」 */
-  pdom.nameEl.textContent = displayNameOf(data);
+  const decidedName = resolveLabelName(pdom._id, data?.name);
+  if(pdom.nameEl.textContent !== decidedName){ pdom.nameEl.textContent = decidedName; }
 
   const barH = bar.getBoundingClientRect().height || 0;
   const visibleBottom = r.height - barH;
@@ -525,17 +526,24 @@ function renderPlayer(pdom, data, isSelf){
       pdom._bubbleTimer=setTimeout(()=>{ pdom.bubbleEl.style.display="none"; }, remain);
       pdom._lastShownMsgAt=msgAt; if(!isSelf) playMessage();
     }
-  }else{ pdom.bubbleEl.style.display="none"; }
+  }else{
+    pdom.bubbleEl.style.display="none";
+  }
 
   const pinText=data.pinMsg || "";
   pdom.pinBubbleEl.style.display = pinText ? "block" : "none";
   if(pinText) pdom.pinBubbleEl.textContent = pinText;
 }
 
-/* ===== 自分DOM保証 ===== */
-function ensureMineDom(){ if(!uid) return; if(!domMap.get(uid)){ const d=createPlayerDom(uid); domMap.set(uid,d); play.appendChild(d.wrap); } renderPlayer(domMap.get(uid), me, true); }
+/* ====== 自分DOM保証 ====== */
+function ensureMineDom(){
+  if(!uid) return;
+  if(!domMap.get(uid)){ const d=createPlayerDom(uid); domMap.set(uid,d); play.appendChild(d.wrap); }
+  const data = { x:me.x, y:me.y, dir:me.dir, pose:me.pose, msg:me.msg, msgAt:me.msgAt, pinMsg:me.pinMsg, name: (lastShownName.get(uid) || normalizeName(me.name) || "ななし") };
+  renderPlayer(domMap.get(uid), data, true);
+}
 
-/* ===== 入力UI ===== */
+/* ====== 入力・送信 ====== */
 let lastSentAt=0;
 msgInput.addEventListener("input", ()=>{
   const v=msgInput.value;
@@ -546,20 +554,33 @@ msgInput.addEventListener("input", ()=>{
 sendBtn.addEventListener("click", sendMsg);
 msgInput.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); sendMsg(); }});
 function validateMessage(raw){ if(!raw) return {ok:false}; if(isASCIIish(raw)){ if(countWordsASCII(raw)>10 || raw.length>100) return {ok:false}; } else{ if(Array.from(raw).length>NON_ASCII_LIMIT) return {ok:false}; } return {ok:true}; }
+function sendMsg(){
+  const raw=msgInput.value.trim(); if(!validateMessage(raw).ok) return;
+  const nowMs=Date.now(); if(nowMs-lastSentAt<500) return; lastSentAt=nowMs;
+  me.msg=raw; me.msgAt=nowMs; ensureMineDom();
+  const mine=domMap.get(uid); if(mine){ mine._lastShownMsgAt = nowMs; }
+  msgInput.value=""; sendBtn.disabled=true;
+  safeUpdate({ msg: raw, msgAt: serverTimestamp() });
+}
 
-/* ===== ピン留め（頭上） ===== */
+/* ====== ピン ====== */
 function renderPinBtn(){ const pressed=!!me.pinMsg; pinBtn.setAttribute("aria-pressed", pressed?"true":"false"); }
 renderPinBtn();
 pinBtn.addEventListener("click", ()=>{
-  if(me.pinMsg){ me.pinMsg=""; renderPinBtn(); safeUpdate({pinMsg:"", pinAt:0}); const mine=domMap.get(uid); if(mine){ mine.pinBubbleEl.style.display="none"; } return; }
+  if(me.pinMsg){
+    me.pinMsg=""; renderPinBtn(); safeUpdate({pinMsg:"", pinAt:0});
+    const mine=domMap.get(uid); if(mine){ mine.pinBubbleEl.style.display="none"; }
+    return;
+  }
   const typed=msgInput.value.trim(); const pick=typed?typed:(me.msg?me.msg:"");
   if(!pick){ toast("ピン留めする文がない"); return; }
   if(typed && !validateMessage(typed).ok){ toast("文字数制限を超えている"); return; }
-  me.pinMsg=pick; renderPinBtn(); const mine=domMap.get(uid); if(mine){ mine.pinBubbleEl.textContent=pick; mine.pinBubbleEl.style.display="block"; }
+  me.pinMsg=pick; renderPinBtn();
+  const mine=domMap.get(uid); if(mine){ mine.pinBubbleEl.textContent=pick; mine.pinBubbleEl.style.display="block"; }
   safeUpdate({pinMsg: pick, pinAt: serverTimestamp()});
 });
 
-/* ===== 書き置き（猫の位置に1人1件、更新可、8hTTL） ===== */
+/* ====== 書き置き ====== */
 noteBtn.addEventListener("click", async ()=>{
   const typed = msgInput.value.trim();
   const pick = typed ? typed : (me.msg ? me.msg : "");
@@ -569,21 +590,21 @@ noteBtn.addEventListener("click", async ()=>{
     const r = noteRefOf(uid);
     const nowXY = { x: me.x, y: me.y };
     const snap = await get(r);
+    const authorName = lastShownName.get(uid) || normalizeName(me.name) || "ななし";
     if(snap.exists()){
-      await update(r, { text: pick, author: displayNameOf({name: me.name}), uid: uid || "", x: nowXY.x, y: nowXY.y, updatedAt: serverTimestamp() });
+      await update(r, { text: pick, author: authorName, uid: uid || "", x: nowXY.x, y: nowXY.y, updatedAt: serverTimestamp() });
       toast("書き置きを更新した");
     }else{
-      await set(r, { text: pick, author: displayNameOf({name: me.name}), uid: uid || "", x: nowXY.x, y: nowXY.y, at: serverTimestamp(), updatedAt: serverTimestamp() });
+      await set(r, { text: pick, author: authorName, uid: uid || "", x: nowXY.x, y: nowXY.y, at: serverTimestamp(), updatedAt: serverTimestamp() });
       toast("書き置きを残した");
     }
   }catch(e){
     console.error("note set/update failed:", e);
-    const msg = (e && (e.code || e.message || e.name)) ? String(e.code || e.message || e.name) : "unknown";
-    toast(`書き置きに失敗: ${msg}`);
+    toast("書き置きに失敗");
   }
 });
 
-/* ===== ポーズ（上部🪑 & Sキー） ===== */
+/* ====== ポーズ（上部🪑 & Sキー） ====== */
 function renderPoseTopBtn(){ poseTopBtn.innerHTML=`<span class="icon" aria-hidden="true">🪑</span><span class="txt"> ${me.pose==="stand"?"座る":"立つ"}</span>`; poseTopBtn.setAttribute("aria-pressed", me.pose==="sit"?"true":"false"); }
 renderPoseTopBtn();
 poseTopBtn.addEventListener("click", togglePose);
@@ -595,7 +616,7 @@ window.addEventListener("keydown", e=>{
 });
 function togglePose(){ me.pose=(me.pose==="stand")?"sit":"stand"; renderPoseTopBtn(); safeUpdate({pose:me.pose}); }
 
-/* ===== タップ移動・向き判定 ===== */
+/* ====== タップ移動 ====== */
 function setTargetFromEvent(e){
   const pt=(e.touches && e.touches[0]) ? e.touches[0] : e;
   const {x,y}=toNorm(pt.clientX, pt.clientY);
@@ -607,7 +628,7 @@ play.addEventListener("pointerdown", setTargetFromEvent);
 play.addEventListener("touchstart", setTargetFromEvent, {passive:true});
 play.addEventListener("dblclick", e=>{ e.preventDefault(); }, {passive:false});
 
-/* ===== ループ ===== */
+/* ====== ループ ====== */
 let loopStarted=false; let lastT=now();
 function startLoop(){ if(loopStarted) return; loopStarted=true; requestAnimationFrame(loop); }
 function loop(){
@@ -625,24 +646,14 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
-/* ===== 書き込み ===== */
+/* ====== 書き込み ====== */
 async function safeUpdate(patch){ if(!uid) return; try{ await update(myRef(), patch); }catch(e){ console.error("[rtdb] update failed:", patch, e); } }
 
-/* ===== 送信 ===== */
-function sendMsg(){
-  const raw=msgInput.value.trim(); if(!validateMessage(raw).ok) return;
-  const nowMs=Date.now(); if(nowMs-lastSentAt<500) return; lastSentAt=nowMs;
-  me.msg=raw; me.msgAt=nowMs; ensureMineDom();
-  const mine=domMap.get(uid); if(mine){ mine._lastShownMsgAt = nowMs; }
-  msgInput.value=""; sendBtn.disabled=true;
-  safeUpdate({ msg: raw, msgAt: serverTimestamp() });
-}
-
-/* ===== 名簿（2.5秒表示） ===== */
+/* ====== 名簿表示 ====== */
 function peekNames(){
-  let names = Object.values(latestPlayers).map(p=>displayNameOf(p)).filter(Boolean);
-  if(names.length===0 && (me.name || uid)){ names = [displayNameOf({name: me.name})]; }
-  namesPeek.textContent = names.length ? `いまの参加者：${names.join(" / ")}` : "いまは誰もいない";
+  const names = Object.entries(latestPlayers).map(([id,p])=> resolveLabelName(id, p?.name));
+  const list = names.length ? names.join(" / ") : (resolveLabelName(uid, me.name) || "いまは誰もいない");
+  namesPeek.textContent = `いまの参加者：${list}`;
   namesPeek.style.display = "block";
   clearTimeout(peekNames._t); peekNames._t = setTimeout(()=> namesPeek.style.display="none", 2500);
 }

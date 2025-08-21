@@ -73,11 +73,9 @@
   #helper{flex:0 0 auto; display:flex; align-items:center; gap:8px; font-size:12px; color:#6b7280; max-width:34%; overflow:hidden; text-overflow:ellipsis; user-select:none}
   @media (max-width:980px){ #helper{display:none} }
 
-  /* ===== レイヤー順 =====
-     一般チャット(.bubble.chat) > 名札(.name) > ピン(.bubble.pin) > 猫画像(.catImg) > 書き置き(#notesLayer)
-  */
+  /* レイヤー順：チャット > 名札 > ピン > 猫 > 書き置き */
   .p{position:absolute; left:0; top:0; transform:translate3d(0,0,0) translate(-50%, -80%); will-change:transform; width:78px; height:78px; z-index:10}
-  .catImg{width:78px; height:78px; display:block; object-fit:contain; image-rendering:auto; pointer-events:none; transition:transform .18s ease; position:relative; z-index:0}
+  .catImg{width:78px; height:78px; display:block; object-fit:contain; pointer-events:none; transition:transform .18s ease; position:relative; z-index:0}
   .catImg.right{transform:scaleX(-1)}
   .catImg.sit{display:none}
   .catImg.angry{display:none}
@@ -361,7 +359,7 @@ muteBtn.addEventListener("click", ()=>{ muted=!muted; if(masterGain) masterGain.
 renderMuteButton();
 
 /* ====== 状態 ====== */
-const lastShownName = new Map(); // uid -> 最後に画面へ出した名前
+const lastShownName = new Map();
 let hasOwnNote=false;
 
 let uid=null;
@@ -387,8 +385,8 @@ function normalizeName(s){ if(typeof s!=="string") return ""; const t=s.trim(); 
 function resolveLabelName(userId, incoming){
   const prev=lastShownName.get(userId)||"";
   const n=normalizeName(incoming);
-  if(n){ lastShownName.set(userId,n); return n; }      // 非空を最優先
-  if(prev){ return prev; }                              // 空更新は無視
+  if(n){ lastShownName.set(userId,n); return n; }
+  if(prev){ return prev; }
   const fallback = (LANG==="ja"?"ななし":"anon");
   lastShownName.set(userId, fallback);
   return fallback;
@@ -403,12 +401,16 @@ function metaRef(){ return ref(db, `worlds/${WORLD_ID}/meta`); }
 const playersRef = playersRefOf(WORLD_ID);
 
 /* ====== i18n適用 ====== */
+function renderHelpDialog(){
+  helpDialog.innerHTML = L[LANG].helpHTML;
+  const btn = helpDialog.querySelector("#helpClose");
+  if(btn){ btn.addEventListener("click", ()=>helpDialog.close(), {once:true}); }
+}
 function applyLang(){
   const t=L[LANG];
   document.getElementById("hint").textContent = t.hint;
   msgInput.placeholder = t.placeholder;
   hintLang.textContent = (LANG==="ja") ? `非英語：0/15` : `Non‑English: 0/15`;
-  // 上段ボタン
   poseTopBtn.innerHTML = `<span class="icon" aria-hidden="true">🪑</span><span class="txt"> ${me.pose==="stand"?t.sit:t.stand}</span>`;
   angerBtn.innerHTML   = `<span class="icon" aria-hidden="true">💢</span><span class="txt"> ${t.anger}</span>`;
   newRoomBtn.innerHTML = `<span class="icon" aria-hidden="true">🆕</span><span class="txt"> ${t.newroom}</span>`;
@@ -417,11 +419,7 @@ function applyLang(){
   noteClearBtn.innerHTML=`<span class="icon" aria-hidden="true">🗑️</span><span class="txt"> ${t.clear}</span>`;
   langBtn.innerHTML    = `<span class="icon" aria-hidden="true">${LANG==="ja"?"🇯🇵":"🇺🇸"}</span><span class="txt"> ${LANG==="ja"?"日本語":"English"}</span>`;
   renderMuteButton();
-  renderHelpDialog();  // 中身差し替え
-}
-function renderHelpDialog(){
-  helpDialog.innerHTML = L[LANG].helpHTML;
-  helpDialog.querySelector("#helpClose").addEventListener("click", ()=>helpDialog.close());
+  renderHelpDialog();
 }
 applyLang();
 langBtn.addEventListener("click", ()=>{
@@ -473,7 +471,7 @@ function showFull(){
 /* ====== プレゼンス ====== */
 async function mountPresence(forceStand=false){
   try{
-    const initialName = normalizeName(me.name); // 空は許可しない
+    const initialName = normalizeName(me.name);
     lastShownName.set(uid, initialName);
     await set(myRef(), {
       name: initialName,
@@ -490,7 +488,7 @@ async function mountPresence(forceStand=false){
 /* ====== 購読（プレイヤー） ====== */
 const domMap=new Map();
 let initialPlayersLoaded=false;
-let latestPlayers = {};
+let latestPlayers = {};   /* ←★ ここで一度だけ宣言。以降は再宣言しない */
 function subscribePlayers(){
   onValue(playersRef, snap=>{
     const data=snap.val()||{};
@@ -620,22 +618,18 @@ function renderPlayer(pdom, data, isSelf){
   else{ pdom.wrap.classList.add("stand"); pdom.wrap.classList.remove("sit"); }
   const right=(data.dir===1); pdom.standImg.classList.toggle("right", right); pdom.sitImg.classList.toggle("right", right); pdom.angryImg.classList.toggle("right", right);
 
-  // エモート
   const emoActive = (data.emo==="angry") && (Date.now() - Number(data.emoAt||0) <= EMO_SHOW_MS);
   pdom.wrap.classList.toggle("emo-angry", emoActive);
 
-  // 名札：空を適用しない
   const decidedName = resolveLabelName(pdom._id, data?.name);
   if(pdom.nameEl.textContent !== decidedName){ pdom.nameEl.textContent = decidedName; }
 
-  // 下部バーと重なり回避
   const barH = bar.getBoundingClientRect().height || 0;
   const visibleBottom = r.height - barH;
   const wantFlip = (py + 90 > visibleBottom - 8);
   if(!pdom._flip && wantFlip){ pdom.nameEl.classList.add("flip"); pdom._flip=true; }
   else if(pdom._flip && (py + 90 < visibleBottom - 24)){ pdom.nameEl.classList.remove("flip"); pdom._flip=false; }
 
-  // 一般チャット
   const raw=data.msg || ""; const msgAt=Number(data.msgAt || 0);
   if(raw && msgAt>0){
     const REPLAY_GUARD_MS=4000; const nowAbs=Date.now(); const isReplaySelf=isSelf && (msgAt - pdom._lastShownMsgAt < REPLAY_GUARD_MS);
@@ -648,7 +642,6 @@ function renderPlayer(pdom, data, isSelf){
     }
   }else{ pdom.bubbleEl.style.display="none"; }
 
-  // ピン
   const pinText=data.pinMsg || "";
   pdom.pinBubbleEl.style.display = pinText ? "block" : "none";
   if(pinText) pdom.pinBubbleEl.textContent = pinText;
@@ -686,7 +679,6 @@ function sendMsg(){
 function renderPinBtn(){ const pressed=!!me.pinMsg; pinBtn.setAttribute("aria-pressed", pressed?"true":"false"); }
 renderPinBtn();
 pinBtn.addEventListener("click", ()=>{
-  const t=L[LANG];
   if(me.pinMsg){
     me.pinMsg=""; renderPinBtn(); safeUpdate({pinMsg:"", pinAt:0});
     const mine=domMap.get(uid); if(mine){ mine.pinBubbleEl.style.display="none"; }
@@ -729,7 +721,7 @@ angerBtn.addEventListener("click", ()=>{
   me.emo="angry"; me.emoAt=Date.now();
   ensureMineDom();
   safeUpdate({ emo:"angry", emoAt: serverTimestamp() });
-  setTimeout(()=>{ // クライアント側の見た目だけ消す（サーバ値は自然消滅扱い）
+  setTimeout(()=>{
     if(Date.now()-me.emoAt >= EMO_SHOW_MS){ me.emo="none"; ensureMineDom(); }
   }, EMO_SHOW_MS+100);
 });
@@ -780,7 +772,6 @@ function loop(){
 async function safeUpdate(patch){ if(!uid) return; try{ await update(myRef(), patch); }catch(e){ console.error("[rtdb] update failed:", patch, e); } }
 
 /* ====== 名簿表示 ====== */
-let latestPlayers = {};
 function peekNames(){
   const names = Object.entries(latestPlayers).map(([id,p])=> resolveLabelName(id, p?.name));
   const list = names.length ? names.join(" / ") : (resolveLabelName(uid, me.name) || (LANG==="ja"?"いまは誰もいない":"nobody yet"));

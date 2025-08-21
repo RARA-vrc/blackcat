@@ -6,7 +6,6 @@
 <title>ゆるネコひろば</title>
 <meta name="color-scheme" content="light only">
 
-<!-- 猫画像（左向きが正）を先読み -->
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png" as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png"  as="image" crossorigin>
 
@@ -22,7 +21,6 @@
   body,button,input{touch-action:manipulation}
   #app{position:fixed; inset:0; display:flex; flex-direction:column}
 
-  /* ==== ヘッダ ==== */
   header{
     padding: calc(env(safe-area-inset-top) + 4px) 12px 8px;
     border-bottom:1px solid var(--border); background:var(--panel); position:relative; z-index:3;
@@ -45,7 +43,6 @@
     .btn.ghost{padding:10px}
   }
 
-  /* ==== プレイエリア ==== */
   #play{
     position:relative; flex:1; overflow:hidden; cursor:crosshair;
     background-image:
@@ -57,7 +54,6 @@
   .ping{position:absolute; width:10px; height:10px; border-radius:999px; border:2px solid var(--accent); opacity:.7; pointer-events:none; transform:translate(-50%,-50%) scale(.2); animation:ping .8s ease-out forwards}
   @keyframes ping{80%{opacity:.15; transform:translate(-50%,-50%) scale(2.0)} 100%{opacity:0; transform:translate(-50%,-50%) scale(2.6)}}
 
-  /* ==== 下部バー（入力を最優先で広く） ==== */
   #bar{
     height:var(--barH); display:flex; align-items:center; gap:8px;
     border-top:1px solid var(--border); background:var(--panel);
@@ -74,7 +70,6 @@
   #helper{flex:0 0 auto; display:flex; align-items:center; gap:8px; font-size:12px; color:#6b7280; max-width:34%; overflow:hidden; text-overflow:ellipsis; user-select:none}
   @media (max-width:980px){ #helper{display:none} }
 
-  /* ==== プレイヤー（画像ベース／左向き基準） ==== */
   .p{position:absolute; left:0; top:0; transform:translate3d(0,0,0) translate(-50%, -80%); will-change:transform; width:78px; height:78px}
   .catImg{width:78px; height:78px; display:block; object-fit:contain; image-rendering:auto; pointer-events:none; transition:transform .18s ease}
   .catImg.right{transform:scaleX(-1)}
@@ -82,40 +77,37 @@
   .sit .catImg.stand{display:none}
   .sit .catImg.sit{display:block}
 
-  /* 名札（自動フリップ＋ヒステリシス） */
+  /* 名札を最前面に（書き置きより前） */
   .name{
     position:absolute; left:50%; top:78px; transform:translateX(-50%);
     background:rgba(17,17,17,.95); color:#fff; font-size:12px; padding:2px 8px; border-radius:999px; white-space:nowrap;
     max-width:180px; text-overflow:ellipsis; overflow:hidden; letter-spacing:.2px; border:1px solid rgba(0,0,0,.6);
-    z-index:2; pointer-events:none; will-change:transform;
+    z-index:4; pointer-events:none; will-change:transform;
   }
   .name.flip{top:auto; bottom:84px}
 
-  /* 通常吹き出し（60秒） */
   .bubble{
     position:absolute; left:50%; bottom:94px; transform:translateX(-50%);
     background:#fff; color:#111; border:1px solid var(--border); border-radius:12px; padding:8px 10px; font-size:14px;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:min(86vw, 520px);
-    box-shadow:0 8px 22px rgba(0,0,0,.06); z-index:1; display:none; pointer-events:none;
+    box-shadow:0 8px 22px rgba(0,0,0,.06); z-index:2; display:none; pointer-events:none;
   }
-  /* ピン吹き出し（常時、2/3サイズ） */
   .bubble.pin{
     display:none; bottom:122px; background:var(--pin-bg); border-color:var(--pin-bd);
-    font-size:0.66em; padding:6px 9px;
+    font-size:0.66em; padding:6px 9px; z-index:2;
   }
 
-  /* ===== 書き置き（猫の位置に浮かぶ付箋） ===== */
-  #notesLayer{position:absolute; inset:0; pointer-events:none; z-index:2}
+  /* 書き置きは名札より後ろ */
+  #notesLayer{position:absolute; inset:0; pointer-events:none; z-index:1}
   .noteItem{
     position:absolute; transform:translate3d(0,0,0) translate(-50%, -120%);
     background:var(--pin-bg); border:1px solid var(--pin-bd); border-radius:10px;
-    padding:4px 6px; font-size:0.5rem; /* およそチャットの1/2 */
+    padding:4px 6px; font-size:0.5rem;
     color:#111; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; max-width:50vw;
     box-shadow:0 4px 12px rgba(0,0,0,.06);
   }
-  .noteItem.flip{ transform:translate3d(0,0,0) translate(-50%, 18px); } /* 画面上端に近い時は下向きに出す */
+  .noteItem.flip{ transform:translate3d(0,0,0) translate(-50%, 18px); }
 
-  /* 一時的な名前一覧 */
   #namesPeek{
     position:fixed; left:50%; top:calc(8px + env(safe-area-inset-top));
     transform:translateX(-50%); z-index:5; background:rgba(0,0,0,.8); color:#fff;
@@ -135,7 +127,6 @@
 
   #hint{position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom)); background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.85; z-index:4}
 
-  /* 満員ダイアログ */
   #full{position:fixed; inset:0; background:rgba(255,255,255,.9); display:none; align-items:center; justify-content:center; z-index:20}
   #full .card{width:min(92vw,520px); border:1px solid var(--border); border-radius:18px; background:#fff; padding:18px 16px 16px; box-shadow:0 18px 60px rgba(0,0,0,.08)}
   #full .card h3{margin:0 0 8px}
@@ -164,7 +155,6 @@
     <div id="notesLayer" aria-live="polite"></div>
   </div>
 
-  <!-- 下部バー：アイコン3つ＋広い入力欄 -->
   <div id="bar">
     <div id="msgWrap">
       <input id="msg" type="text" inputmode="text" autocomplete="off" placeholder="短いことば…（非英語15 / 英語10語）" aria-label="メッセージ入力（1行）">
@@ -212,7 +202,6 @@
     <div style="background:#f8fafc; border:1px solid #e5e7eb; padding:10px; border-radius:10px; font-size:13px; color:#374151; margin-bottom:12px">
       音が出ない場合：ページを一度タップしてから、ブラウザのサイト設定で「音声を許可」。iOSは本体のサイレントスイッチも確認。
     </div>
-    <!-- 作者Xリンク -->
     <p id="authorXLine" class="subtle" style="margin:6px 0 0; text-align:right; opacity:.7; display:none">
       作者X: <a id="authorX" href="#" target="_blank" rel="noopener" style="color:#6b7280; text-decoration:underline dotted">link</a>
     </p>
@@ -222,7 +211,6 @@
   </div>
 </dialog>
 
-<!-- 満員ダイアログ -->
 <div id="full">
   <div class="card">
     <h3>満員だ（10人まで）</h3>
@@ -234,17 +222,12 @@
 </div>
 
 <script type="module">
-/* ===== 画像URL（左向き） ===== */
 const CAT_STAND_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png";
 const CAT_SIT_URL   = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png";
 
-/* ===== 作者Xリンク（空なら非表示） ===== */
 const AUTHOR_X_LINK = ""; // 例: "https://x.com/your_handle"
-
-/* ===== 書き置きTTL（8時間） ===== */
 const NOTE_TTL_MS = 8 * 60 * 60 * 1000;
 
-/* ===== Firebase config ===== */
 const firebaseConfig = {
   apiKey:"AIzaSyCUpt4XLfSSZLt0VhJon926--c-I2tRMkE",
   authDomain:"blackcat-67716.firebaseapp.com",
@@ -256,7 +239,6 @@ const firebaseConfig = {
   measurementId:"G-R47HW00266"
 };
 
-/* ===== RoomID ===== */
 const url = new URL(location.href);
 const qp = url.searchParams.get("room");
 const hp = (location.hash.match(/room=([^&]+)/)||[])[1];
@@ -274,7 +256,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-/* DOM */
+/* DOM refs */
 const play = document.getElementById("play");
 const notesLayer = document.getElementById("notesLayer");
 const bar = document.getElementById("bar");
@@ -343,10 +325,16 @@ function pingAt(nx,ny){ const r=getPlayRect(); if(!r) return; const {x,y}=toPx(n
 function roundPx(v){ return Math.round(v); }
 function toast(text){ const el=document.getElementById("hint"); el.textContent=text; el.style.opacity=.95; clearTimeout(toast._t); toast._t=setTimeout(()=> el.style.opacity=.85, 1500); }
 
+/* ★ 名札用のフォールバック */
+function displayNameOf(obj){
+  const s = (obj && typeof obj.name === "string") ? obj.name.trim() : "";
+  return s.length ? s.slice(0,3) : "ななし";
+}
+
 /* ===== Refs ===== */
 function playersRefOf(room){ return ref(db, `worlds/${room}/players`); }
 function myRef(){ return ref(db, `worlds/${WORLD_ID}/players/${uid}`); }
-function notesRootRef(){ return ref(db, `worlds/${WORLD_ID}/notes`); }          // 1人1件: key=uid
+function notesRootRef(){ return ref(db, `worlds/${WORLD_ID}/notes`); }
 function noteRefOf(u){ return ref(db, `worlds/${WORLD_ID}/notes/${u}`); }
 const playersRef = playersRefOf(WORLD_ID);
 
@@ -386,10 +374,7 @@ async function ensureCapacity(){
     const snap = await get(playersRef);
     const n = snap.exists() ? snap.numChildren() : 0;
     return n < ROOM_CAP;
-  }catch(e){
-    console.warn("capacity check failed:", e);
-    return true;
-  }
+  }catch(e){ console.warn("capacity check failed:", e); return true; }
 }
 function showFull(){
   full.style.display = "flex";
@@ -404,7 +389,8 @@ function showFull(){
 async function mountPresence(forceStand=false){
   try{
     await set(myRef(), {
-      name: me.name, x: me.x, y: me.y, dir: me.dir,
+      name: displayNameOf({name: me.name}),  // ★ 空なら「ななし」
+      x: me.x, y: me.y, dir: me.dir,
       pose: forceStand ? "stand" : me.pose,
       msg: "", msgAt: 0, pinMsg: "", pinAt: 0,
       lastActive: serverTimestamp()
@@ -428,8 +414,7 @@ function subscribePlayers(){
       for(const id of ids){
         if(!domMap.has(id) && id!==uid){
           playLogin();
-          const n=(data[id] && data[id].name) ? data[id].name : "ななし";
-          toast(`${n} が入室した`);
+          toast(`${displayNameOf(data[id])} が入室した`);
         }
       }
     }
@@ -443,11 +428,11 @@ function subscribePlayers(){
     for(const [id,pdom] of domMap){ if(!seen.has(id)){ pdom.wrap.remove(); domMap.delete(id); } }
 
     initialPlayersLoaded=true;
-  });
+  }, (err)=>{ console.error("players onValue error:", err); });
 }
 
-/* ===== 購読（書き置き：8時間TTL・1人1件） ===== */
-const notesDomMap = new Map(); // uid -> el
+/* ===== 購読（書き置き） ===== */
+const notesDomMap = new Map();
 function subscribeNotes(){
   onValue(notesRootRef(), snap=>{
     const nowMs = Date.now();
@@ -462,17 +447,15 @@ function subscribeNotes(){
         upsertNoteDom(id, v);
         seen.add(id);
       }else{
-        // 期限切れ
         if(id === uid){
           remove(noteRefOf(uid)).catch(()=>{});
         }
       }
     });
-    // DOM掃除
     for(const [id, el] of notesDomMap){
       if(!seen.has(id)){ el.remove(); notesDomMap.delete(id); }
     }
-  });
+  }, (err)=>{ console.error("notes onValue error:", err); });
 }
 function upsertNoteDom(ownerUid, data){
   let el = notesDomMap.get(ownerUid);
@@ -483,22 +466,22 @@ function upsertNoteDom(ownerUid, data){
     notesDomMap.set(ownerUid, el);
   }
   el.textContent = data.text || "";
-  positionNoteDom(el, data.x ?? 0.5, data.y ?? 0.7);
+  el.dataset.x = String(data.x ?? 0.5);
+  el.dataset.y = String(data.y ?? 0.7);
+  positionNoteDom(el, Number(el.dataset.x), Number(el.dataset.y));
 }
 function positionNoteDom(el, nx, ny){
   const r=getPlayRect(); if(!r) return;
   const px = roundPx(nx * r.width);
   const py = roundPx(ny * r.height);
-  // 画面上端に近いときは下向きに
   const topSpace = py - 130;
   if(topSpace < 0){ el.classList.add("flip"); }
   else{ el.classList.remove("flip"); }
-  // 標準は上にオフセット（CSSのtranslateで-120%相当）
   el.style.transform = `translate3d(${px}px, ${py}px, 0) ${el.classList.contains("flip") ? "translate(-50%, 18px)" : "translate(-50%, -120%)"}`;
 }
-window.addEventListener("resize", ()=>{ // 画面サイズ変化で再配置
-  for(const [id, el] of notesDomMap){
-    const snap = el._data;
+window.addEventListener("resize", ()=>{
+  for(const [, el] of notesDomMap){
+    positionNoteDom(el, Number(el.dataset.x), Number(el.dataset.y));
   }
 });
 
@@ -522,7 +505,10 @@ function renderPlayer(pdom, data, isSelf){
   if(data.pose==="sit"){ pdom.wrap.classList.add("sit"); pdom.wrap.classList.remove("stand"); }
   else{ pdom.wrap.classList.add("stand"); pdom.wrap.classList.remove("sit"); }
   const right=(data.dir===1); pdom.standImg.classList.toggle("right", right); pdom.sitImg.classList.toggle("right", right);
-  pdom.nameEl.textContent = data.name || "";
+
+  /* ★ 名札：空/未定義なら「ななし」 */
+  pdom.nameEl.textContent = displayNameOf(data);
+
   const barH = bar.getBoundingClientRect().height || 0;
   const visibleBottom = r.height - barH;
   const wantFlip = (py + 90 > visibleBottom - 8);
@@ -584,10 +570,10 @@ noteBtn.addEventListener("click", async ()=>{
     const nowXY = { x: me.x, y: me.y };
     const snap = await get(r);
     if(snap.exists()){
-      await update(r, { text: pick, author: me.name || "ななし", uid: uid || "", x: nowXY.x, y: nowXY.y, updatedAt: serverTimestamp() });
+      await update(r, { text: pick, author: displayNameOf({name: me.name}), uid: uid || "", x: nowXY.x, y: nowXY.y, updatedAt: serverTimestamp() });
       toast("書き置きを更新した");
     }else{
-      await set(r, { text: pick, author: me.name || "ななし", uid: uid || "", x: nowXY.x, y: nowXY.y, at: serverTimestamp(), updatedAt: serverTimestamp() });
+      await set(r, { text: pick, author: displayNameOf({name: me.name}), uid: uid || "", x: nowXY.x, y: nowXY.y, at: serverTimestamp(), updatedAt: serverTimestamp() });
       toast("書き置きを残した");
     }
   }catch(e){
@@ -597,7 +583,7 @@ noteBtn.addEventListener("click", async ()=>{
   }
 });
 
-/* ===== ポーズ（上部🪑 & Sキー。入力中はS無効） ===== */
+/* ===== ポーズ（上部🪑 & Sキー） ===== */
 function renderPoseTopBtn(){ poseTopBtn.innerHTML=`<span class="icon" aria-hidden="true">🪑</span><span class="txt"> ${me.pose==="stand"?"座る":"立つ"}</span>`; poseTopBtn.setAttribute("aria-pressed", me.pose==="sit"?"true":"false"); }
 renderPoseTopBtn();
 poseTopBtn.addEventListener("click", togglePose);
@@ -654,8 +640,8 @@ function sendMsg(){
 
 /* ===== 名簿（2.5秒表示） ===== */
 function peekNames(){
-  let names = Object.values(latestPlayers).map(p=>p && p.name ? p.name : null).filter(Boolean);
-  if(names.length===0 && (me.name || uid)){ names = [me.name || "ななし"]; }
+  let names = Object.values(latestPlayers).map(p=>displayNameOf(p)).filter(Boolean);
+  if(names.length===0 && (me.name || uid)){ names = [displayNameOf({name: me.name})]; }
   namesPeek.textContent = names.length ? `いまの参加者：${names.join(" / ")}` : "いまは誰もいない";
   namesPeek.style.display = "block";
   clearTimeout(peekNames._t); peekNames._t = setTimeout(()=> namesPeek.style.display="none", 2500);
@@ -667,7 +653,6 @@ function peekNames(){
   });
 });
 
-/* ===== 共有・ヘルプ ===== */
 shareBtn.addEventListener("click", async ()=>{
   const invite=new URL(location.href);
   invite.searchParams.set("room", WORLD_ID);
@@ -680,11 +665,9 @@ shareBtn.addEventListener("click", async ()=>{
 helpBtn.addEventListener("click", ()=>helpDialog.showModal());
 helpClose.addEventListener("click", ()=>helpDialog.close());
 
-/* ===== ネットワーク状態 ===== */
 window.addEventListener("online",  ()=> toast("オンライン"));
 window.addEventListener("offline", ()=> toast("オフライン：再接続待ち"));
 
-/* ===== 起動前チェック ===== */
 (function(){
   const needs=["apiKey","authDomain","databaseURL","projectId","appId"];
   if(needs.some(k=>!firebaseConfig[k])) toast("Firebaseのconfigを入れてから使う");

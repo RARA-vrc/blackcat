@@ -363,6 +363,9 @@ const lastShownName = new Map();
 let hasOwnNote=false;
 
 let uid=null;
+let joined=false;   // ★ 名前確定済みか（ジョイン完了か）
+let mounted=false;  // ★ RTDB購読やpresence設置を完了したか
+
 let me={ name:"", x:0.5, y:0.7, dir:1, pose:"stand", msg:"", msgAt:0, pinMsg:"", emo:"none", emoAt:0 };
 let target={x:me.x,y:me.y};
 let lastSync=0, lastHeartbeat=0; let SPEED_PX_PER_S=120;
@@ -433,30 +436,60 @@ const remembered=localStorage.getItem("yuru_name"); if(remembered) nameInput.val
 nameInput.addEventListener("input", ()=>{ const n=nameInput.value.trim(); if([...n].length>3) nameInput.value=Array.from(n).slice(0,3).join(""); });
 enterBtn.addEventListener("click", startJoin);
 nameInput.addEventListener("keydown", e=>{ if(e.key==="Enter") startJoin(); });
+
 async function startJoin(){
   const n=normalizeName(nameInput.value);
   if(!n){ warn.textContent = (LANG==="ja"?"1〜3文字":"1–3 characters"); return; }
-  me.name=n; me.pose="stand"; me.pinMsg="";
+  me.name=n; joined=true; me.pose="stand"; me.pinMsg="";
   join.style.display="none";
   localStorage.setItem("yuru_name", me.name);
-  await initAuth();
+
+  // すでにサインイン済みなら即 presence 構築、未サインインなら認証へ
+  if(uid && !mounted){
+    await initAfterAuth();               // ★ 初回構築
+  }else if(uid && mounted){
+    // ★ 既にpresenceが空名で立っている可能性に備え、nameだけ更新
+    lastShownName.set(uid, me.name);
+    await update(myRef(), { name: me.name });
+    ensureMineDom();
+  }else{
+    await initAuth();                    // 認証 → onAuthStateChanged 側で initAfterAuth()
+  }
 }
-async function initAuth(){ try{ await signInAnonymously(auth); }catch(e){ alert((LANG==="ja"?"匿名認証に失敗。設定とネットワークを確認。":"Anonymous sign‑in failed. Check settings/network.")); console.error("[auth] signIn failed:", e); } }
+
+async function initAuth(){
+  try{ await signInAnonymously(auth); }
+  catch(e){ alert((LANG==="ja"?"匿名認証に失敗。設定とネットワークを確認。":"Anonymous sign‑in failed. Check settings/network.")); console.error("[auth] signIn failed:", e); }
+}
 
 onAuthStateChanged(auth, async user=>{
   if(!user) return;
   uid=user.uid;
+
+  // まだ名前が決まっていなければ、ここでは何もしない（空名書き込みを防ぐ）
+  if(!normalizeName(me.name)){ return; }
+
+  // すでに初期化済みなら何もしない
+  if(mounted) return;
+
+  await initAfterAuth();
+});
+
+async function initAfterAuth(){
+  // spawn確定
   me.x=Math.random()*0.8+0.1; me.y=Math.random()*0.4+0.5; target={x:me.x,y:me.y};
-  me.pose="stand"; me.pinMsg=""; me.emo="none"; me.emoAt=0;
+  ensureMineDom();
+
   const ok = await ensureCapacity();
   if(!ok){ showFull(); return; }
-  ensureMineDom();
+
   await mountPresence(true);
   startLoop();
   subscribePlayers();
   subscribeNotes();
   subscribeMeta();
-});
+  mounted=true;
+}
 
 /* ====== 入室上限 ====== */
 async function ensureCapacity(){
@@ -488,7 +521,7 @@ async function mountPresence(forceStand=false){
 /* ====== 購読（プレイヤー） ====== */
 const domMap=new Map();
 let initialPlayersLoaded=false;
-let latestPlayers = {};   /* ←★ ここで一度だけ宣言。以降は再宣言しない */
+let latestPlayers = {};
 function subscribePlayers(){
   onValue(playersRef, snap=>{
     const data=snap.val()||{};
@@ -772,6 +805,7 @@ function loop(){
 async function safeUpdate(patch){ if(!uid) return; try{ await update(myRef(), patch); }catch(e){ console.error("[rtdb] update failed:", patch, e); } }
 
 /* ====== 名簿表示 ====== */
+let latestPlayers = {};
 function peekNames(){
   const names = Object.entries(latestPlayers).map(([id,p])=> resolveLabelName(id, p?.name));
   const list = names.length ? names.join(" / ") : (resolveLabelName(uid, me.name) || (LANG==="ja"?"いまは誰もいない":"nobody yet"));
@@ -821,7 +855,6 @@ window.addEventListener("offline", ()=> toast(LANG==="ja"?"オフライン：再
 })();
 msgInput.dispatchEvent(new Event("input"));
 applyLang();
-startLoop();
 </script>
 </body>
 </html>

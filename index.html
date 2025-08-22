@@ -6,7 +6,6 @@
 <title>ゆるネコひろば</title>
 <meta name="color-scheme" content="light only">
 
-<!-- 左向き猫PNG（立ち/座り/威嚇） -->
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png" as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png"  as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/angerCAT.png"    as="image" crossorigin>
@@ -173,8 +172,11 @@
       <button id="enterBtn">はじめる</button>
     </div>
     <div id="warn" role="status" aria-live="polite"></div>
-    <!-- ★ 入室前ミニガイド：指定の3行 -->
-    <div id="joinGuide" class="subtle"></div>
+    <div id="joinGuide" class="subtle">
+      <div>📨 チャット送信 英語は10語・日本語は15文字まで。60秒で消える</div>
+      <div>📌 ステータス 頭上に小さく固定。もう一度📌タップで解除</div>
+      <div>🖋️ 書置 足元に小さく残す。ひとり一件。更新可。🗑️でクリア。8時間で自動削除</div>
+    </div>
     <p class="subtle" id="joinHint">音が出ないときは一度画面をタップしてからミュートを確かめる。</p>
   </div>
 </div>
@@ -183,116 +185,61 @@
 <div id="full" style="display:none"></div>
 
 <script type="module">
-/* ===== 猫PNG ===== */
+/* ===== 画像URL ===== */
 const CAT_STAND_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png";
 const CAT_SIT_URL   = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png";
 const CAT_ANGRY_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/angerCAT.png";
 
 /* ===== プレゼンス設定 ===== */
-const HEARTBEAT_MS = 7000;
-const STALE_MS     = 30000;
-const CLEANUP_MS   = 60000;
+const HEARTBEAT_MS   = 7000;
+const STALE_MS       = 30000;   // 心拍の「古い」判定（内部）
+const STALE_HIDE_MS  = 120000;  // UIで隠す閾値（以前よりゆるく）
+const CLEANUP_MS     = 60000;
 
-/* ===== ほか設定 ===== */
-const NOTE_TTL_MS = 8*60*60*1000;
-const EMO_SHOW_MS = 3000;
-const ROOM_CAP    = 10;
+/* ===== その他 ===== */
+const NOTE_TTL_MS    = 8*60*60*1000;
+const EMO_SHOW_MS    = 3000;
+const ROOM_CAP       = 10;
 const MIGRATE_TTL_MS = 30000;
 
-/* ===== i18n ===== */
+/* ===== i18n（日本語主体。英語は省略） ===== */
 const I18N = {
   ja:{
     brand:"ゆるネコひろば",
     roomCount:n=>`🐈‍⬛ ${n}`,
     namesPeek:list=>`いまの参加者： ${list}`,
-    poseSit:"座る", poseStand:"立つ",
-    anger:"威嚇",
+    poseSit:"座る", poseStand:"立つ", anger:"威嚇",
     soundOn:"音オン", soundMute:"ミュート",
-    newRoom:"新部屋", share:"共有", clear:"クリア", help:"ヘルプ", lang:"日本語",
-    leave:"退室",
+    newRoom:"新部屋", share:"共有", clear:"クリア", help:"ヘルプ", lang:"日本語", leave:"退室",
     msgPlaceholder:"(15文字 / 10 words)",
     hintKeys:"Enterで送信  Sで座る",
-    helperASCII:w=>`英語：${w}/10`,
-    helperCJK:n=>`非英語：${n}/15`,
+    helperASCII:w=>`英語：${w}/10`, helperCJK:n=>`非英語：${n}/15`,
     hint:"画面をタップで自分の猫がゆっくり移動",
-    joinTitle:"名前を入れて参加",
-    joinDesc:"名前は3文字まで。URLが同じなら同じ部屋。落ち着いて遊ぶ場。",
-    joinStart:"はじめる",
-    joinHint:"音が出ないときは一度画面をタップしてからミュートを確かめる。",
-    // ★ 指定の3行（入室前ミニガイド）
-    joinGuideHtml: `
-      <div>
-        <div>📨 チャット送信 英語は10語・日本語は15文字まで。60秒で消える</div>
-        <div>📌 ステータス 頭上に小さく固定。もう一度📌タップで解除</div>
-        <div>🖋️ 書置 足元に小さく残す。ひとり一件。更新可。🗑️でクリア。8時間で自動削除</div>
-      </div>
-    `,
+    joinTitle:"名前を入れて参加", joinDesc:"名前は3文字まで。URLが同じなら同じ部屋。落ち着いて遊ぶ場。",
+    joinStart:"はじめる", joinHint:"音が出ないときは一度画面をタップしてからミュートを確かめる。",
     helpHtml:`<h3 style="margin:0 0 8px">使い方</h3>
       <ul style="margin:0 0 12px 18px; line-height:1.7; color:#374151; font-size:14px">
-        <li>タップ/クリックで移動。動きはゆったり</li>
-        <li>📨 一行チャット。英語10語/日本語など15文字。60秒で消える</li>
-        <li>📌 ステータス固定（頭上・小さめ/再押しで解除）</li>
-        <li>🖋️ 書き置き（足元・ひとり一件・更新可・8時間で自動削除/🗑️で消す）</li>
+        <li>タップ/クリックで移動</li>
+        <li>📨 英語10語/日本語など15文字。60秒で消える</li>
+        <li>📌 頭上固定（再押しで解除）</li>
+        <li>🖋️ 足元に書き置き（ひとり一件・更新可・8時間で自動削除/🗑️で消す）</li>
         <li>🪑 立つ/座る、💢 威嚇（3秒）</li>
-        <li>🐈‍⬛ 参加者名を短く表示、🔗 リンクコピー、🆕 新部屋</li>
+        <li>🐈‍⬛ 参加者名表示、🔗 リンクコピー、🆕 新部屋、🚪 退室</li>
         <li>部屋は最大10人。名前は3文字まで</li>
       </ul>`,
-    confirmLeave:"今の部屋から退室する。OK？",
-    left:"退室した",
+    confirmLeave:"今の部屋から退室する。OK？", left:"退室した",
     notify:{
-      join:n=>`${n} が入室した`,
-      leave:n=>`${n} が退室した`,
+      join:n=>`${n} が入室した`, leave:n=>`${n} が退室した`,
       pinOn:"ピンを固定した", pinOff:"ピンを外した",
       noteSaved:"書き置きを残した", noteUpdated:"書き置きを更新した", noteCleared:"書き置きを消した",
       urlCopied:"リンクをコピーした。フレンドを招待できる",
       newRoomBy:n=>`${n} が新しい部屋を作成`,
-      full:"満員だ。10人まで",
-      online:"オンライン", offline:"オフライン。再接続待ち",
+      full:"満員だ。10人まで", online:"オンライン", offline:"オフライン。再接続待ち",
       errorAuth:"認証エラー。ネットワークか設定を確認"
-    }
-  },
-  en:{  /* 参考: 英語UIも維持（同等の意味） */
-    brand:"Yuru Neko Plaza",
-    roomCount:n=>`🐈‍⬛ ${n}`, namesPeek:list=>`Now here: ${list}`,
-    poseSit:"Sit", poseStand:"Stand", anger:"Anger",
-    soundOn:"Sound On", soundMute:"Muted", newRoom:"New Room",
-    share:"Share", clear:"Clear", help:"Help", lang:"English", leave:"Leave",
-    msgPlaceholder:"(15 chars / 10 words)",
-    hintKeys:"Enter to send  S to sit",
-    helperASCII:w=>`EN: ${w}/10`, helperCJK:n=>`Non‑EN: ${n}/15`,
-    hint:"Tap to move your cat slowly",
-    joinTitle:"Enter your name", joinDesc:"Up to 3 chars. Same URL joins the same room.", joinStart:"Start",
-    joinHint:"No sound? Tap once and check mute.",
-    joinGuideHtml:`<div>
-      <div>📨 Chat: up to 10 English words / 15 non‑EN chars. Disappears in 60s</div>
-      <div>📌 Status: small bubble above your head. Tap 📌 again to remove</div>
-      <div>🖋️ Note: tiny text at your feet. One per person. Editable. 🗑️ clears. Auto‑deletes after 8h</div>
-    </div>`,
-    helpHtml:`<h3 style="margin:0 0 8px">How to play</h3>
-      <ul style="margin:0 0 12px 18px; line-height:1.7; color:#374151; font-size:14px">
-        <li>Tap/click to move (slow)</li>
-        <li>📨 one‑line chat (EN 10 words / Non‑EN 15 chars, fades in 60s)</li>
-        <li>📌 status pin above the cat (toggle)</li>
-        <li>🖋️ note at your feet (one per user, editable, auto‑deletes in 8h / 🗑️ to clear)</li>
-        <li>🪑 sit/stand, 💢 anger (3s)</li>
-        <li>🐈‍⬛ show names, 🔗 copy link, 🆕 new room</li>
-        <li>Up to 10 people; names up to 3 chars</li>
-      </ul>`,
-    confirmLeave:"Leave this room now?",
-    left:"Left the room",
-    notify:{
-      join:n=>`${n} joined`, leave:n=>`${n} left`,
-      pinOn:"Pinned", pinOff:"Unpinned",
-      noteSaved:"Left a note", noteUpdated:"Updated the note", noteCleared:"Cleared the note",
-      urlCopied:"Link copied. Invite your friends",
-      newRoomBy:n=>`${n} created a new room`,
-      full:"Room is full. Max 10",
-      online:"Online", offline:"Offline. Waiting to reconnect",
-      errorAuth:"Auth error. Check network/settings"
     }
   }
 };
-let LANG = localStorage.getItem("yuru_lang") || "ja";
+let LANG = "ja";
 
 /* ===== Firebase ===== */
 const firebaseConfig = {
@@ -368,12 +315,8 @@ const lblShare=document.getElementById("lblShare");
 const lblClear=document.getElementById("lblClear");
 const lblHelp=document.getElementById("lblHelp");
 const lblLang=document.getElementById("lblLang");
-const joinTitle=document.getElementById("joinTitle");
-const joinDesc=document.getElementById("joinDesc");
-const joinHint=document.getElementById("joinHint");
-const joinGuide=document.getElementById("joinGuide");
-const leaveBtn=document.getElementById("leaveBtn");
-
+const lblLeave=document.getElementById("lblLeave");
+const leaveBtn=document.getElementById("leaveBtn"); // 退室ボタン
 worldLabel.textContent=`room: ${WORLD_ID}`;
 countLabel.textContent="🐈‍⬛ 0";
 
@@ -385,11 +328,11 @@ function tone({freq=880,dur=0.12,type="sine",vol=0.7,attack=0.005,release=0.12}=
 function playLogin(){ if(!muted&&AC){ tone({freq:880,type:"triangle",vol:0.55,dur:0.12}); setTimeout(()=>tone({freq:1320,type:"triangle",vol:0.55,dur:0.12}),140); } }
 function playMessage(){ if(!muted&&AC){ tone({freq:700,type:"sine",vol:0.5,dur:0.09}); } }
 function toast(text){ const el=document.getElementById("hint"); el.textContent=text; el.style.opacity=.95; clearTimeout(toast._t); toast._t=setTimeout(()=> el.style.opacity=.85,1500); }
-function renderMuteButton(){ document.getElementById("lblSound").textContent = " " + (muted ? I18N[LANG].soundMute : I18N[LANG].soundOn); soundIcon.textContent = muted ? "🔇" : "🔔"; }
+function renderMuteButton(){ lblSound.textContent = " " + (muted ? I18N[LANG].soundMute : I18N[LANG].soundOn); soundIcon.textContent = muted ? "🔇" : "🔔"; }
 muteBtn.addEventListener("click", ()=>{ muted=!muted; if(masterGain) masterGain.gain.value=muted?0:0.24; localStorage.setItem("yuru_mute", muted?"1":"0"); renderMuteButton(); });
 
 /* ===== 状態 ===== */
-const lastShownName=new Map();
+const lastShownName=new Map();   // uid -> 最後に表示できた名前
 let hasOwnNote=false;
 let uid=null, joined=false, mounted=false;
 let me={ name:"", x:0.5, y:0.7, dir:1, pose:"stand", msg:"", msgAt:0, pinMsg:"", emo:"none", emoAt:0 };
@@ -417,38 +360,31 @@ function noteRefOf(u){ return ref(db, `worlds/${WORLD_ID}/notes/${u}`); }
 function metaRef(){ return ref(db, `worlds/${WORLD_ID}/meta`); }
 const playersRef=playersRefOf(WORLD_ID);
 
-/* ===== 言語適用 ===== */
+/* ===== 言語（日本語固定表示） ===== */
 function applyLang(){
-  const T=I18N[LANG];
-  document.documentElement.lang = (LANG==="ja"?"ja":"en");
-  brandTitle.textContent=T.brand;
-  msgInput.placeholder=T.msgPlaceholder;
-  hintKeys.textContent=T.hintKeys;
-  document.getElementById("hint").textContent=T.hint;
-  joinTitle.textContent = T.joinTitle;
-  joinDesc.innerHTML   = T.joinDesc;
-  enterBtn.textContent = T.joinStart;
-  joinHint.textContent = T.joinHint;
-  joinGuide.innerHTML  = T.joinGuideHtml;
-  document.getElementById("lblPose").textContent  = " " + (me.pose==="stand" ? T.poseSit : T.poseStand);
-  document.getElementById("lblAnger").textContent = " " + T.anger;
-  document.getElementById("lblNew").textContent   = " " + T.newRoom;
-  document.getElementById("lblShare").textContent = " " + T.share;
-  document.getElementById("lblClear").textContent = " " + T.clear;
-  document.getElementById("lblHelp").textContent  = " " + T.help;
-  document.getElementById("lblLang").textContent  = " " + T.lang;
-  document.getElementById("lblLeave").textContent = " " + T.leave;
-  langIcon.textContent = (LANG==="ja"?"🇯🇵":"🇺🇸");
+  brandTitle.textContent=I18N[LANG].brand;
+  msgInput.placeholder=I18N[LANG].msgPlaceholder;
+  hintKeys.textContent=I18N[LANG].hintKeys;
+  document.getElementById("hint").textContent=I18N[LANG].hint;
+  document.getElementById("lblPose").textContent  = " " + (me.pose==="stand" ? I18N[LANG].poseSit : I18N[LANG].poseStand);
+  document.getElementById("lblAnger").textContent = " " + I18N[LANG].anger;
+  document.getElementById("lblNew").textContent   = " " + I18N[LANG].newRoom;
+  document.getElementById("lblShare").textContent = " " + I18N[LANG].share;
+  document.getElementById("lblClear").textContent = " " + I18N[LANG].clear;
+  document.getElementById("lblHelp").textContent  = " " + I18N[LANG].help;
+  document.getElementById("lblLang").textContent  = " " + I18N[LANG].lang;
+  document.getElementById("lblLeave").textContent = " " + I18N[LANG].leave;
+  langIcon.textContent="🇯🇵";
 }
-document.getElementById("langBtn").addEventListener("click", ()=>{ LANG=(LANG==="ja")?"en":"ja"; localStorage.setItem("yuru_lang", LANG); applyLang(); });
+applyLang();
 
-/* ===== 参加（毎回空欄） ===== */
+/* ===== 参加（毎回入力） ===== */
 nameInput.addEventListener("input", ()=>{ const n=nameInput.value.trim(); if([...n].length>3) nameInput.value = Array.from(n).slice(0,3).join(""); });
 enterBtn.addEventListener("click", startJoin);
 nameInput.addEventListener("keydown", e=>{ if(e.key==="Enter") startJoin(); });
 async function startJoin(){
   const n=normalizeName(nameInput.value);
-  if(!n){ warn.textContent=LANG==="ja"?"1〜3文字":"1–3 chars"; return; }
+  if(!n){ warn.textContent="1〜3文字"; return; }
   warn.textContent="";
   me.name=n; joined=true; me.pose="stand"; me.pinMsg="";
   join.style.display="none";
@@ -466,6 +402,8 @@ async function initAfterAuth(){
   ensureMineDom();
   const ok=await ensureCapacity(); if(!ok){ showFull(); return; }
   await mountPresence(true);
+  // 参加直後にさらに心拍をもう一度送っておく（表示安定）
+  setTimeout(()=>{ safeUpdate({lastActive:serverTimestamp()}); }, 2000);
   await ensureNamePersisted(4);
   setTimeout(()=>ensureNamePersisted(2), 1200);
   startLoop();
@@ -482,14 +420,14 @@ async function ensureCapacity(){
     let n=0, nowMs=Date.now();
     snap.forEach(ch=>{
       const v=ch.val()||{};
-      const named=isNamed(v);
-      const alive = Number(v.lastActive||0) && (nowMs - Number(v.lastActive||0)) <= STALE_MS;
-      if(named && alive) n++;
+      const ts=Number(v.lastActive||0);
+      const alive = ts && (nowMs - ts) <= STALE_HIDE_MS; // UIの閾値と合わせる
+      if(alive) n++;
     });
     return n<ROOM_CAP;
   }catch(e){ console.warn("capacity check failed:", e); return true; }
 }
-function showFull(){ full.style.display="flex"; full.innerHTML=`<div class="card"><h3>${LANG==="ja"?"満員だ":"Room is full"}</h3><p style="margin-top:0">${LANG==="ja"?"10人まで":"Max 10 players"}</p></div>`; }
+function showFull(){ full.style.display="flex"; full.innerHTML=`<div class="card"><h3>満員だ</h3><p style="margin-top:0">10人まで</p></div>`; }
 
 /* ===== プレゼンス登録 ===== */
 async function mountPresence(forceStand=false){
@@ -527,65 +465,76 @@ async function ensureNamePersisted(retries=3){
 window.addEventListener("visibilitychange", ()=>{ if(document.hidden){ try{ update(myRef(), {lastActive: serverTimestamp()}); }catch(_){} } });
 window.addEventListener("pagehide", ()=>{ try{ update(myRef(), {lastActive: serverTimestamp()}); }catch(_){} });
 
-/* ===== players購読 ===== */
+/* ===== players購読（可視化の緩和） ===== */
 const domMap=new Map();
 let initialPlayersLoaded=false;
 let latestPlayers={};
-
-function isAlive(p){ const ts=Number(p?.lastActive||0); return ts && (Date.now()-ts) <= STALE_MS; }
 
 function subscribePlayers(){
   onValue(playersRef, snap=>{
     const data=snap.val()||{};
     latestPlayers=data;
-    const ids=Object.keys(data);
 
+    const ids=Object.keys(data);
+    const nowMs=Date.now();
+
+    // 見せる対象：自分 ＋ lastActive が2分以内 or 未取得
     const showIds = ids.filter(id=>{
       if(id===uid) return true;
-      const p=data[id]||{};
-      return isNamed(p) && isAlive(p);
+      const v=data[id]||{};
+      const ts=Number(v.lastActive||0);
+      if(!ts) return true;                 // 情報が出揃うまで見せる
+      return (nowMs - ts) <= STALE_HIDE_MS;
     });
 
+    // 人数表示：上と同じ基準
     countLabel.textContent = I18N[LANG].roomCount(showIds.length);
 
     const seen=new Set(showIds);
 
     for(const id of showIds){
       const p=data[id]||{};
+
+      // 自分のサーバ名が空なら補修
       if(id===uid){
-        const serverName=normalizeName(p?.name||"");
-        if(serverName){ me.name=serverName; lastShownName.set(uid, serverName); }
+        const s=normalizeName(p?.name||"");
+        if(s){ me.name=s; lastShownName.set(uid,s); }
         else{ ensureNamePersisted(2); }
       }
+
       let pdom=domMap.get(id);
       const isNew=!pdom;
       if(isNew){
         pdom=createPlayerDom(id);
         domMap.set(id,pdom);
         play.appendChild(pdom.wrap);
+
+        // 初期ロード完了後に入ってきた相手だけ演出
         if(initialPlayersLoaded && id!==uid){
-          if(p){ joinBurstAt(p.x, p.y); }
+          joinBurstAt(p.x??0.5, p.y??0.7);
           warpPulse(pdom); playLogin();
-          const nm=normalizeName(p?.name||"");
+          const nm=normalizeName(p?.name||"") || lastShownName.get(id) || "";
           if(nm) toast(I18N[LANG].notify.join(nm));
         }
       }
       renderPlayer(pdom, p, id===uid);
     }
 
+    // いなくなった人を片付け
     for(const [id,pdom] of domMap){
       if(!seen.has(id)){
-        const nm=normalizeName((latestPlayers[id]?.name)||"");
+        const nm=normalizeName((latestPlayers[id]?.name)||"") || lastShownName.get(id) || "";
         if(initialPlayersLoaded && id!==uid && nm){ toast(I18N[LANG].notify.leave(nm)); }
         pdom.wrap.remove(); domMap.delete(id); lastShownName.delete(id);
       }
     }
 
-    initialPlayersLoaded=true;
+    // 自分のノードが見えてから「初期ロード完了」にする（人数/演出のズレ防止）
+    if(!initialPlayersLoaded && ids.includes(uid)) initialPlayersLoaded=true;
   }, err=>console.error("players onValue error:", err));
 }
 
-/* ===== 入室演出 ===== */
+/* ===== 入室演出・DOM生成・描画 ===== */
 function joinBurstAt(nx,ny){
   const r=play.getBoundingClientRect(); if(r.width<=0) return;
   const x=nx*r.width, y=ny*r.height;
@@ -601,61 +550,6 @@ function warpPulse(pdom){
   pdom.wrap.style.setProperty("--py", `${py}px`);
   pdom.wrap.classList.add("warp"); setTimeout(()=>pdom.wrap.classList.remove("warp"), 520);
 }
-
-/* ===== notes購読 ===== */
-const notesDomMap=new Map();
-onValue(notesRootRef(), snap=>{
-  const nowMs=Date.now(); const seen=new Set(); hasOwnNote=false;
-  snap.forEach(ch=>{
-    const v=ch.val()||{}; const ts=Number(v.updatedAt||v.at||0);
-    const alive=ts>0 && (nowMs-ts)<=NOTE_TTL_MS; const id=ch.key;
-    if(alive){ upsertNoteDom(id,v); seen.add(id); if(id===uid) hasOwnNote=true; }
-    else{ if(id===uid){ remove(noteRefOf(uid)).catch(()=>{}); } }
-  });
-  for(const [id,el] of notesDomMap){ if(!seen.has(id)){ el.remove(); notesDomMap.delete(id); } }
-  noteClearBtn.disabled=!hasOwnNote;
-});
-function upsertNoteDom(ownerUid,data){
-  let el=notesDomMap.get(ownerUid);
-  if(!el){ el=document.createElement("div"); el.className="noteItem"; notesLayer.appendChild(el); notesDomMap.set(ownerUid, el); }
-  el.textContent=data.text||""; el.dataset.x=String(data.x??0.5); el.dataset.y=String(data.y??0.7);
-  positionNoteDom(el, Number(el.dataset.x), Number(el.dataset.y));
-}
-function positionNoteDom(el,nx,ny){
-  const r=play.getBoundingClientRect(); if(r.width<=0) return;
-  const px=Math.round(nx*r.width), py=Math.round(ny*r.height);
-  const topSpace=py-130; if(topSpace<0){ el.classList.add("flip"); } else { el.classList.remove("flip"); }
-  el.style.transform=`translate3d(${px}px, ${py}px, 0) ${el.classList.contains("flip")?"translate(-50%, 18px)":"translate(-50%, -120%)"}`;
-}
-
-/* ===== メタ：新部屋通知 ===== */
-let NEXT_ROOM_ID=null;
-let migrateHideTimer=null;
-function showLocalMigrate(nextRoomId, byName){
-  NEXT_ROOM_ID=nextRoomId;
-  migrateText.textContent=`🆕 ${I18N[LANG].notify.newRoomBy(byName|| (LANG==="ja"?"だれか":"someone"))}`;
-  migrate.style.display="flex";
-  clearTimeout(migrateHideTimer);
-  migrateHideTimer=setTimeout(()=>{ migrate.style.display="none"; }, MIGRATE_TTL_MS+50);
-}
-function subscribeMeta(){
-  onValue(metaRef(), snap=>{
-    const m=snap.val()||{};
-    clearTimeout(migrateHideTimer);
-    const at=Number(m.at||0);
-    const fresh = m.nextRoom && at>0 && (Date.now() - at) <= MIGRATE_TTL_MS;
-    if(fresh){
-      const byName=(latestPlayers[m.by]?.name)?normalizeName(latestPlayers[m.by].name):(LANG==="ja"?"だれか":"someone");
-      showLocalMigrate(m.nextRoom, byName);
-    }else{
-      migrate.style.display="none";
-    }
-  });
-}
-migrateGo.addEventListener("click", ()=>{ if(!NEXT_ROOM_ID) return; const u=new URL(location.href); u.searchParams.set("room", NEXT_ROOM_ID); location.href=u.toString(); });
-migrateClose.addEventListener("click", ()=>{ migrate.style.display="none"; });
-
-/* ===== プレイヤーDOM ===== */
 function createPlayerDom(id){
   const wrap=document.createElement("div"); wrap.className="p stand";
   const nameEl=document.createElement("div"); nameEl.className="name";
@@ -669,7 +563,7 @@ function createPlayerDom(id){
 }
 function renderPlayer(pdom, data, isSelf){
   const r=play.getBoundingClientRect(); if(r.width<=0) return;
-  const px=Math.round(data.x*r.width), py=Math.round(data.y*r.height);
+  const px=Math.round((data.x??0.5)*r.width), py=Math.round((data.y??0.7)*r.height);
   pdom.wrap.style.transform=`translate3d(${px}px, ${py}px, 0) translate(-50%, -80%)`;
 
   if(data.pose==="sit"){ pdom.wrap.classList.add("sit"); pdom.wrap.classList.remove("stand"); }
@@ -683,7 +577,10 @@ function renderPlayer(pdom, data, isSelf){
   const emoActive=(data.emo==="angry") && (Date.now()-Number(data.emoAt||0) <= EMO_SHOW_MS);
   pdom.wrap.classList.toggle("emo-angry", emoActive);
 
-  const decidedName=normalizeName(data?.name||"");
+  // 名前：現在値 or 最後に見えた値（フォールバック）
+  let decidedName=normalizeName(data?.name||"");
+  if(decidedName){ lastShownName.set(pdom._id, decidedName); }
+  else{ decidedName=lastShownName.get(pdom._id)||""; }
   pdom.nameEl.style.display = decidedName ? "block":"none";
   if(decidedName && pdom.nameEl.textContent!==decidedName) pdom.nameEl.textContent=decidedName;
 
@@ -711,6 +608,8 @@ function renderPlayer(pdom, data, isSelf){
   pdom.pinBubbleEl.style.display=pinText?"block":"none";
   if(pinText) pdom.pinBubbleEl.textContent=pinText;
 }
+
+/* ===== 自分DOMを保証 ===== */
 function ensureMineDom(){
   if(!uid) return;
   if(!domMap.get(uid)){ const d=createPlayerDom(uid); domMap.set(uid,d); play.appendChild(d.wrap); }
@@ -718,7 +617,7 @@ function ensureMineDom(){
   renderPlayer(domMap.get(uid), data, true);
 }
 
-/* ===== 入力/送信・ピン・書き置き・威嚇・ポーズ ===== */
+/* ===== 入力・ピン・書き置き・威嚇・退室等（省略なく維持） ===== */
 let lastSentAt=0;
 function validateMessage(raw){
   if(!raw) return {ok:false};
@@ -750,8 +649,8 @@ pinBtn.addEventListener("click", ()=>{
   }
   const typed=msgInput.value.trim();
   const pick=typed?typed:(me.msg?me.msg:"");
-  if(!pick){ toast(LANG==="ja"?"ピンに入れる文がない":"Nothing to pin"); return; }
-  if(typed && !validateMessage(typed).ok){ toast(LANG==="ja"?"文字数の上限を超えた":"Too long"); return; }
+  if(!pick){ toast("ピンに入れる文がない"); return; }
+  if(typed && !validateMessage(typed).ok){ toast("文字数の上限を超えた"); return; }
   me.pinMsg=pick; renderPinBtn();
   const mine=domMap.get(uid); if(mine){ mine.pinBubbleEl.textContent=pick; mine.pinBubbleEl.style.display="block"; }
   safeUpdate({pinMsg:pick, pinAt:serverTimestamp()}); toast(I18N[LANG].notify.pinOn);
@@ -759,8 +658,8 @@ pinBtn.addEventListener("click", ()=>{
 noteBtn.addEventListener("click", async ()=>{
   const typed=msgInput.value.trim();
   const pick=typed?typed:(me.msg?me.msg:"");
-  if(!pick){ toast(LANG==="ja"?"書き置きする文がない":"Nothing to note"); return; }
-  if(typed && !validateMessage(typed).ok){ toast(LANG==="ja"?"文字数の上限を超えた":"Too long"); return; }
+  if(!pick){ toast("書き置きする文がない"); return; }
+  if(typed && !validateMessage(typed).ok){ toast("文字数の上限を超えた"); return; }
   try{
     const r=noteRefOf(uid); const nowXY={x:me.x,y:me.y}; const snap=await get(r);
     const authorName=normalizeName(me.name);
@@ -771,36 +670,33 @@ noteBtn.addEventListener("click", async ()=>{
       await set(r,{text:pick,author:authorName,uid:uid||"",x:nowXY.x,y:nowXY.y,at:serverTimestamp(),updatedAt:serverTimestamp()});
       toast(I18N[LANG].notify.noteSaved);
     }
-  }catch(e){ console.error("note set/update failed:", e); toast(LANG==="ja"?"書き置きに失敗":"Note failed"); }
+  }catch(e){ console.error("note set/update failed:", e); toast("書き置きに失敗"); }
 });
 noteClearBtn.addEventListener("click", async ()=>{
   if(!uid) return;
   try{ await remove(noteRefOf(uid)); toast(I18N[LANG].notify.noteCleared); }
-  catch(e){ console.error("note clear failed:", e); toast(LANG==="ja"?"削除に失敗":"Failed to clear"); }
+  catch(e){ console.error("note clear failed:", e); toast("削除に失敗"); }
 });
 angerBtn.addEventListener("click", ()=>{
   me.emo="angry"; me.emoAt=Date.now(); ensureMineDom();
   safeUpdate({emo:"angry", emoAt:serverTimestamp()});
   setTimeout(()=>{ if(Date.now()-me.emoAt>=EMO_SHOW_MS){ me.emo="none"; ensureMineDom(); } }, EMO_SHOW_MS+120);
 });
-function renderPoseTopBtn(){ document.getElementById("lblPose").textContent = " " + (me.pose==="stand" ? I18N[LANG].poseSit : I18N[LANG].poseStand); } renderPoseTopBtn();
+function renderPoseTopBtn(){ lblPose.textContent = " " + (me.pose==="stand" ? I18N[LANG].poseSit : I18N[LANG].poseStand); } renderPoseTopBtn();
 poseTopBtn.addEventListener("click", togglePose);
 window.addEventListener("keydown", e=>{ const tag=(e.target && e.target.tagName)?e.target.tagName.toLowerCase():""; if(tag==="input"||tag==="textarea"||(e.target&&e.target.isContentEditable)) return; if(e.key.toLowerCase()==="s"){ togglePose(); }});
 function togglePose(){ me.pose=(me.pose==="stand")?"sit":"stand"; renderPoseTopBtn(); safeUpdate({pose:me.pose}); }
 
-/* ===== 退室（安全） ===== */
+/* 退室 */
 leaveBtn.addEventListener("click", async ()=>{
   if(!uid) return;
   if(!confirm(I18N[LANG].confirmLeave)) return;
   try{ await remove(myRef()); }catch(e){ console.warn("leave remove failed:", e); }
-  // ローカル状態を初期化。以降はDBへ書かない
   mounted=false; joined=false;
   me.msg=""; me.pinMsg=""; me.emo="none";
   const mine=domMap.get(uid); if(mine){ mine.wrap.remove(); domMap.delete(uid); }
-  // 入室ダイアログへ戻す
   nameInput.value=""; warn.textContent="";
-  join.style.display="flex";
-  toast(I18N[LANG].left);
+  join.style.display="flex"; toast(I18N[LANG].left);
 });
 
 /* ===== 移動・同期・心拍 ===== */
@@ -836,7 +732,67 @@ function loop(){
 /* ===== 安全更新 ===== */
 async function safeUpdate(patch){ if(!uid || !mounted) return; try{ await update(myRef(), patch); }catch(e){ console.error("[rtdb] update failed:", patch, e); } }
 
-/* ===== 抜け殻掃除 ===== */
+/* ===== 書き置き購読・メタ購読・掃除（前回版通り） ===== */
+const notesDomMap=new Map();
+onValue(notesRootRef(), snap=>{
+  const nowMs=Date.now(); const seen=new Set(); hasOwnNote=false;
+  snap.forEach(ch=>{
+    const v=ch.val()||{}; const ts=Number(v.updatedAt||v.at||0);
+    const alive=ts>0 && (nowMs-ts)<=NOTE_TTL_MS; const id=ch.key;
+    if(alive){ upsertNoteDom(id,v); seen.add(id); if(id===uid) hasOwnNote=true; }
+    else{ if(id===uid){ remove(noteRefOf(uid)).catch(()=>{}); } }
+  });
+  for(const [id,el] of notesDomMap){ if(!seen.has(id)){ el.remove(); notesDomMap.delete(id); } }
+  noteClearBtn.disabled=!hasOwnNote;
+});
+function upsertNoteDom(ownerUid,data){
+  let el=notesDomMap.get(ownerUid);
+  if(!el){ el=document.createElement("div"); el.className="noteItem"; notesLayer.appendChild(el); notesDomMap.set(ownerUid, el); }
+  el.textContent=data.text||""; el.dataset.x=String(data.x??0.5); el.dataset.y=String(data.y??0.7);
+  positionNoteDom(el, Number(el.dataset.x), Number(el.dataset.y));
+}
+function positionNoteDom(el,nx,ny){
+  const r=play.getBoundingClientRect(); if(r.width<=0) return;
+  const px=Math.round(nx*r.width), py=Math.round(ny*r.height);
+  const topSpace=py-130; if(topSpace<0){ el.classList.add("flip"); } else { el.classList.remove("flip"); }
+  el.style.transform=`translate3d(${px}px, ${py}px, 0) ${el.classList.contains("flip")?"translate(-50%, 18px)":"translate(-50%, -120%)"}`;
+}
+
+let NEXT_ROOM_ID=null; let migrateHideTimer=null;
+function showLocalMigrate(nextRoomId, byName){
+  NEXT_ROOM_ID=nextRoomId;
+  migrateText.textContent=`🆕 ${I18N[LANG].notify.newRoomBy(byName|| "だれか")}`;
+  migrate.style.display="flex";
+  clearTimeout(migrateHideTimer);
+  migrateHideTimer=setTimeout(()=>{ migrate.style.display="none"; }, MIGRATE_TTL_MS+50);
+}
+function subscribeMeta(){
+  onValue(metaRef(), snap=>{
+    const m=snap.val()||{};
+    clearTimeout(migrateHideTimer);
+    const at=Number(m.at||0);
+    const fresh = m.nextRoom && at>0 && (Date.now() - at) <= MIGRATE_TTL_MS;
+    if(fresh){
+      const byName=(latestPlayers[m.by]?.name)?normalizeName(latestPlayers[m.by].name):"だれか";
+      showLocalMigrate(m.nextRoom, byName);
+    }else{
+      migrate.style.display="none";
+    }
+  });
+}
+newRoomBtn.addEventListener("click", async ()=>{
+  const id=makeRoomId();
+  try{
+    await update(metaRef(), {nextRoom:id, by:uid||"", at:serverTimestamp()});
+    const byName = normalizeName(me.name) || "自分";
+    showLocalMigrate(id, byName);
+  }catch(e){
+    console.error("set nextRoom failed:", e); toast("新しい部屋の作成に失敗");
+  }
+});
+migrateGo.addEventListener("click", ()=>{ if(!NEXT_ROOM_ID) return; const u=new URL(location.href); u.searchParams.set("room", NEXT_ROOM_ID); location.href=u.toString(); });
+migrateClose.addEventListener("click", ()=>{ migrate.style.display="none"; });
+
 async function cleanupGhosts(){
   try{
     const snap=await get(playersRef);
@@ -855,12 +811,17 @@ async function cleanupGhosts(){
 }
 setInterval(cleanupGhosts, CLEANUP_MS);
 
-/* ===== 名簿・共有・ヘルプ・新部屋 ===== */
+/* 名簿・共有・ヘルプ */
 function peekNames(){
+  const nowMs=Date.now();
   const list = Object.entries(latestPlayers)
-    .filter(([id,p])=> id===uid ? true : (isNamed(p) && isAlive(p)))
-    .map(([id,p])=> id===uid ? normalizeName(me.name) : normalizeName(p.name))
-    .filter(Boolean).join(" / ") || (LANG==="ja"?"いまは誰もいない":"Nobody here");
+    .filter(([id,p])=> {
+      if(id===uid) return true;
+      const ts=Number(p?.lastActive||0);
+      return !ts || (nowMs - ts) <= STALE_HIDE_MS;
+    })
+    .map(([id,p])=> id===uid ? normalizeName(me.name) : (normalizeName(p.name)||lastShownName.get(id)||""))
+    .filter(Boolean).join(" / ") || "いまは誰もいない";
   namesPeek.textContent=I18N[LANG].namesPeek(list);
   namesPeek.style.display="block";
   clearTimeout(peekNames._t); peekNames._t=setTimeout(()=>namesPeek.style.display="none", 2500);
@@ -877,7 +838,7 @@ shareBtn.addEventListener("click", async ()=>{
       await navigator.clipboard.writeText(invite.toString());
       toast(I18N[LANG].notify.urlCopied);
     }else{
-      prompt(LANG==="ja"?"このURLをコピーして共有してね":"Copy this URL", invite.toString());
+      prompt("このURLをコピーして共有してね", invite.toString());
     }
   }catch(e){ console.warn("clipboard failed:", e); }
 });
@@ -886,24 +847,9 @@ helpBtn.addEventListener("click", ()=>{
   helpDialog.showModal();
   helpDialog.querySelector("#helpClose").addEventListener("click", ()=>helpDialog.close(), {once:true});
 });
-newRoomBtn.addEventListener("click", async ()=>{
-  const id=makeRoomId();
-  try{
-    await update(metaRef(), {nextRoom:id, by:uid||"", at:serverTimestamp()});
-    const byName = normalizeName(me.name) || (LANG==="ja"?"自分":"you");
-    showLocalMigrate(id, byName);
-  }catch(e){
-    console.error("set nextRoom failed:", e);
-    toast(LANG==="ja"?"新しい部屋の作成に失敗":"Failed to create");
-  }
-});
 
-/* ===== 起動 ===== */
-(function(){
-  worldLabel.textContent=`room: ${WORLD_ID}`;
-  applyLang(); renderMuteButton();
-  msgInput.dispatchEvent(new Event("input"));
-})();
+/* 起動 */
+(function(){ worldLabel.textContent=`room: ${WORLD_ID}`; renderMuteButton(); msgInput.dispatchEvent(new Event("input")); })();
 </script>
 </body>
 </html>

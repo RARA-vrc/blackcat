@@ -16,14 +16,14 @@
     --accent:#ff7aa2; --accent-ink:#fff; --border:#e5e7eb;
     --barH:60px; --ring:3px; --ringColor:rgba(255,122,162,.45);
     --pin-bg:#ffe7ef; --pin-bd:#ffc6d7;
-    --burstA:#ff7aa2; --burstB:#ffc0d2;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
   html,body{height:100%; margin:0; font-family:ui-sans-serif,system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink)}
   body,button,input{touch-action:manipulation}
   #app{position:fixed; inset:0; display:flex; flex-direction:column}
 
-  header{position:sticky; top:0; z-index:50; padding:calc(env(safe-area-inset-top)+4px) 10px 8px; padding-right:calc(10px + env(safe-area-inset-right)); border-bottom:1px solid var(--border); background:var(--panel)}
+  /* ヘッダは最前面に。ポップアップ類はさらに上に重ねる */
+  header{position:sticky; top:0; z-index:2000; padding:calc(env(safe-area-inset-top)+4px) 10px 8px; padding-right:calc(10px + env(safe-area-inset-right)); border-bottom:1px solid var(--border); background:var(--panel)}
   .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px}
   .brand{display:flex; align-items:center; gap:10px; min-width:0}
   .brand h1{font-size:clamp(13px,2.2vw,16px); font-weight:800; margin:0; white-space:nowrap; cursor:pointer}
@@ -33,7 +33,7 @@
 
   .meta{display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none}
   .meta::-webkit-scrollbar{display:none}
-  .btn{appearance:none; border:0; background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:10px 12px; font-size:clamp(12px,1.7vw,14px); font-weight:800; cursor:pointer; min-height:40px; min-width:44px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap}
+  .btn{appearance:none; border:0; background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:10px 12px; font-size:clamp(12px,1.7vw,14px); font-weight:800; cursor:pointer; min-height:40px; min-width:44px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; pointer-events:auto}
   .btn.ghost{background:transparent; color:var(--ink); border:1px solid var(--border)}
   .btn.iconOnly{padding:10px; min-width:44px}
   .btn:disabled{opacity:.5; cursor:not-allowed}
@@ -42,7 +42,7 @@
   .txt{display:inline-block}
   @media (max-width:940px){ .btn.ghost .txt{display:none} }
 
-  #play{position:relative; flex:1; overflow:hidden; background-image:radial-gradient(circle at 1px 1px,#f1f3f5 1px,transparent 0), radial-gradient(1200px 420px at 50% 120%, #f7f7f7 0%, transparent 60%); background-size:18px 18px, auto; user-select:none; touch-action:none; cursor:grab}
+  #play{position:relative; flex:1; overflow:hidden; background-image:radial-gradient(circle at 1px 1px,#f1f3f5 1px,transparent 0), radial-gradient(1200px 420px at 50% 120%, #f7f7f7 0%, transparent 60%); background-size:18px 18px, auto; user-select:none; touch-action:none; cursor:grab; z-index:0}
   #play.dragging{cursor:grabbing}
   #worldWrap{position:absolute; inset:0; transform-origin:0 0; will-change:transform}
   #world{position:absolute; left:0; top:0; width:100vmax; height:100vmax; border:2px dashed #e5e7eb; border-radius:16px; box-shadow:0 0 0 6px rgba(255,255,255,.6) inset}
@@ -78,19 +78,21 @@
   .noteItem{position:absolute; background:var(--pin-bg); border:1px solid var(--pin-bd); border-radius:10px; padding:4px 6px; font-size:0.5rem; color:#111; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; max-width:50vw; box-shadow:0 4px 12px rgba(0,0,0,.06); transform:translate(-50%, -120%)}
   .noteItem.flip{transform:translate(-50%, 18px)}
 
-  .join-burst{position:absolute; left:0; top:0; pointer-events:none; width:0; height:0; z-index:5}
-  .join-burst .ring{position:absolute; left:0; top:0; width:12px; height:12px; border:2px solid var(--burstA); border-radius:999px; transform:translate(-50%,-50%) scale(.3); opacity:.8; animation:joinRing .9s cubic-bezier(.2,.8,.2,1) forwards}
-  @keyframes joinRing{60%{box-shadow:0 0 32px rgba(255,122,162,.45)} 100%{transform:translate(-50%,-50%) scale(9.5); opacity:0}}
-  .join-burst .spark{position:absolute; left:0; top:0; width:6px; height:6px; background:radial-gradient(circle at 30% 30%, #fff 0, #fff 18%, var(--burstB) 19%, var(--burstA) 100%); border-radius:50%; transform:translate(-50%,-50%); opacity:.95; animation:joinSpark .9s ease-out forwards}
-  @keyframes joinSpark{to{ transform:translate(var(--dx), var(--dy)); opacity:0 }}
+  /* ポップアップはヘッダより上に */
+  #namesPeek{position:fixed; left:50%; top:calc(8px + env(safe-area-inset-top)); transform:translateX(-50%); z-index:2600; background:rgba(0,0,0,.84); color:#fff; font-size:13px; border-radius:12px; padding:8px 10px; max-width:90vw; white-space:normal; display:none; pointer-events:none}
+  #migrate{position:fixed; left:50%; top:70px; transform:translateX(-50%); z-index:3200; background:#111; color:#fff; border-radius:12px; padding:8px 10px; font-size:14px; display:none; align-items:center; gap:8px; box-shadow:0 12px 40px rgba(0,0,0,.25)}
+  #migrate .go{border:0; background:#fff; color:#111; font-weight:800; padding:6px 10px; border-radius:10px; cursor:pointer}
+  #migrate .close{border:0; background:transparent; color:#fff; font-weight:800; padding:4px 8px; cursor:pointer}
 
-  .spawn{position:absolute; width:26px; height:26px; border:2px solid var(--accent); border-radius:999px; transform:translate(-50%,-50%); pointer-events:none; animation:spawnPulse 1.6s ease-out infinite; z-index:4}
-  @keyframes spawnPulse{0%{transform:translate(-50%,-50%) scale(.6); opacity:.9} 100%{transform:translate(-50%,-50%) scale(2.2); opacity:0}}
+  #reconnect{position:fixed; inset:0; background:rgba(255,255,255,.92); display:none; align-items:center; justify-content:center; z-index:3000}
+  #reconnect .card{width:min(92vw,520px); border:1px solid var(--border); border-radius:18px; background:#fff; padding:18px 16px 16px; box-shadow:0 18px 60px rgba(0,0,0,.08)}
+  #reconnect h3{margin:0 0 8px}
+  #reconnect .row{display:flex; gap:10px; justify-content:flex-end}
 
-  #hint{position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom)); background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.92; z-index:4; display:flex; align-items:center; gap:8px}
+  #hint{position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom)); background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.92; z-index:2500; display:flex; align-items:center; gap:8px}
   #hint button{background:transparent; border:0; color:#fff; font-weight:900; cursor:pointer; padding:0 2px}
 
-  #join{position:fixed; inset:0; background:rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center; z-index:100}
+  #join{position:fixed; inset:0; background:rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center; z-index:2800}
   #join .card{width:min(92vw,560px); border:1px solid var(--border); border-radius:18px; background:#fff; padding:18px 16px 16px; box-shadow:0 18px 60px rgba(0,0,0,.08)}
   #join h2{margin:0 0 8px; font-size:18px}
   #join p{margin:0 0 12px; font-size:14px; color:#555; line-height:1.6}
@@ -103,21 +105,10 @@
   #joinGuide{font-size:12px; color:#374151; background:#fafafa; border:1px solid var(--border); padding:10px 10px; border-radius:12px; line-height:1.65; margin-top:8px}
   #joinGuide b{color:#111}
 
-  #namesPeek{position:fixed; left:50%; top:calc(8px + env(safe-area-inset-top)); transform:translateX(-50%); z-index:4; background:rgba(0,0,0,.84); color:#fff; font-size:13px; border-radius:12px; padding:8px 10px; max-width:90vw; white-space:normal; display:none; pointer-events:none}
-
-  #migrate{position:fixed; left:50%; top:64px; transform:translateX(-50%); z-index:50; background:#111; color:#fff; border-radius:12px; padding:8px 10px; font-size:14px; display:none; align-items:center; gap:8px}
-  #migrate .go{border:0; background:#fff; color:#111; font-weight:800; padding:6px 10px; border-radius:10px; cursor:pointer}
-  #migrate .close{border:0; background:transparent; color:#fff; font-weight:800; padding:4px 8px; cursor:pointer}
-
-  #reconnect{position:fixed; inset:0; background:rgba(255,255,255,.92); display:none; align-items:center; justify-content:center; z-index:160}
-  #reconnect .card{width:min(92vw,520px); border:1px solid var(--border); border-radius:18px; background:#fff; padding:18px 16px 16px; box-shadow:0 18px 60px rgba(0,0,0,.08)}
-  #reconnect h3{margin:0 0 8px}
-  #reconnect .row{display:flex; gap:10px; justify-content:flex-end}
-
-  #full{position:fixed; inset:0; background:rgba(255,255,255,.9); display:none; align-items:center; justify-content:center; z-index:200}
+  #full{position:fixed; inset:0; background:rgba(255,255,255,.9); display:none; align-items:center; justify-content:center; z-index:2900}
 
   @media (prefers-reduced-motion: reduce){
-    .p{transition:none} .join-burst{display:none} .spawn{animation:none} .ping{animation:none; display:none}
+    .p{transition:none}
   }
 </style>
 </head>
@@ -214,12 +205,12 @@
 <div id="full" style="display:none"></div>
 
 <script type="module">
-/* ========== 画像URL ========== */
+/* 画像URL */
 const CAT_STAND_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png";
 const CAT_SIT_URL   = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png";
 const CAT_ANGRY_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/angerCAT.png";
 
-/* ========== パラメータ ========== */
+/* パラメータ */
 const HEARTBEAT_MS   = 7000;
 const IDLE_MS        = 90*1000;
 const NOTE_TTL_MS    = 8*60*60*1000;
@@ -230,9 +221,9 @@ const SPEED_PX_PER_S = 120;
 const NON_ASCII_LIMIT= 15;
 const BUBBLE_MS      = 60000;
 const ZMIN           = 0.4, ZMAX = 2.0;
-const PARK_GRACE_MS  = 6 * 60 * 60 * 1000; // ← 6時間は在室（parked）扱い
+const PARK_GRACE_MS  = 6 * 60 * 60 * 1000;
 
-/* ========== i18n ========== */
+/* i18n */
 const I18N={};
 I18N.ja = {
   brand:"くろねこひろば",
@@ -247,8 +238,8 @@ I18N.ja = {
   joinHint:"音が出ないときは一度画面をタップしてからミュートを確かめる。",
   helpHtml:`<h3 style="margin:0 0 8px">使い方</h3>
     <ul style="margin:0 0 12px 18px; line-height:1.7; color:#374151; font-size:14px">
-      <li>マウス/指で<b>ドラッグしてフィールド移動</b>。二本指でズーム・パン</li>
-      <li>📍 <b>ダブルクリック/ダブルタップでネコ移動</b></li>
+      <li>フィールドはドラッグで移動、二本指でズーム</li>
+      <li>📍 ダブルクリック/ダブルタップでネコ移動</li>
       <li>📨 英語10語/日本語など15文字。60秒で消える</li>
       <li>📌 頭上固定（再押しで解除）</li>
       <li>🖋️ 足元に書き置き（ひとり一件・更新可・8時間で自動削除/🗑️で消す）</li>
@@ -280,14 +271,14 @@ I18N.en = {
   joinHint:"No sound? Tap once and toggle the bell.",
   helpHtml:`<h3 style="margin:0 0 8px">How to play</h3>
     <ul style="margin:0 0 12px 18px; line-height:1.7; color:#374151; font-size:14px">
-      <li><b>Drag to move the field</b>. Two fingers to zoom & pan</li>
-      <li>📍 <b>Double‑tap/double‑click to move your cat</b></li>
-      <li>📨 English up to 10 words / others up to 15 chars. Fades in 60s</li>
-      <li>📌 Small status above head (toggle to clear)</li>
-      <li>🖋️ Note near feet (one per person, editable, auto‑clears after 8h / 🗑️ to delete)</li>
+      <li>Drag to pan, pinch to zoom</li>
+      <li>📍 Double‑click/tap to move your cat</li>
+      <li>📨 10 words / 15 chars, fades in 60s</li>
+      <li>📌 Pinned above head (toggle)</li>
+      <li>🖋️ One note near feet (editable, 8h auto‑clear / 🗑️ to delete)</li>
       <li>🪑 Sit/Stand, 💢 Angry (3s)</li>
       <li>🐈‍⬛ Show names, 🔗 copy link, 🆕 new room, 🚪 leave</li>
-      <li>Up to 10 players. Name ≤ 3 chars</li>
+      <li>Max 10 players. Name ≤ 3 chars</li>
     </ul>`,
   confirmLeave:"Leave this room?", left:"Left",
   rcTitle:"Connection lost", rcDesc:"This tab is dozing. Your cat stays seated. Reconnect to move.",
@@ -302,7 +293,7 @@ I18N.en = {
 };
 let LANG="ja";
 
-/* ========== Firebase ========== */
+/* Firebase */
 const firebaseConfig = {
   apiKey:"AIzaSyCUpt4XLfSSZLt0VhJon926--c-I2tRMkE",
   authDomain:"blackcat-67716.firebaseapp.com",
@@ -331,13 +322,12 @@ const app=initializeApp(firebaseConfig);
 const db=getDatabase(app);
 const auth=getAuth(app);
 
-/* DOM 取得 */
+/* DOM */
 const play=document.getElementById("play");
 const worldWrap=document.getElementById("worldWrap");
 const world=document.getElementById("world");
 const notesLayer=document.getElementById("notesLayer");
 const bar=document.getElementById("bar");
-
 const msgInput=document.getElementById("msg");
 const sendBtn=document.getElementById("send");
 const pinBtn=document.getElementById("pinBtn");
@@ -391,7 +381,7 @@ const reconnectClose=document.getElementById("reconnectClose");
 worldLabel.textContent=`room: ${WORLD_ID}`;
 countDock.textContent="🐈‍⬛ 0";
 
-/* ========== サウンド ========== */
+/* サウンド */
 let AC=null, masterGain=null; let muted=localStorage.getItem("yuru_mute")==="1";
 function unlockAudio(){ const Ctx=window.AudioContext||window.webkitAudioContext; if(!AC && Ctx){ AC=new Ctx(); masterGain=AC.createGain(); masterGain.gain.value=muted?0:0.24; masterGain.connect(AC.destination);} if(AC&&AC.state==="suspended") AC.resume(); }
 function setupAudioUnlock(){ const once=()=>{unlockAudio(); document.removeEventListener("pointerdown", once); document.removeEventListener("keydown", once);}; document.addEventListener("pointerdown", once, {passive:true}); document.addEventListener("keydown", once); enterBtn.addEventListener("click", unlockAudio, {once:true}); } setupAudioUnlock();
@@ -399,12 +389,12 @@ function tone({freq=880,dur=0.12,type="sine",vol=0.7,attack=0.005,release=0.12}=
 function playLogin(){ if(!muted&&AC){ tone({freq:880,type:"triangle",vol:0.55,dur:0.12}); setTimeout(()=>tone({freq:1320,type:"triangle",vol:0.55,dur:0.12}),140); } }
 function playMessage(){ if(!muted&&AC){ tone({freq:700,type:"sine",vol:0.5,dur:0.09}); } }
 
-/* ========== お知らせ ========== */
+/* お知らせ */
 function notify(text, ttl=90000){ hintText.textContent=text; hintBox.style.display="flex"; hintBox.style.opacity=.95; clearTimeout(notify._t); notify._t=setTimeout(()=>{ hintBox.style.display="none"; }, ttl); }
 function toast(text, ttl=2200){ notify(text, ttl); }
 hintClose.addEventListener("click", ()=>{ hintBox.style.display="none"; clearTimeout(notify._t); });
 
-/* ========== 状態 ========== */
+/* 状態 */
 const lastShownName=new Map();
 let hasOwnNote=false;
 let uid=null, joined=false, mounted=false;
@@ -431,7 +421,7 @@ function noteRefOf(u){ return ref(db, `worlds/${WORLD_ID}/notes/${u}`); }
 function metaRef(){ return ref(db, `worlds/${WORLD_ID}/meta`); }
 const playersRef=playersRefOf(WORLD_ID);
 
-/* ========== 言語 ========== */
+/* 言語 */
 function applyLang(){
   const T=I18N[LANG];
   document.getElementById("brandTitle").textContent=T.brand;
@@ -453,7 +443,7 @@ function applyLang(){
 applyLang();
 document.getElementById("langBtn").addEventListener("click", ()=>{ LANG=(LANG==="ja")?"en":"ja"; applyLang(); });
 
-/* ========== 参加フロー ========== */
+/* 参加 */
 nameInput.addEventListener("input", ()=>{ const n=nameInput.value.trim(); if([...n].length>3) nameInput.value=Array.from(n).slice(0,3).join(""); });
 enterBtn.addEventListener("click", startJoin);
 nameInput.addEventListener("keydown", e=>{ if(e.key==="Enter") startJoin(); });
@@ -472,7 +462,7 @@ initAuthOnBoot();
 async function initAuthOnBoot(){ try{ await signInAnonymously(auth); }catch(e){ console.error("[auth] anon failed:", e); toast(I18N[LANG].notify.errorAuth, 6000); } }
 onAuthStateChanged(auth, async u=>{ if(!u) return; uid=u.uid; if(joined && !mounted){ await initAfterAuth(); } });
 
-/* ========== 初期化 ========== */
+/* 初期化 */
 async function initAfterAuth(){
   me.x=Math.random()*0.8+0.1; me.y=Math.random()*0.4+0.5; target={x:me.x,y:me.y};
   centerWorld(); applyView();
@@ -489,10 +479,17 @@ async function initAfterAuth(){
 }
 
 /* 満員 */
-async function ensureCapacity(){ try{ const snap=await get(playersRef); let n=0; const now=Date.now(); snap.forEach(ch=>{ const v=ch.val()||{}; const f=presenceFlags(v, now); if(f.online || f.parked) n++; }); return n<ROOM_CAP; }catch{ return true; } }
+async function ensureCapacity(){
+  try{
+    const snap=await get(playersRef);
+    let n=0; const now=Date.now();
+    snap.forEach(ch=>{ const v=ch.val()||{}; const f=presenceFlags(v, now); if(f.online || f.parked) n++; });
+    return n<ROOM_CAP;
+  }catch{ return true; }
+}
 function showFull(){ full.style.display="flex"; full.innerHTML=`<div class="card"><h3>${LANG==="ja"?"満員だ":"Room full"}</h3><p>${LANG==="ja"?"10人まで":"Max 10 players"}</p></div>`; }
 
-/* presence：削除しない。onDisconnect で connected:false＋座らせる */
+/* presence：onDisconnectでconnected:falseにする。削除はしない */
 async function mountPresence(forceStand=false){
   try{
     await set(myRef(), {
@@ -520,7 +517,7 @@ document.addEventListener("visibilitychange", ()=>{
   }
 });
 
-/* 再接続監視＋モーダル */
+/* 再接続監視 */
 function monitorReconnect(){
   const conn = ref(db, ".info/connected");
   let showTimer=null;
@@ -552,20 +549,20 @@ reconnectBtn.addEventListener("click", async ()=>{
 });
 reconnectClose.addEventListener("click", ()=>{ reconnect.style.display="none"; });
 
-/* ===== 6時間猶予（presence） ===== */
+/* ===== 6時間駐車＋古いデータの互換 ===== */
 function presenceFlags(p, now = Date.now()){
+  // 互換: lastActiveが無い古いデータは「在室（parked）」として扱う
+  const hasLegacy = (p && (typeof p.connected === "undefined") && (typeof p.lastActive === "undefined") && (p.name || p.x!=null));
   const last = Number(p?.lastActive || 0);
   const conn = !!p?.connected;
-  const age  = last ? (now - last) : Infinity;
-
-  const online = conn;                      // 回線が生きている
-  const parked = !conn && age <= PARK_GRACE_MS; // 切断だが6h以内は在室扱い
-  const stale  = age > PARK_GRACE_MS;       // 6h超＝在室扱いから外す
-
+  const age  = last ? (now - last) : (hasLegacy ? 0 : Infinity);
+  const online = conn;
+  const parked = (!conn && age <= PARK_GRACE_MS) || hasLegacy;
+  const stale  = !hasLegacy && age > PARK_GRACE_MS;
   return { online, parked, stale, age };
 }
 
-/* players購読：online||parked を人数にカウント */
+/* players購読 */
 const domMap=new Map();
 let initialPlayersLoaded=false;
 let latestPlayers={};
@@ -605,27 +602,19 @@ function subscribePlayers(){
   });
 }
 
-/* 入室演出 */
+/* 入室エフェクト */
 function joinBurstAt(nx,ny){
   const r=world.getBoundingClientRect();
   const x=r.left + nx*r.width, y=r.top + ny*r.height;
-  const fx=document.createElement("div"); fx.className="join-burst"; fx.style.left=`${x}px`; fx.style.top=`${y}px`;
-  const ring=document.createElement("div"); ring.className="ring"; fx.appendChild(ring);
-  const N=14;
-  for(let i=0;i<N;i++){
-    const th=(Math.PI*2/N)*i + Math.random()*0.25;
-    const dist=64+Math.random()*36;
-    const dx=Math.cos(th)*dist, dy=Math.sin(th)*dist;
-    const s=document.createElement("span"); s.className="spark";
-    s.style.setProperty("--dx", `${dx.toFixed(1)}px`);
-    s.style.setProperty("--dy", `${dy.toFixed(1)}px`);
-    s.style.animationDelay=`${(Math.random()*0.06).toFixed(3)}s`;
-    fx.appendChild(s);
-  }
+  const fx=document.createElement("div"); fx.className="join-burst"; fx.style.cssText=`position:fixed;left:${x}px;top:${y}px;z-index:2400;pointer-events:none`;
+  const ring=document.createElement("div"); ring.style.cssText="position:absolute;width:12px;height:12px;border:2px solid #ff7aa2;border-radius:999px;transform:translate(-50%,-50%) scale(.3);opacity:.8;animation:joinRing .9s cubic-bezier(.2,.8,.2,1) forwards";
+  const style=document.createElement("style"); style.textContent=`@keyframes joinRing{60%{box-shadow:0 0 32px rgba(255,122,162,.45)}100%{transform:translate(-50%,-50%) scale(9.5);opacity:0}}`; fx.appendChild(style);
+  fx.appendChild(ring);
   document.body.appendChild(fx); setTimeout(()=>fx.remove(), 950);
 }
 function spawnPulse(nx,ny){ const {x,y}=toPxLocal(nx,ny); const el=document.createElement("div"); el.className="spawn"; el.style.left=`${x}px`; el.style.top=`${y}px`; world.appendChild(el); setTimeout(()=>el.remove(), 3000); }
 
+/* プレイヤーDOM */
 function createPlayerDom(id){
   const wrap=document.createElement("div"); wrap.className="p stand";
   const nameEl=document.createElement("div"); nameEl.className="name";
@@ -717,6 +706,7 @@ function sendMsg(){
   safeUpdate({msg:raw, msgAt:serverTimestamp()});
 }
 
+/* ピン */
 function renderPinBtn(){ pinBtn.setAttribute("aria-pressed", me.pinMsg?"true":"false"); } renderPinBtn();
 pinBtn.addEventListener("click", ()=>{
   if(me.pinMsg){
@@ -731,6 +721,8 @@ pinBtn.addEventListener("click", ()=>{
   const mine=domMap.get(uid); if(mine){ mine.pinBubbleEl.textContent=pick; mine.pinBubbleEl.style.display="block"; }
   safeUpdate({pinMsg:pick, pinAt:serverTimestamp()}); toast(I18N[LANG].notify.pinOn, 1800);
 });
+
+/* 書き置き：既存ノートには at を引き継いで送る */
 noteBtn.addEventListener("click", async ()=>{
   const typed=msgInput.value.trim(); const pick=typed?typed:(me.msg?me.msg:"");
   if(!pick){ toast(LANG==="ja"?"書き置きする文がない":"Nothing to note", 2200); return; }
@@ -739,28 +731,33 @@ noteBtn.addEventListener("click", async ()=>{
     const r=noteRefOf(uid); const nowXY={x:me.x,y:me.y}; const snap=await get(r);
     const authorName=normalizeName(me.name);
     if(snap.exists()){
-      await update(r,{text:pick,author:authorName,uid:uid||"",x:nowXY.x,y:nowXY.y,updatedAt:serverTimestamp()});
+      const prev=snap.val()||{};
+      const prevAt = Number(prev.at||0) || Date.now();
+      await update(r,{text:pick,author:authorName,uid:uid||"",x:nowXY.x,y:nowXY.y,updatedAt:serverTimestamp(),at:prevAt});
       toast(I18N[LANG].notify.noteUpdated, 1800);
     }else{
       await set(r,{text:pick,author:authorName,uid:uid||"",x:nowXY.x,y:nowXY.y,at:serverTimestamp(),updatedAt:serverTimestamp()});
       toast(I18N[LANG].notify.noteSaved, 1800);
     }
-  }catch(e){ console.error("note set/update failed:", e); toast(LANG==="ja"?"書き置きに失敗":"Failed to save note", 2200); }
+  }catch(e){ console.error("note set/update failed:", e); toast(LANG==="ja"?"書き置きに失敗":"Failed to save note", 2600); }
 });
 noteClearBtn.addEventListener("click", async ()=>{
   if(!uid) return;
   try{ await remove(noteRefOf(uid)); toast(I18N[LANG].notify.noteCleared, 1800); }
   catch(e){ console.error("note clear failed:", e); toast(LANG==="ja"?"削除に失敗":"Delete failed", 2200); }
 });
+
+/* 威嚇 */
 angerBtn.addEventListener("click", ()=>{
   me.emo="angry"; me.emoAt=Date.now(); ensureMineDom();
   safeUpdate({emo:"angry", emoAt:serverTimestamp()});
   setTimeout(()=>{ if(Date.now()-me.emoAt>=EMO_SHOW_MS){ me.emo="none"; ensureMineDom(); } }, EMO_SHOW_MS+120);
 });
+
+/* 座る/立つ：常に操作可（回線状態に依らず） */
 function renderPoseTopBtn(){ lblPose.textContent=" "+(me.pose==="stand"?I18N[LANG].poseSit:I18N[LANG].poseStand); } renderPoseTopBtn();
-poseTopBtn.addEventListener("click", togglePose);
-window.addEventListener("keydown", e=>{ const tag=(e.target&&e.target.tagName)?e.target.tagName.toLowerCase():""; if(tag==="input"||tag==="textarea"||(e.target&&e.target.isContentEditable)) return; if(e.key.toLowerCase()==="s"){ togglePose(); }});
-function togglePose(){ me.pose=(me.pose==="stand")?"sit":"stand"; renderPoseTopBtn(); safeUpdate({pose:me.pose}); }
+poseTopBtn.addEventListener("click", ()=>{ me.pose=(me.pose==="stand")?"sit":"stand"; renderPoseTopBtn(); ensureMineDom(); safeUpdate({pose:me.pose}); });
+window.addEventListener("keydown", e=>{ const tag=(e.target&&e.target.tagName)?e.target.tagName.toLowerCase():""; if(tag==="input"||tag==="textarea"||(e.target&&e.target.isContentEditable)) return; if(e.key.toLowerCase()==="s"){ me.pose=(me.pose==="stand")?"sit":"stand"; renderPoseTopBtn(); ensureMineDom(); safeUpdate({pose:me.pose}); }});
 
 /* 退室 */
 leaveBtn.addEventListener("click", async ()=>{
@@ -775,7 +772,7 @@ leaveBtn.addEventListener("click", async ()=>{
   join.style.display="flex"; toast(I18N[LANG].left, 2000);
 });
 
-/* ===== ズーム/パン＋ダブルタップ/クリック移動 ===== */
+/* ズーム/パン＋ダブルタップ/クリック移動 */
 function centerWorld(){ const r=play.getBoundingClientRect(); const {w,h}=worldSize(); zoom=1; panX=(r.width-w*zoom)/2; panY=(r.height-h*zoom)/2; }
 function applyView(){ worldWrap.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`; zoomLabel.textContent = `${Math.round(zoom*100)}%`; }
 function setZoomCentered(nz){ nz=Math.max(ZMIN, Math.min(ZMAX, nz)); const r=play.getBoundingClientRect(); const cx=r.width/2, cy=r.height/2; const worldX=(cx - panX)/zoom, worldY=(cy - panY)/zoom; zoom=nz; panX=cx - worldX*zoom; panY=cy - worldY*zoom; userPanned=true; applyView(); }
@@ -895,7 +892,7 @@ onValue(notesRootRef(), snap=>{
     const v=ch.val()||{}; const ts=Number(v.updatedAt||v.at||0);
     const alive=ts>0 && (nowMs-ts)<=NOTE_TTL_MS; const id=ch.key;
     if(alive){ upsertNoteDom(id,v); seen.add(id); if(id===uid) hasOwnNote=true; }
-    else{ if(id===uid){ remove(noteRefOf(uid)).catch(()=>{}); } }
+    // TTL切れは自動削除したいならここで remove(noteRefOf(id))
   });
   for(const [id,el] of notesDomMap){ if(!seen.has(id)){ el.remove(); notesDomMap.delete(id); } }
   noteClearBtn.disabled=!hasOwnNote;
@@ -912,11 +909,12 @@ function upsertNoteDom(ownerUid,data){
   if(screenY<120) el.classList.add("flip"); else if(screenY>140) el.classList.remove("flip");
 }
 
-/* 新部屋通知 */
+/* 新部屋通知：ローカル即時＋サーバ購読 */
 let NEXT_ROOM_ID=null; let migrateHideTimer=null;
 function showLocalMigrate(nextRoomId, byName){
   NEXT_ROOM_ID=nextRoomId;
-  migrateText.textContent=`🆕 ${I18N[LANG].notify.newRoomBy(byName|| (LANG==="ja"?"だれか":"someone"))}`;
+  const text = LANG==="ja" ? `${byName||"だれか"} が新しい部屋を作成` : `${byName||"someone"} created a new room`;
+  migrateText.textContent=`🆕 ${text}`;
   migrate.style.display="flex";
   clearTimeout(migrateHideTimer);
   migrateHideTimer=setTimeout(()=>{ migrate.style.display="none"; }, MIGRATE_TTL_MS+50);
@@ -940,8 +938,12 @@ newRoomBtn.addEventListener("click", async ()=>{
   try{
     await update(metaRef(), {nextRoom:id, by:uid||"", at:serverTimestamp()});
     const byName = normalizeName(me.name) || (LANG==="ja"?"自分":"me");
-    showLocalMigrate(id, byName);
-  }catch(e){ console.error("set nextRoom failed:", e); toast(LANG==="ja"?"新しい部屋の作成に失敗":"Failed to create room", 2500); }
+    showLocalMigrate(id, byName); // 成否に関係なくローカル表示
+  }catch(e){
+    console.warn("set nextRoom failed:", e);
+    const byName = normalizeName(me.name) || (LANG==="ja"?"自分":"me");
+    showLocalMigrate(id, byName); // 失敗時も表示
+  }
 });
 migrateGo.addEventListener("click", ()=>{ if(!NEXT_ROOM_ID) return; const u=new URL(location.href); u.searchParams.set("room", NEXT_ROOM_ID); location.href=u.toString(); });
 migrateClose.addEventListener("click", ()=>{ migrate.style.display="none"; });

@@ -106,7 +106,6 @@
   #join button{padding:12px 14px; border-radius:12px; background:var(--accent); color:#fff; font-weight:800; font-size:16px; border:0; cursor:pointer; white-space:nowrap}
   #warn{color:#b40000; font-size:13px; min-height:1.4em}
   .subtle{font-size:12px; color:#6b7280}
-  /* ミニガイド */
   #joinGuide{font-size:12px; color:#374151; background:#fafafa; border:1px solid var(--border); padding:10px 10px; border-radius:12px; line-height:1.65; margin-top:8px}
   #joinGuide b{color:#111}
 
@@ -156,17 +155,14 @@
   <div id="hint" aria-live="polite">画面をタップで自分の猫がゆっくり移動</div>
 </div>
 
-<!-- 参加者一覧（クリック透過） -->
 <div id="namesPeek" aria-live="polite"></div>
 
-<!-- 新部屋ポップ（✕で閉じる＋30秒自動消滅） -->
 <div id="migrate" role="alert">
   <span id="migrateText">🆕 新しい部屋が作られた</span>
   <button class="go" id="migrateGo">移動</button>
   <button class="close" id="migrateClose" aria-label="閉じる">✕</button>
 </div>
 
-<!-- Join（毎回空欄） -->
 <div id="join" role="dialog" aria-modal="true" aria-label="名前入力">
   <div class="card">
     <h2 id="joinTitle">名前を入れて参加</h2>
@@ -176,10 +172,7 @@
       <button id="enterBtn">はじめる</button>
     </div>
     <div id="warn" role="status" aria-live="polite"></div>
-
-    <!-- ★ 入室前ミニガイド -->
     <div id="joinGuide" class="subtle"></div>
-
     <p class="subtle" id="joinHint">音が出ないときは一度画面をタップしてからミュートを確かめる。</p>
   </div>
 </div>
@@ -194,9 +187,9 @@ const CAT_SIT_URL   = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/
 const CAT_ANGRY_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/angerCAT.png";
 
 /* ===== プレゼンス設定 ===== */
-const HEARTBEAT_MS = 7000;   // lastActiveの打刻間隔
-const STALE_MS     = 30000;  // 30秒で抜け殻と見なして非表示
-const CLEANUP_MS   = 60000;  // 60秒でDB掃除試行
+const HEARTBEAT_MS = 7000;
+const STALE_MS     = 30000;
+const CLEANUP_MS   = 60000;
 
 /* ===== ほか設定 ===== */
 const NOTE_TTL_MS = 8*60*60*1000;
@@ -223,45 +216,39 @@ const I18N = {
     joinDesc:"名前は3文字まで。URLが同じなら同じ部屋。落ち着いて遊ぶ場。",
     joinStart:"はじめる",
     joinHint:"音が出ないときは一度画面をタップしてからミュートを確かめる。",
-    // ★ 追加：入室前ミニガイド
     joinGuideHtml: `
       <div id="guide">
         <div style="margin:4px 0 8px; font-weight:700; color:#111">まずは操作の基本</div>
         <ul style="margin:0 0 10px 18px; padding:0; list-style:disc; line-height:1.7">
-          <li><b>📨 送信</b> 一行チャットを出す。英語は10語まで。日本語などは15文字まで。60秒で消える</li>
-          <li><b>📌 ピン留め</b> 頭上に小さく固定。淡いピンクで見やすい。もう一度押すと外れる</li>
-          <li><b>🖋️ 書き置き</b> 猫のいた場所に小さく残す。ひとり一件。更新できる。8時間で自動削除</li>
+          <li><b>📨 送信</b> 一行チャット。英語は10語・非英語は15文字まで。60秒で消える</li>
+          <li><b>📌 ピン留め</b> 頭上に小さく固定（淡いピンク）。もう一度で外れる</li>
+          <li><b>🖋️ 書き置き</b> 猫のいた場所に小さく残す。ひとり一件。更新可。8時間で自動削除</li>
         </ul>
         <div style="margin:6px 0 0"><b>🔗 共有</b> を押してリンクをコピー。フレンドを招待しよう</div>
       </div>
     `,
     helpHtml:`<h3 style="margin:0 0 8px">使い方</h3>
       <ul style="margin:0 0 12px 18px; line-height:1.7; color:#374151; font-size:14px">
-        <li>タップやクリックでその場所へ移動。動きはゆったり</li>
-        <li>入力欄は一行。英語は10語まで。非英語は15文字まで。Enterで送信</li>
-        <li>一般チャットは60秒で消える</li>
-        <li>🪑で立つと座るを切り替える。Sキーでも切り替え</li>
-        <li>💢で威嚇。表示は3秒</li>
-        <li>📌は頭上に固定。淡いピンクで小さめ。もう一度押すと外れる</li>
-        <li>🖋️は書き置き。猫のいた場所に小さく残る。ひとり一件。更新できる。8時間で自動削除。🗑️で消せる</li>
-        <li>🐈‍⬛を押すと参加者の名前を短く表示</li>
+        <li>タップやクリックで移動。動きはゆったり</li>
+        <li>入力欄は一行。英語10語／非英語15文字。Enterで送信。60秒で消える</li>
+        <li>🪑で立つ/座る。Sでも切替</li>
+        <li>💢で威嚇（3秒）</li>
+        <li>📌は頭上に固定。📌もう一度で解除</li>
+        <li>🖋️は書き置き。ひとり一件・更新可・8時間で自動削除。🗑️で消す</li>
+        <li>🐈‍⬛で参加者の名前を短く表示</li>
         <li>🔗でリンクをコピー。同じリンクは同じ部屋</li>
-        <li>🆕で新しい部屋を作る。全員に移動バナーが出る</li>
+        <li>🆕で新しい部屋を作る（全員に移動バナー）</li>
         <li>部屋は最大10人。名前は3文字まで</li>
       </ul>`,
     notify:{
       join:n=>`${n} が入室した`,
       leave:n=>`${n} が退室した`,
-      pinOn:"ピンを固定した",
-      pinOff:"ピンを外した",
-      noteSaved:"書き置きを残した",
-      noteUpdated:"書き置きを更新した",
-      noteCleared:"書き置きを消した",
+      pinOn:"ピンを固定した", pinOff:"ピンを外した",
+      noteSaved:"書き置きを残した", noteUpdated:"書き置きを更新した", noteCleared:"書き置きを消した",
       urlCopied:"リンクをコピーした。フレンドを招待できる",
       newRoomBy:n=>`${n} が新しい部屋を作成`,
       full:"満員だ。10人まで",
-      online:"オンライン",
-      offline:"オフライン。再接続待ち",
+      online:"オンライン", offline:"オフライン。再接続待ち",
       errorAuth:"認証エラー。ネットワークか設定を確認"
     }
   },
@@ -275,53 +262,45 @@ const I18N = {
     newRoom:"New Room", share:"Share", clear:"Clear", help:"Help", lang:"English",
     msgPlaceholder:"(15 chars / 10 words)",
     hintKeys:"Enter to send  S to sit",
-    helperASCII:w=>`EN: ${w}/10`,
-    helperCJK:n=>`Non‑EN: ${n}/15`,
+    helperASCII:w=>`EN: ${w}/10`, helperCJK:n=>`Non‑EN: ${n}/15`,
     hint:"Tap to move your cat slowly",
     joinTitle:"Enter your name",
     joinDesc:"Up to 3 characters. Same URL joins the same room. Calm space.",
     joinStart:"Start",
     joinHint:"No sound? Tap once and check mute.",
-    // ★ added guide in English
     joinGuideHtml: `
       <div id="guide">
         <div style="margin:4px 0 8px; font-weight:700; color:#111">Quick guide</div>
         <ul style="margin:0 0 10px 18px; padding:0; list-style:disc; line-height:1.7">
-          <li><b>📨 Send</b> Show a one‑line chat. Up to 10 words in English. Up to 15 chars for other languages. Disappears in 60 seconds</li>
-          <li><b>📌 Pin</b> Keep a small pink bubble above your cat. Press again to remove</li>
-          <li><b>🖋️ Note</b> Leave a tiny message at your cat’s position. One per person. Editable. Auto‑deletes after 8 hours</li>
+          <li><b>📨 Send</b> One‑line chat. EN up to 10 words / others up to 15 chars. Fades in 60s</li>
+          <li><b>📌 Pin</b> Small pink bubble above your cat. Press again to remove</li>
+          <li><b>🖋️ Note</b> Leave a tiny message at your cat’s position. One per person. Editable. Auto‑deletes after 8h</li>
         </ul>
         <div style="margin:6px 0 0"><b>🔗 Share</b> to copy the link. Invite your friends</div>
       </div>
     `,
     helpHtml:`<h3 style="margin:0 0 8px">How to play</h3>
       <ul style="margin:0 0 12px 18px; line-height:1.7; color:#374151; font-size:14px">
-        <li>Tap or click to move. Motion stays calm</li>
-        <li>One‑line input. English up to 10 words. Non‑English up to 15 chars. Press Enter to send</li>
-        <li>Regular chat fades in 60 seconds</li>
-        <li>🪑 toggles stand and sit. S key also works</li>
-        <li>💢 shows anger for 3 seconds</li>
-        <li>📌 pins a small pink bubble above your cat. Press again to remove</li>
-        <li>🖋️ leaves a tiny note at your cat’s position. One per person. Editable. Auto‑deletes after 8 hours. Use 🗑️ to clear</li>
-        <li>Press 🐈‍⬛ to show names for a moment</li>
-        <li>🔗 copies the link. Same link joins the same room</li>
-        <li>🆕 creates a new room and shows a migrate banner to everyone</li>
-        <li>Up to 10 people. Names up to 3 characters</li>
+        <li>Tap or click to move</li>
+        <li>One‑line input. EN 10 words / Non‑EN 15 chars. Enter to send. Fades in 60s</li>
+        <li>🪑 toggles stand/sit (S key)</li>
+        <li>💢 anger for 3s</li>
+        <li>📌 pin above the cat (toggle)</li>
+        <li>🖋️ note at your cat’s position. One per user. Editable. Auto‑deletes after 8h. 🗑️ to clear</li>
+        <li>🐈‍⬛ shows names briefly</li>
+        <li>🔗 copies the link</li>
+        <li>🆕 new room (banner for all)</li>
+        <li>Max 10 people. Names up to 3 chars</li>
       </ul>`,
     notify:{
-      join:n=>`${n} joined`,
-      leave:n=>`${n} left`,
-      pinOn:"Pinned",
-      pinOff:"Unpinned",
-      noteSaved:"Left a note",
-      noteUpdated:"Updated the note",
-      noteCleared:"Cleared the note",
+      join:n=>`${n} joined`, leave:n=>`${n} left`,
+      pinOn:"Pinned", pinOff:"Unpinned",
+      noteSaved:"Left a note", noteUpdated:"Updated the note", noteCleared:"Cleared the note",
       urlCopied:"Link copied. Invite your friends",
       newRoomBy:n=>`${n} created a new room`,
       full:"Room is full. Max 10",
-      online:"Online",
-      offline:"Offline. Waiting to reconnect",
-      errorAuth:"Auth error. Check network or settings"
+      online:"Online", offline:"Offline. Waiting to reconnect",
+      errorAuth:"Auth error. Check network/settings"
     }
   }
 };
@@ -390,7 +369,7 @@ const migrate=document.getElementById("migrate");
 const migrateText=document.getElementById("migrateText");
 const migrateGo=document.getElementById("migrateGo");
 const migrateClose=document.getElementById("migrateClose");
-const langBtn=document.getElementById("langBtn");
+const langBtn=document.getElementById("langBtn");   /* ← 重複宣言はこれのみ */
 const brandTitle=document.getElementById("brandTitle");
 const langIcon=document.getElementById("langIcon");
 const lblPose=document.getElementById("lblPose");
@@ -440,7 +419,7 @@ function toPx(nx,ny){ const r=getPlayRect(); if(!r) return {x:0,y:0}; return {x:
 function roundPx(v){ return Math.round(v); }
 function pingAt(nx,ny){ const r=getPlayRect(); if(!r) return; const {x,y}=toPx(nx,ny); const s=document.createElement("span"); s.className="ping"; s.style.left=`${x}px`; s.style.top=`${y}px`; play.appendChild(s); s.addEventListener("animationend",()=>s.remove()); }
 function normalizeName(s){ if(typeof s!=="string") return ""; const t=s.trim(); return t.length?Array.from(t).slice(0,3).join(""):""; }
-function isNamed(p){ const n = normalizeName(p?.name||""); return n.length>0; }
+function isNamed(p){ const n=normalizeName(p?.name||""); return n.length>0; }
 
 /* ===== Refs ===== */
 function playersRefOf(room){ return ref(db, `worlds/${room}/players`); }
@@ -451,7 +430,6 @@ function metaRef(){ return ref(db, `worlds/${WORLD_ID}/meta`); }
 const playersRef=playersRefOf(WORLD_ID);
 
 /* ===== 言語適用 ===== */
-const langBtn=document.getElementById("langBtn");
 function applyLang(){
   const T=I18N[LANG];
   document.documentElement.lang = (LANG==="ja"?"ja":"en");
@@ -463,7 +441,7 @@ function applyLang(){
   joinDesc.innerHTML   = T.joinDesc;
   enterBtn.textContent = T.joinStart;
   joinHint.textContent = T.joinHint;
-  joinGuide.innerHTML  = T.joinGuideHtml;  // ★ 入室前ガイドを反映
+  joinGuide.innerHTML  = T.joinGuideHtml;  /* ← 空にならない */
   lblPose.textContent  = " " + (me.pose==="stand" ? T.poseSit : T.poseStand);
   lblAnger.textContent = " " + T.anger;
   lblNew.textContent   = " " + T.newRoom;
@@ -508,7 +486,7 @@ async function initAfterAuth(){
   mounted=true;
 }
 
-/* ===== 満員判定：名前ありかつ生存のみカウント ===== */
+/* ===== 満員判定 ===== */
 async function ensureCapacity(){
   try{
     const snap=await get(playersRef);
@@ -540,7 +518,7 @@ async function mountPresence(forceStand=false){
   try{ onDisconnect(myRef()).remove(); }catch(e){ console.warn("[rtdb] onDisconnect failed:", e); }
 }
 
-/* ===== 名前定着の再送リトライ ===== */
+/* ===== 名前定着リトライ ===== */
 function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
 async function ensureNamePersisted(retries=3){
   for(let i=0;i<retries;i++){
@@ -556,19 +534,16 @@ async function ensureNamePersisted(retries=3){
   return false;
 }
 
-/* ===== 退場補助：visibility/pagehide ===== */
+/* ===== 離脱補助 ===== */
 window.addEventListener("visibilitychange", ()=>{ if(document.hidden){ try{ update(myRef(), {lastActive: serverTimestamp()}); }catch(_){} } });
 window.addEventListener("pagehide", ()=>{ try{ update(myRef(), {lastActive: serverTimestamp()}); }catch(_){} });
 
-/* ===== players購読：名前あり＆生存のみ描画 ===== */
+/* ===== players購読 ===== */
 const domMap=new Map();
 let initialPlayersLoaded=false;
 let latestPlayers={};
 
-function isAlive(p){
-  const ts=Number(p?.lastActive||0);
-  return ts && (Date.now()-ts) <= STALE_MS;
-}
+function isAlive(p){ const ts=Number(p?.lastActive||0); return ts && (Date.now()-ts) <= STALE_MS; }
 
 function subscribePlayers(){
   onValue(playersRef, snap=>{
@@ -661,11 +636,10 @@ function positionNoteDom(el,nx,ny){
   const r=play.getBoundingClientRect(); if(r.width<=0) return;
   const px=Math.round(nx*r.width), py=Math.round(ny*r.height);
   const topSpace=py-130; if(topSpace<0){ el.classList.add("flip"); } else { el.classList.remove("flip"); }
-  el.style.transform=`translate3d(${px}px, ${py}px, 0) ${el.classList.contains("flip")?"rect(0 0 0 0) translate(-50%, 18px)":"translate(-50%, -120%)"}`;
   el.style.transform=`translate3d(${px}px, ${py}px, 0) ${el.classList.contains("flip")?"translate(-50%, 18px)":"translate(-50%, -120%)"}`;
 }
 
-/* ===== メタ：新部屋通知（✕可＋30秒TTL） ===== */
+/* ===== メタ：新部屋通知 ===== */
 let NEXT_ROOM_ID=null;
 let migrateHideTimer=null;
 function showLocalMigrate(nextRoomId, byName){
@@ -755,7 +729,7 @@ function ensureMineDom(){
   renderPlayer(domMap.get(uid), data, true);
 }
 
-/* ===== 入力/送信 ===== */
+/* ===== 入力/送信・ピン・書き置き・威嚇・ポーズ ===== */
 let lastSentAt=0;
 function validateMessage(raw){
   if(!raw) return {ok:false};
@@ -778,8 +752,6 @@ function sendMsg(){
   msgInput.value=""; sendBtn.disabled=true;
   safeUpdate({msg:raw, msgAt:serverTimestamp()});
 }
-
-/* ===== ピン ===== */
 function renderPinBtn(){ pinBtn.setAttribute("aria-pressed", me.pinMsg?"true":"false"); } renderPinBtn();
 pinBtn.addEventListener("click", ()=>{
   if(me.pinMsg){
@@ -795,8 +767,6 @@ pinBtn.addEventListener("click", ()=>{
   const mine=domMap.get(uid); if(mine){ mine.pinBubbleEl.textContent=pick; mine.pinBubbleEl.style.display="block"; }
   safeUpdate({pinMsg:pick, pinAt:serverTimestamp()}); toast(I18N[LANG].notify.pinOn);
 });
-
-/* ===== 書き置き ===== */
 noteBtn.addEventListener("click", async ()=>{
   const typed=msgInput.value.trim();
   const pick=typed?typed:(me.msg?me.msg:"");
@@ -819,21 +789,17 @@ noteClearBtn.addEventListener("click", async ()=>{
   try{ await remove(noteRefOf(uid)); toast(I18N[LANG].notify.noteCleared); }
   catch(e){ console.error("note clear failed:", e); toast(LANG==="ja"?"削除に失敗":"Failed to clear"); }
 });
-
-/* ===== 威嚇 ===== */
 angerBtn.addEventListener("click", ()=>{
   me.emo="angry"; me.emoAt=Date.now(); ensureMineDom();
   safeUpdate({emo:"angry", emoAt:serverTimestamp()});
   setTimeout(()=>{ if(Date.now()-me.emoAt>=EMO_SHOW_MS){ me.emo="none"; ensureMineDom(); } }, EMO_SHOW_MS+120);
 });
-
-/* ===== ポーズ ===== */
 function renderPoseTopBtn(){ lblPose.textContent = " " + (me.pose==="stand" ? I18N[LANG].poseSit : I18N[LANG].poseStand); } renderPoseTopBtn();
 poseTopBtn.addEventListener("click", togglePose);
 window.addEventListener("keydown", e=>{ const tag=(e.target && e.target.tagName)?e.target.tagName.toLowerCase():""; if(tag==="input"||tag==="textarea"||(e.target&&e.target.isContentEditable)) return; if(e.key.toLowerCase()==="s"){ togglePose(); }});
 function togglePose(){ me.pose=(me.pose==="stand")?"sit":"stand"; renderPoseTopBtn(); safeUpdate({pose:me.pose}); }
 
-/* ===== 移動・同期・ハートビート ===== */
+/* ===== 移動・同期・心拍 ===== */
 function setTargetFromEvent(e){
   const pt=(e.touches&&e.touches[0])?e.touches[0]:e;
   const {x,y}=toNorm(pt.clientX, pt.clientY);
@@ -866,7 +832,7 @@ function loop(){
 /* ===== 安全更新 ===== */
 async function safeUpdate(patch){ if(!uid) return; try{ await update(myRef(), patch); }catch(e){ console.error("[rtdb] update failed:", patch, e); } }
 
-/* ===== 抜け殻掃除（期限超えは第三者削除がルールで許可） ===== */
+/* ===== 抜け殻掃除 ===== */
 async function cleanupGhosts(){
   try{
     const snap=await get(playersRef);
@@ -898,7 +864,6 @@ function peekNames(){
 ["click","keydown"].forEach(ev=>{
   playersBtn.addEventListener(ev, e=>{ if(ev==="keydown" && e.key!=="Enter" && e.key!==" ") return; peekNames(); });
 });
-
 shareBtn.addEventListener("click", async ()=>{
   const invite=new URL(location.href);
   invite.searchParams.set("room", WORLD_ID);
@@ -912,13 +877,11 @@ shareBtn.addEventListener("click", async ()=>{
     }
   }catch(e){ console.warn("clipboard failed:", e); }
 });
-
 helpBtn.addEventListener("click", ()=>{
   helpDialog.innerHTML=`<div style="padding:16px 16px 12px; max-width:560px">${I18N[LANG].helpHtml}<div style="display:flex; gap:8px; justify-content:flex-end"><button id="helpClose" class="btn">OK</button></div></div>`;
   helpDialog.showModal();
   helpDialog.querySelector("#helpClose").addEventListener("click", ()=>helpDialog.close(), {once:true});
 });
-
 newRoomBtn.addEventListener("click", async ()=>{
   const id=makeRoomId();
   try{

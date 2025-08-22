@@ -6,7 +6,6 @@
 <title>くろねこひろば</title>
 <meta name="color-scheme" content="light only">
 
-<!-- 猫PNGを事前読み込み -->
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png" as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png"  as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/angerCAT.png"    as="image" crossorigin>
@@ -28,7 +27,7 @@
   header{position:sticky; top:0; z-index:50; padding:calc(env(safe-area-inset-top)+4px) 10px 8px; padding-right:calc(10px + env(safe-area-inset-right)); border-bottom:1px solid var(--border); background:var(--panel)}
   .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px}
   .brand{display:flex; align-items:center; gap:10px; min-width:0}
-  .brand h1{font-size:clamp(13px,2.2vw,16px); font-weight:800; margin:0; white-space:nowrap}
+  .brand h1{font-size:clamp(13px,2.2vw,16px); font-weight:800; margin:0; white-space:nowrap; cursor:pointer}
   .chip{border:1px solid var(--border); background:#fafafa; border-radius:999px; padding:6px 10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:clamp(12px,1.6vw,14px)}
   #worldLabel{max-width:clamp(120px,38vw,360px)}
   #countDock{flex:0 0 auto; font-weight:800; background:#fff}
@@ -45,7 +44,8 @@
   @media (max-width:940px){ .btn.ghost .txt{display:none} }
 
   /* ===== プレイ領域（正方形ワールド） ===== */
-  #play{position:relative; flex:1; overflow:hidden; background-image: radial-gradient(circle at 1px 1px, #f1f3f5 1px, transparent 0), radial-gradient(1200px 420px at 50% 120%, #f7f7f7 0%, transparent 60%); background-size:18px 18px, auto; user-select:none; touch-action:none}
+  #play{position:relative; flex:1; overflow:hidden; background-image:radial-gradient(circle at 1px 1px,#f1f3f5 1px,transparent 0), radial-gradient(1200px 420px at 50% 120%, #f7f7f7 0%, transparent 60%); background-size:18px 18px, auto; user-select:none; touch-action:none; cursor:grab}
+  #play.dragging{cursor:grabbing}
   #worldWrap{position:absolute; inset:0; transform-origin:0 0; will-change:transform}
   #world{position:absolute; left:0; top:0; width:100vmax; height:100vmax; border:2px dashed #e5e7eb; border-radius:16px; box-shadow:0 0 0 6px rgba(255,255,255,.6) inset}
   #notesLayer{position:absolute; inset:0; pointer-events:none; z-index:0}
@@ -132,6 +132,9 @@
       <span class="chip" id="countDock" aria-live="polite">🐈‍⬛ 0</span>
     </div>
     <div class="meta" id="meta">
+      <!-- ヘルプを一番左に -->
+      <button id="helpBtn"      class="btn ghost" title="使い方"><span class="icon">❔</span><span class="txt" id="lblHelp"> ヘルプ</span></button>
+
       <button id="poseTopBtn"   class="btn ghost" title="立つ/座る"><span class="icon">🪑</span><span class="txt" id="lblPose"> 座る</span></button>
       <button id="angerBtn"     class="btn ghost" title="威嚇"><span class="icon">💢</span><span class="txt" id="lblAnger"> 威嚇</span></button>
       <button id="muteBtn"      class="btn ghost" title="音のオン/オフ"><span class="icon" id="soundIcon">🔔</span><span class="txt" id="lblSound"> 音オン</span></button>
@@ -145,13 +148,12 @@
 
       <button id="leaveBtn"     class="btn ghost" title="退室"><span class="icon">🚪</span><span class="txt" id="lblLeave"> 退室</span></button>
       <button id="noteClearBtn" class="btn ghost" title="自分の書き置きを消す"><span class="icon">🗑️</span><span class="txt" id="lblClear"> クリア</span></button>
-      <button id="helpBtn"      class="btn ghost" title="使い方"><span class="icon">❔</span><span class="txt" id="lblHelp"> ヘルプ</span></button>
       <button id="langBtn"      class="btn ghost" title="言語切替"><span class="icon" id="langIcon">🇯🇵</span><span class="txt" id="lblLang"> 日本語</span></button>
     </div>
   </header>
 
   <div id="play" aria-label="play-area">
-    <div id="worldWrap" style="--zoom:1; --panX:0px; --panY:0px">
+    <div id="worldWrap">
       <div id="world">
         <div id="notesLayer"></div>
       </div>
@@ -169,7 +171,7 @@
   </div>
 
   <div id="hint" role="status" aria-live="polite">
-    <span id="hintText">ダブルタップ/ダブルクリックでネコが移動。シングルタップ/クリックで視点スライド。ピンチでズーム。</span>
+    <span id="hintText">ドラッグでフィールド移動。ダブルタップ/ダブルクリックでネコが移動。ピンチでズーム。</span>
     <button id="hintClose" aria-label="閉じる">✕</button>
   </div>
 </div>
@@ -195,8 +197,8 @@
       <div>📨 チャット送信 英語は10語・日本語は15文字まで。60秒で消える</div>
       <div>📌 ステータス 頭上に小さく固定。もう一度📌タップで解除</div>
       <div>🖋️ 書置 足元に小さく残す。ひとり一件。更新可。🗑️でクリア。8時間で自動削除</div>
-      <div>🖱️ **PC**：クリックで視点、**ダブルクリックでネコ移動**。  
-           📱 **スマホ**：タップで視点、**ダブルタップでネコ移動**。ピンチでズーム。</div>
+      <div>🖱️ **PC**：<b>ドラッグでフィールド移動</b>・<b>ダブルクリックでネコ移動</b>。  
+           📱 **スマホ**：<b>ドラッグでフィールド移動</b>・<b>ダブルタップでネコ移動</b>。ピンチでズーム。</div>
       <div>🔗 でリンクをコピーしフレンドを招待</div>
     </div>
     <p class="subtle" id="joinHint">音が出ないときは一度画面をタップしてからミュートを確かめる。</p>
@@ -212,7 +214,7 @@ const CAT_STAND_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/
 const CAT_SIT_URL   = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png";
 const CAT_ANGRY_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/angerCAT.png";
 
-/* ========== パラメータ ========== */
+/* ========== 各種パラメータ ========== */
 const HEARTBEAT_MS   = 7000;
 const IDLE_MS        = 90*1000;
 const NOTE_TTL_MS    = 8*60*60*1000;
@@ -222,10 +224,9 @@ const MIGRATE_TTL_MS = 30000;
 const SPEED_PX_PER_S = 120;
 const NON_ASCII_LIMIT= 15;
 const BUBBLE_MS      = 60000;
-/* ズーム範囲 */
-const ZMIN = 0.4, ZMAX = 2.0;
+const ZMIN           = 0.4, ZMAX = 2.0;
 
-/* ========== i18n（ブランド名も更新） ========== */
+/* ========== i18n ========== */
 const I18N={
   ja:{
     brand:"くろねこひろば",
@@ -235,13 +236,13 @@ const I18N={
     soundOn:"音オン", soundMute:"ミュート",
     newRoom:"新部屋", share:"共有", clear:"クリア", help:"ヘルプ", lang:"日本語", leave:"退室",
     msgPlaceholder:"(15文字 / 10 words)", hintKeys:"Enterで送信  Sで座る",
-    hint:"ダブルタップ/ダブルクリックでネコが移動。タップ/クリックで視点スライド。ピンチでズーム。",
+    hint:"ドラッグでフィールド移動。ダブルタップ/ダブルクリックでネコが移動。ピンチでズーム。",
     joinTitle:"名前を入れて参加", joinDesc:"名前は3文字まで。URLが同じなら同じ部屋。落ち着いて遊ぶ場。", joinStart:"はじめる",
     joinHint:"音が出ないときは一度画面をタップしてからミュートを確かめる。",
     helpHtml:`<h3 style="margin:0 0 8px">使い方</h3>
       <ul style="margin:0 0 12px 18px; line-height:1.7; color:#374151; font-size:14px">
-        <li>タップ/クリックで視点スライド。二本指でズーム・パン</li>
-        <li>📍 **ダブルタップ/ダブルクリックでネコが移動**</li>
+        <li>マウス/指で<b>ドラッグしてフィールド移動</b>。二本指でズーム・パン</li>
+        <li>📍 <b>ダブルクリック/ダブルタップでネコ移動</b></li>
         <li>📨 英語10語/日本語など15文字。60秒で消える</li>
         <li>📌 頭上固定（再押しで解除）</li>
         <li>🖋️ 足元に書き置き（ひとり一件・更新可・8時間で自動削除/🗑️で消す）</li>
@@ -267,12 +268,12 @@ const I18N={
     soundOn:"Sound", soundMute:"Muted",
     newRoom:"New", share:"Share", clear:"Clear", help:"Help", lang:"English", leave:"Leave",
     msgPlaceholder:"(15 chars / 10 words)", hintKeys:"Enter to send  S to sit/stand",
-    hint:"Double‑tap/double‑click to move your cat. Tap/click to slide the view. Pinch to zoom.",
+    hint:"Drag to move the field. Double‑tap/double‑click to move your cat. Pinch to zoom.",
     joinTitle:"Enter name to join", joinDesc:"Up to 3 characters. Same URL, same room. A chill place.", joinStart:"Start",
     joinHint:"No sound? Tap once and toggle the bell.",
     helpHtml:`<h3 style="margin:0 0 8px">How to play</h3>
       <ul style="margin:0 0 12px 18px; line-height:1.7; color:#374151; font-size:14px">
-        <li>Tap/Click to slide the view. Two fingers to zoom & pan</li>
+        <li><b>Drag to move the field</b>. Two fingers to zoom & pan</li>
         <li>📍 <b>Double‑tap/double‑click to move your cat</b></li>
         <li>📨 English up to 10 words / others up to 15 chars. Fades in 60s</li>
         <li>📌 Small status above head (toggle to clear)</li>
@@ -325,7 +326,7 @@ const app=initializeApp(firebaseConfig);
 const db=getDatabase(app);
 const auth=getAuth(app);
 
-/* ========== DOM ========== */
+/* ========== DOM 取得 ========== */
 const play=document.getElementById("play");
 const worldWrap=document.getElementById("worldWrap");
 const world=document.getElementById("world");
@@ -371,14 +372,13 @@ const lblClear=document.getElementById("lblClear");
 const lblHelp=document.getElementById("lblHelp");
 const lblLang=document.getElementById("lblLang");
 const lblLeave=document.getElementById("lblLeave");
-
 const zoomOutBtn=document.getElementById("zoomOutBtn");
 const zoomInBtn=document.getElementById("zoomInBtn");
 const zoomLabel=document.getElementById("zoomLabel");
-
 const hintBox=document.getElementById("hint");
 const hintText=document.getElementById("hintText");
 const hintClose=document.getElementById("hintClose");
+const leaveBtn=document.getElementById("leaveBtn");
 
 worldLabel.textContent=`room: ${WORLD_ID}`;
 countDock.textContent="🐈‍⬛ 0";
@@ -391,7 +391,7 @@ function tone({freq=880,dur=0.12,type="sine",vol=0.7,attack=0.005,release=0.12}=
 function playLogin(){ if(!muted&&AC){ tone({freq:880,type:"triangle",vol:0.55,dur:0.12}); setTimeout(()=>tone({freq:1320,type:"triangle",vol:0.55,dur:0.12}),140); } }
 function playMessage(){ if(!muted&&AC){ tone({freq:700,type:"sine",vol:0.5,dur:0.09}); } }
 
-/* ===== お知らせ（✕で閉じられ、既定は90秒） ===== */
+/* お知らせ（90s自動消滅／✕で閉じ） */
 function notify(text, ttl=90000){ hintText.textContent=text; hintBox.style.display="flex"; hintBox.style.opacity=.95; clearTimeout(notify._t); notify._t=setTimeout(()=>{ hintBox.style.display="none"; }, ttl); }
 function toast(text, ttl=2200){ notify(text, ttl); }
 hintClose.addEventListener("click", ()=>{ hintBox.style.display="none"; clearTimeout(notify._t); });
@@ -425,9 +425,9 @@ const playersRef=playersRefOf(WORLD_ID);
 /* ========== 言語適用 ========== */
 function applyLang(){
   const T=I18N[LANG];
-  brandTitle.textContent=T.brand;
+  document.getElementById("brandTitle").textContent=T.brand;
   msgInput.placeholder=T.msgPlaceholder;
-  hintKeys.textContent=T.hintKeys;
+  document.getElementById("hintKeys").textContent=T.hintKeys;
   notify(T.hint, 90000);
   lblPose.textContent  =" "+(me.pose==="stand"?T.poseSit:T.poseStand);
   lblAnger.textContent =" "+T.anger;
@@ -440,10 +440,7 @@ function applyLang(){
   langIcon.textContent=(LANG==="ja")?"🇯🇵":"🇺🇸";
 }
 applyLang();
-langBtn.addEventListener("click", ()=>{
-  LANG=(LANG==="ja")?"en":"ja";
-  applyLang();
-});
+langBtn.addEventListener("click", ()=>{ LANG=(LANG==="ja")?"en":"ja"; applyLang(); });
 
 worldLabel.textContent=`room: ${WORLD_ID}`;
 
@@ -477,6 +474,7 @@ async function initAfterAuth(){
   subscribePlayers();
   subscribeNotes();
   subscribeMeta();
+  monitorReconnect();   // ★ 追加：再接続監視
   spawnPulse(me.x, me.y);
   mounted=true;
 }
@@ -488,13 +486,34 @@ function showFull(){ full.style.display="flex"; full.innerHTML=`<div class="card
 /* ========== プレゼンス ========= */
 async function mountPresence(forceStand=false){
   try{
-    await set(myRef(), { name:normalizeName(me.name), x:me.x, y:me.y, dir:me.dir, pose:forceStand?"stand":me.pose,
-      msg:"", msgAt:0, pinMsg:"", pinAt:0, emo:"none", emoAt:0, lastActive:serverTimestamp() });
+    await set(myRef(), {
+      name:normalizeName(me.name), x:me.x, y:me.y, dir:me.dir, pose:forceStand?"stand":me.pose,
+      msg:"", msgAt:0, pinMsg:me.pinMsg||"", pinAt:me.pinMsg?serverTimestamp():0,
+      emo:"none", emoAt:0, lastActive:serverTimestamp()
+    });
   }catch(e){ console.error("[rtdb] initial set failed:", e); }
-  try{ onDisconnect(myRef()).remove(); }catch(e){ console.warn("[rtdb] onDisconnect failed:", e); }
+  try{ onDisconnect(myRef()).remove(); }catch(e){ console.warn("[rtdb] onDisconnect set failed:", e); }
 }
 window.addEventListener("visibilitychange", ()=>{ try{ update(myRef(), {lastActive:serverTimestamp()}); }catch{} });
 window.addEventListener("pagehide", ()=>{ try{ update(myRef(), {lastActive:serverTimestamp()}); }catch{} });
+
+/* 再接続監視：/.info/connected が true になったら自分ノードを再生 or 復活 */
+function monitorReconnect(){
+  const conn = ref(db, ".info/connected");
+  onValue(conn, async snap=>{
+    const c = snap.val();
+    if(c===true && uid && joined){
+      try{
+        const s = await get(myRef());
+        if(s.exists()){
+          await update(myRef(), { lastActive: serverTimestamp() });
+        }else{
+          await mountPresence(false); // 位置はそのまま（me.x, me.y）で再作成
+        }
+      }catch(e){ console.warn("reconnect ensure presence failed:", e); }
+    }
+  });
+}
 
 /* ========== players購読 ========= */
 const domMap=new Map();
@@ -708,7 +727,7 @@ leaveBtn.addEventListener("click", async ()=>{
   join.style.display="flex"; toast(I18N[LANG].left, 2000);
 });
 
-/* ========== ズーム/パン/クリック・タップ挙動 ========== */
+/* ========== ズーム/パン ========== */
 function centerWorld(){
   const r=play.getBoundingClientRect();
   const {w,h}=worldSize();
@@ -716,10 +735,7 @@ function centerWorld(){
   panX = (r.width  - w*zoom)/2;
   panY = (r.height - h*zoom)/2;
 }
-function applyView(){
-  worldWrap.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
-  zoomLabel.textContent = `${Math.round(zoom*100)}%`;
-}
+function applyView(){ worldWrap.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`; zoomLabel.textContent = `${Math.round(zoom*100)}%`; }
 function setZoomCentered(nz){
   nz = Math.max(ZMIN, Math.min(ZMAX, nz));
   const r=play.getBoundingClientRect();
@@ -747,7 +763,7 @@ play.addEventListener("wheel", e=>{
   userPanned=true; applyView();
 }, {passive:false});
 
-/* ピンチズーム＋パン（二本指） */
+/* ピンチズーム（二本指） */
 let gesture=null, gesturing=false;
 play.addEventListener("touchstart", e=>{
   if(e.touches.length===2){
@@ -779,59 +795,57 @@ play.addEventListener("touchend", e=>{
   if(e.touches.length===0) { gesture=null; setTimeout(()=>{ gesturing=false; }, 0); }
 },{passive:true});
 
-/* PC：シングルクリック=視点スライド、ダブルクリック=ネコ移動 */
-let singleClickTimer=null;
-function animatePanTo(nx,ny, ms=220){
-  const r=play.getBoundingClientRect();
-  const cx=r.width/2, cy=r.height/2;
-  const worldX=(nx - panX)/zoom, worldY=(ny - panY)/zoom;
-  const tx = cx - worldX*zoom, ty = cy - worldY*zoom;
-  const sx=panX, sy=panY, t0=performance.now();
-  function ease(a){ return a<.5?2*a*a : -1+(4-2*a)*a; }
-  function step(t){ const p=Math.min(1,(t-t0)/ms); panX=sx+(tx-sx)*ease(p); panY=sy+(ty-sy)*ease(p); applyView(); if(p<1) requestAnimationFrame(step); }
-  requestAnimationFrame(step);
-}
-function setTargetFromClient(cx,cy){
-  const {x,y}=toNormFromClient(cx,cy);
+/* ドラッグでパン（マウス/1本指）＋ダブルクリック/ダブルタップで移動 */
+let panning=false, panStartX=0, panStartY=0, dragStartX=0, dragStartY=0;
+play.addEventListener("pointerdown", e=>{
+  if(gesturing) return;
+  if(e.button!==0 && e.buttons!==1) return;
+  panning=true; dragStartX=e.clientX; dragStartY=e.clientY; panStartX=panX; panStartY=panY;
+  play.classList.add("dragging");
+  try{ play.setPointerCapture(e.pointerId); }catch{}
+});
+play.addEventListener("pointermove", e=>{
+  if(!panning) return;
+  const dx=e.clientX-dragStartX, dy=e.clientY-dragStartY;
+  panX = panStartX + dx; panY = panStartY + dy; userPanned=true; applyView();
+});
+function endPan(e){ if(!panning) return; panning=false; play.classList.remove("dragging"); try{ play.releasePointerCapture(e.pointerId); }catch{} }
+play.addEventListener("pointerup", endPan);
+play.addEventListener("pointercancel", endPan);
+
+/* PC：ダブルクリックでネコ移動 */
+play.addEventListener("dblclick", e=>{
+  e.preventDefault();
+  const {x,y}=toNormFromClient(e.clientX, e.clientY);
   const pxNow=toPxLocal(me.x, me.y).x; const pxNext=toPxLocal(x, y).x;
   target.x=x; target.y=y; me.dir=(pxNext>=pxNow)?1:-1;
   safeUpdate({dir:me.dir});
-}
-play.addEventListener("click", e=>{
-  // ダブルクリック待ち
-  if(singleClickTimer) clearTimeout(singleClickTimer);
-  singleClickTimer=setTimeout(()=>{ animatePanTo(e.clientX, e.clientY); singleClickTimer=null; }, 230);
-});
-play.addEventListener("dblclick", e=>{
-  if(singleClickTimer){ clearTimeout(singleClickTimer); singleClickTimer=null; }
-  e.preventDefault();
-  setTargetFromClient(e.clientX, e.clientY);
 });
 
-/* スマホ：ダブルタップでネコ移動、シングルタップで視点スライド */
+/* スマホ：ダブルタップでネコ移動（ドラッグとは両立） */
 let lastTapTime=0, lastTapX=0, lastTapY=0;
 play.addEventListener("touchend", e=>{
-  if(gesturing) return;                  // ピンチ中は無視
+  if(gesturing) return;
   if(e.touches.length>0) return;
   const t=Date.now();
   const touch=e.changedTouches[0];
   const x=touch.clientX, y=touch.clientY;
   const dt=t-lastTapTime, dist=Math.hypot(x-lastTapX, y-lastTapY);
   if(dt<300 && dist<24){
-    // ダブルタップ：ネコ移動
-    setTargetFromClient(x,y);
+    const {x:nx,y:ny}=toNormFromClient(x,y);
+    const pxNow=toPxLocal(me.x, me.y).x; const pxNext=toPxLocal(nx, ny).x;
+    target.x=nx; target.y=ny; me.dir=(pxNext>=pxNow)?1:-1;
+    safeUpdate({dir:me.dir});
     lastTapTime=0;
   }else{
-    // シングル：視点スライド（ダブルタップ判定待ちで少し遅らせる）
     lastTapTime=t; lastTapX=x; lastTapY=y;
-    setTimeout(()=>{ if(lastTapTime && (Date.now()-lastTapTime)>=300){ animatePanTo(lastTapX, lastTapY); lastTapTime=0; } }, 320);
   }
 }, {passive:true});
 
 /* リサイズ：ユーザーが自分でドラッグしてなければ中央寄せ */
 window.addEventListener("resize", ()=>{ if(!userPanned){ centerWorld(); applyView(); }});
 
-/* ========== ループ：正規化距離で移動 ========= */
+/* ========== ループ ========= */
 let loopStarted=false; let lastT=performance.now();
 function startLoop(){ if(loopStarted) return; loopStarted=true; requestAnimationFrame(loop); }
 function loop(){
@@ -945,9 +959,11 @@ helpBtn.addEventListener("click", ()=>{
   renderMuteButton();
   msgInput.dispatchEvent(new Event("input"));
   centerWorld(); applyView();
-  // 入室時の案内（90秒/✕で閉じ可）
   notify(I18N[LANG].hint, 90000);
 })();
+function renderMuteButton(){ soundIcon.textContent = muted ? "🔇" : "🔔"; lblSound.textContent = " " + (muted ? (LANG==="ja"?"ミュート":"Muted") : (LANG==="ja"?"音オン":"Sound")); }
+muteBtn.addEventListener("click", ()=>{ muted=!muted; localStorage.setItem("yuru_mute", muted ? "1":"0"); if(masterGain) masterGain.gain.value = muted ? 0 : 0.24; renderMuteButton(); });
+
 </script>
 </body>
 </html>

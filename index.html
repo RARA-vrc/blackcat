@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1">
-<title>ゆるネコひろばα</title>
+<title>ゆるネコひろば</title>
 <meta name="color-scheme" content="light only">
 
 <!-- 猫PNGを事前読み込み -->
@@ -24,21 +24,49 @@
   body,button,input{touch-action:manipulation}
   #app{position:fixed; inset:0; display:flex; flex-direction:column}
 
-  header{padding: calc(env(safe-area-inset-top) + 4px) 12px 8px; border-bottom:1px solid var(--border); background:var(--panel); position:relative; z-index:5}
+  /* ===== ヘッダ：sticky + 文字サイズの自動調整 ===== */
+  header{
+    position:sticky; top:0; z-index:50;
+    padding: calc(env(safe-area-inset-top) + 4px) 10px 8px;
+    padding-right: calc(10px + env(safe-area-inset-right));
+    border-bottom:1px solid var(--border); background:var(--panel);
+  }
   header .row{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; row-gap:6px}
   .brand{display:flex; align-items:center; gap:10px; min-width:0; flex:1 1 260px}
   .brand .catBtn{width:28px; height:28px; border-radius:8px; display:grid; place-items:center; cursor:pointer; border:1px solid var(--border); background:#fff}
-  .brand h1{font-size:clamp(14px, 2.6vw, 16px); font-weight:800; margin:0; white-space:nowrap}
-  .chip{border:1px solid var(--border); background:#fafafa; border-radius:999px; padding:6px 10px; white-space:nowrap; max-width:50vw; overflow:hidden; text-overflow:ellipsis}
-  .meta{display:flex; align-items:center; gap:8px; flex:0 0 auto; flex-wrap:wrap; position:relative; z-index:6}
-  .btn{appearance:none; border:0; background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:10px 12px; font-size:14px; font-weight:800; cursor:pointer; min-height:40px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; flex:0 0 auto}
+  .brand h1{font-size:clamp(13px, 2.2vw, 16px); font-weight:800; margin:0; white-space:nowrap}
+  .chip{
+    border:1px solid var(--border); background:#fafafa; border-radius:999px; padding:6px 10px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    font-size:clamp(12px, 1.6vw, 14px);
+  }
+  /* room ID は幅を食いがちなので強めに制限 */
+  #worldLabel{max-width:clamp(140px, 38vw, 360px)}
+  #countLabel{max-width:28vw}
+
+  .meta{display:flex; align-items:center; gap:8px; flex:0 0 auto; flex-wrap:wrap}
+  .btn{
+    appearance:none; border:0; background:var(--accent); color:var(--accent-ink);
+    border-radius:12px; padding:10px 12px; font-size:clamp(12px, 1.7vw, 14px);
+    font-weight:800; cursor:pointer; min-height:40px; min-width:44px;
+    display:inline-flex; align-items:center; gap:6px; white-space:nowrap; flex:0 0 auto
+  }
   .btn.ghost{background:transparent; color:var(--ink); border:1px solid var(--border)}
   .btn.iconOnly{padding:10px; min-width:44px}
   .btn:disabled{opacity:.5; cursor:not-allowed}
   .btn:focus-visible{outline:var(--ring) solid var(--ringColor); outline-offset:2px}
-  .icon{font-variant-emoji:emoji; font-size:16px}
+  .icon{font-variant-emoji:emoji; font-size:18px}
   .txt{display:inline-block}
-  @media (max-width:560px){ .chip{max-width:60vw; font-size:12px} .btn.ghost .txt{display:none} .btn.ghost{padding:10px} }
+
+  /* ラベルを段階的に折り畳む（タップ領域は維持） */
+  @media (max-width:1024px){
+    .btn.ghost .txt{display:none}
+  }
+  @media (max-width:720px){
+    .brand h1{font-size:13px}
+    #worldLabel{max-width:50vw}
+    .chip{font-size:12px}
+  }
 
   #play{
     position:relative; flex:1; overflow:hidden; cursor:crosshair;
@@ -61,7 +89,7 @@
 
   /* レイヤー順：一般チャット > 名札 > ピン > 猫 > 書き置き */
   .p{position:absolute; left:0; top:0; transform:translate3d(0,0,0) translate(-50%, -80%); will-change:transform; width:78px; height:78px; z-index:10}
-  .p.idle{opacity:.7} /* 長時間操作がない“在室放置”の見た目だけ下げる */
+  .p.idle{opacity:.7}
   .catImg{width:78px; height:78px; display:block; object-fit:contain; pointer-events:none; transition:transform .18s ease; position:relative; z-index:0}
   .catImg.right{transform:scaleX(-1)}
   .catImg.sit{display:none}
@@ -193,19 +221,15 @@ const CAT_STAND_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/
 const CAT_SIT_URL   = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png";
 const CAT_ANGRY_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/angerCAT.png";
 
-/* ===== プレゼンス方針 =====
-   - バックグラウンドでは退室させない。
-   - 退室は onDisconnect（タブ/ウィンドウを閉じる・リロード・通信断）でのみ。
-   - UI は全プレイヤーを表示。一定時間操作が無ければ .idle（薄く）にするだけ。
-*/
-const HEARTBEAT_MS   = 7000;      // 心拍（在室情報の更新）
-const IDLE_MS        = 90*1000;   // idle 視覚化の閾値
+/* ===== プレゼンス方針 ===== */
+const HEARTBEAT_MS   = 7000;
+const IDLE_MS        = 90*1000;
 const NOTE_TTL_MS    = 8*60*60*1000;
 const EMO_SHOW_MS    = 3000;
 const ROOM_CAP       = 10;
 const MIGRATE_TTL_MS = 30000;
 
-/* ===== i18n（日本語） ===== */
+/* ===== i18n（日本語だけ使用） ===== */
 const I18N = {
   ja:{
     brand:"ゆるネコひろば",
@@ -360,9 +384,9 @@ function noteRefOf(u){ return ref(db, `worlds/${WORLD_ID}/notes/${u}`); }
 function metaRef(){ return ref(db, `worlds/${WORLD_ID}/meta`); }
 const playersRef=playersRefOf(WORLD_ID);
 
-/* ===== 言語適用（日本語固定） ===== */
+/* ===== 言語適用 ===== */
 function applyLang(){
-  brandTitle.textContent=I18N[LANG].brand;
+  document.getElementById("brandTitle").textContent=I18N[LANG].brand;
   msgInput.placeholder=I18N[LANG].msgPlaceholder;
   hintKeys.textContent=I18N[LANG].hintKeys;
   document.getElementById("hint").textContent=I18N[LANG].hint;
@@ -402,7 +426,6 @@ async function initAfterAuth(){
   ensureMineDom();
   const ok=await ensureCapacity(); if(!ok){ showFull(); return; }
   await mountPresence(true);
-  // 復帰時に古いノードが残っていたら消えてから入る（onDisconnect側が基本処理）
   startLoop();
   subscribePlayers();
   subscribeNotes();
@@ -420,7 +443,7 @@ async function ensureCapacity(){
 }
 function showFull(){ full.style.display="flex"; full.innerHTML=`<div class="card"><h3>満員だ</h3><p style="margin-top:0">10人まで</p></div>`; }
 
-/* ===== プレゼンス登録 ===== */
+/* ===== プレゼンス登録（退室は onDisconnect のみ） ===== */
 async function mountPresence(forceStand=false){
   try{
     const initialName=normalizeName(me.name);
@@ -435,14 +458,11 @@ async function mountPresence(forceStand=false){
   try{ onDisconnect(myRef()).remove(); }catch(e){ console.warn("[rtdb] onDisconnect failed:", e); }
 }
 
-/* ===== visibility: 在室扱いを維持（心拍だけ軽く入れる） ===== */
-window.addEventListener("visibilitychange", ()=>{
-  // 裏でも退室させない。見えなくなる瞬間に lastActive だけ更新しておく
-  try{ update(myRef(), { lastActive: serverTimestamp() }); }catch(_){}
-});
+/* ===== visibility ===== */
+window.addEventListener("visibilitychange", ()=>{ try{ update(myRef(), { lastActive: serverTimestamp() }); }catch(_){ }});
 window.addEventListener("pagehide", ()=>{ try{ update(myRef(), { lastActive: serverTimestamp() }); }catch(_){}});
 
-/* ===== players購読：全員表示。idle だけ視覚化 ===== */
+/* ===== players購読 ===== */
 const domMap=new Map();
 let initialPlayersLoaded=false;
 let latestPlayers={};
@@ -451,7 +471,6 @@ function subscribePlayers(){
   onValue(playersRef, snap=>{
     const data=snap.val()||{};
     latestPlayers=data;
-
     const ids=Object.keys(data);
     countLabel.textContent = I18N[LANG].roomCount(ids.length);
 
@@ -473,16 +492,12 @@ function subscribePlayers(){
           if(nm) toast(I18N[LANG].notify.join(nm));
         }
       }
-
-      // idle 視覚化（退室はしない）
       const ts=Number(p.lastActive||0);
       const isIdle = ts>0 && (nowMs - ts) > IDLE_MS;
       pdom.wrap.classList.toggle("idle", isIdle);
 
       renderPlayer(pdom, p, id===uid);
     }
-
-    // いなくなった人（ノードが消えた＝onDisconnectや退室）
     for(const [id,pdom] of domMap){
       if(!seen.has(id)){
         const nm=normalizeName((latestPlayers[id]?.name)||"");
@@ -490,7 +505,6 @@ function subscribePlayers(){
         pdom.wrap.remove(); domMap.delete(id);
       }
     }
-
     if(!initialPlayersLoaded && ids.includes(uid)) initialPlayersLoaded=true;
   }, err=>console.error("players onValue error:", err));
 }
@@ -543,12 +557,10 @@ function renderPlayer(pdom, data, isSelf){
   const emoActive=(data.emo==="angry") && (Date.now()-Number(data.emoAt||0) <= EMO_SHOW_MS);
   pdom.wrap.classList.toggle("emo-angry", emoActive);
 
-  // 名前（キャッシュでチラつき防止）
   const decidedName=normalizeNameOrCache(pdom._id, data?.name||"");
   pdom.nameEl.style.display = decidedName ? "block":"none";
   if(decidedName && pdom.nameEl.textContent!==decidedName) pdom.nameEl.textContent=decidedName;
 
-  // 画面下で被らないようにフリップ
   const barH=bar.getBoundingClientRect().height||0;
   const visibleBottom=r.height-barH;
   const wantFlip=(py+110 > visibleBottom);
@@ -557,7 +569,6 @@ function renderPlayer(pdom, data, isSelf){
   pdom.bubbleEl.classList.toggle("bump", pdom._flip);
   pdom.pinBubbleEl.classList.toggle("bump", pdom._flip);
 
-  // チャット
   const raw=data.msg||""; const msgAt=Number(data.msgAt||0);
   if(raw && msgAt>0){
     const REPLAY_GUARD_MS=4000; const nowAbs=Date.now(); const isReplaySelf=isSelf && (msgAt - pdom._lastShownMsgAt < REPLAY_GUARD_MS);
@@ -570,7 +581,6 @@ function renderPlayer(pdom, data, isSelf){
     }
   }else{ pdom.bubbleEl.style.display="none"; }
 
-  // ピン
   const pinText=data.pinMsg||"";
   pdom.pinBubbleEl.style.display=pinText?"block":"none";
   if(pinText) pdom.pinBubbleEl.textContent=pinText;

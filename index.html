@@ -7,130 +7,80 @@
 <meta name="color-scheme" content="light only">
 <style>
   :root{
-    --bg: #fffdf9;
-    --panel:#ffffff;
-    --ink:#1a1a1a;
-    --muted:#6b7280;
-    --accent:#ff7aa2;
-    --accent-ink:#fff;
-    --ring:3px;
-    --ringColor: rgba(255,122,162,.45);
-    --border:#e5e7eb;
-    --barH:72px;
-    --toast: rgba(0,0,0,.92);
-    --notePink:#ffe5ef;
+    --bg:#fffdf9; --panel:#ffffff; --ink:#1a1a1a; --muted:#6b7280;
+    --accent:#ff7aa2; --accent-ink:#fff; --border:#e5e7eb;
+    --ring:3px; --ringColor:rgba(255,122,162,.45);
+    --barH:74px; --toast:rgba(0,0,0,.92); --notePink:#ffe5ef;
   }
-  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent}
-  html,body{height:100%; margin:0; font-family: ui-sans-serif, system-ui, -apple-system, "Hiragino Kaku Gothic ProN", Meiryo, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--ink)}
-  body, button, input { touch-action: manipulation; }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{height:100%; margin:0; font-family:ui-sans-serif,system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink)}
+  body,button,input{touch-action:manipulation}
 
   #app{position:fixed; inset:0; display:flex; flex-direction:column}
 
   header{
-    flex:0 0 auto;
-    display:flex; align-items:center; gap:8px; padding:6px 8px;
-    border-bottom:1px solid var(--border); background:var(--panel); position:relative; z-index:3;
-    overflow-x:auto; overscroll-behavior-x: contain; scroll-snap-type:x proximity;
+    display:flex; align-items:center; gap:8px; padding:8px 8px;
+    border-bottom:1px solid var(--border); background:var(--panel); z-index:3;
+    overflow-x:auto; overscroll-behavior-x:contain; scroll-snap-type:x proximity;
   }
   .brand{display:flex; align-items:center; gap:10px; min-width:0; white-space:nowrap}
-  .brand .logo{font-variant-emoji:emoji; font-size:22px}
-  .brand h1{font-size:16px; font-weight:800; margin:0; letter-spacing:.2px}
-  .chip{
-    border:1px solid var(--border); background:#fafafa; border-radius:999px; padding:7px 10px;
-    white-space:nowrap; display:inline-flex; align-items:center; gap:6px; font-size:13px;
-  }
-  .count{font-weight:700}
-  .btn{
-    appearance:none; border:1px solid var(--border); background:#fff; color:var(--ink);
-    border-radius:14px; padding:8px 10px; font-size:14px; font-weight:800; cursor:pointer; min-height:38px;
-    display:inline-flex; align-items:center; gap:8px;
-  }
-  .btn.primary{ background:var(--accent); color:var(--accent-ink); border-color:transparent }
-  .btn:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
-  .icon{font-variant-emoji: emoji; font-size:18px}
+  .logo{font-variant-emoji:emoji; font-size:22px}
+  h1{font-size:16px; font-weight:800; margin:0; letter-spacing:.2px}
+  .chip{border:1px solid var(--border); background:#fafafa; border-radius:999px; padding:7px 10px; font-size:13px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap}
+  .btn{appearance:none; border:1px solid var(--border); background:#fff; color:var(--ink); border-radius:14px; padding:8px 10px; font-size:14px; font-weight:800; cursor:pointer; min-height:38px; display:inline-flex; align-items:center; gap:8px}
+  .btn.primary{background:var(--accent); color:var(--accent-ink); border-color:transparent}
   .btn.sm{padding:6px 10px; font-size:13px; min-height:34px}
+  .btn:focus-visible{outline:var(--ring) solid var(--ringColor); outline-offset:2px}
+  .icon{font-variant-emoji:emoji; font-size:18px}
 
   #canvasWrap{position:relative; flex:1; overflow:hidden; background:
       radial-gradient(circle at 1px 1px, #f1f3f5 1px, transparent 0) 0 0/18px 18px,
-      radial-gradient(1200px 420px at 50% 120%, #f7f7f7 0%, transparent 60%);
-  }
-  #world{position:absolute; inset:0; transform-origin: 50% 50%}
-  #play{position:absolute; inset:0; cursor:default; user-select:none; touch-action:none;}
+      radial-gradient(1200px 420px at 50% 120%, #f7f7f7 0%, transparent 60%);}
+  #world{position:absolute; inset:0; transform-origin:50% 50%}
+  #play{position:absolute; inset:0; user-select:none; touch-action:none}
 
-  .p{position:absolute; width:96px; height:96px; transform:translate(-50%, -70%); transition: transform .2s ease; pointer-events:none}
-  .p.self .name{background: var(--accent)}
-  .cat{width:96px; height:96px; display:block; image-rendering:-webkit-optimize-contrast}
-  .face-right{ transform: scaleX(-1) }
-  .name{
-    position:absolute; left:50%; top:76px; transform:translateX(-50%);
-    background:#111; color:#fff; font-size:13px; padding:3px 10px; border-radius:999px; white-space:nowrap; letter-spacing:.3px;
-    max-width:160px; text-overflow:ellipsis; overflow:hidden;
-  }
-  .bubble{
-    position:absolute; left:50%; bottom:108px; transform:translateX(-50%);
-    background:#fff; color:#111; border:1px solid var(--border); border-radius:12px; padding:9px 12px; font-size:14px;
-    max-width:min(64vw, 360px); box-shadow:0 8px 22px rgba(0,0,0,.06); white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere;
-  }
-  .pin{ background:var(--notePink); border-color:#ffd2e0; font-size:12px; transform:translateX(-50%) translateY(-6px); opacity:.96 }
+  /* 猫とUI */
+  .p{position:absolute; width:96px; height:96px; transform:translate(-50%,-70%); transition:left .2s ease, top .2s ease; pointer-events:none}
+  .cat{width:96px; height:96px; image-rendering:-webkit-optimize-contrast; display:block}
+  .face-right{transform:scaleX(-1)}
+  .name{position:absolute; left:50%; top:76px; transform:translateX(-50%); background:#111; color:#fff; font-size:13px; padding:3px 10px; border-radius:999px; white-space:nowrap; max-width:160px; overflow:hidden; text-overflow:ellipsis}
+  .bubble{position:absolute; left:50%; bottom:108px; transform:translateX(-50%); background:#fff; color:#111; border:1px solid var(--border); border-radius:12px; padding:9px 12px; font-size:14px; max-width:min(64vw,360px); box-shadow:0 8px 22px rgba(0,0,0,.06); white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere}
+  .pin{background:var(--notePink); border-color:#ffd2e0; font-size:12px; opacity:.96}
+  .note{position:absolute; transform:translate(-50%,-20%); background:var(--notePink); color:#333; border:1px solid #ffd9e4; padding:8px 10px; border-radius:12px; font-size:12px; white-space:pre-wrap; max-width:min(62vw,280px); box-shadow:0 10px 34px rgba(0,0,0,.08)}
 
-  .note{
-    position:absolute; transform:translate(-50%, -20%); background:var(--notePink); color:#333; border:1px solid #ffd9e4;
-    padding:8px 10px; border-radius:12px; font-size:12px; white-space:pre-wrap; max-width:min(62vw, 280px);
-    box-shadow:0 10px 34px rgba(0,0,0,.08);
-  }
-
-  /* join */
-  #join{
-    position:fixed; inset:0; background:rgba(255,255,255,.92); display:flex; align-items:center; justify-content:center; z-index:10;
-  }
-  #join .card{
-    width:min(92vw, 560px); border:1px solid var(--border); border-radius:18px; background:#fff; padding:18px 16px 16px;
-    box-shadow:0 18px 60px rgba(0,0,0,.08);
-  }
+  /* Join */
+  #join{position:fixed; inset:0; background:rgba(255,255,255,.92); display:flex; align-items:center; justify-content:center; z-index:10}
+  #join .card{width:min(92vw,560px); border:1px solid var(--border); border-radius:18px; background:#fff; padding:18px 16px 16px; box-shadow:0 18px 60px rgba(0,0,0,.08)}
   #join h2{margin:0 0 8px; font-size:18px}
   #join p{margin:0 0 12px; font-size:14px; color:#555; line-height:1.6}
   #join .row{display:flex; gap:10px}
-  #join input{
-    flex:1; font-size:18px; padding:12px 12px; border:1px solid var(--border); border-radius:12px; outline:none; background:#fff;
-  }
-  #join input:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
-  #join button{
-    padding:12px 14px; border-radius:12px; background:var(--accent); color:#fff; font-weight:800; font-size:16px; border:0; cursor:pointer; white-space:nowrap;
-  }
+  #join input{flex:1; font-size:18px; padding:12px 12px; border:1px solid var(--border); border-radius:12px; outline:none}
+  #join input:focus-visible{outline:var(--ring) solid var(--ringColor); outline-offset:2px}
+  #join button{padding:12px 14px; border-radius:12px; background:var(--accent); color:#fff; font-weight:800; font-size:16px; border:0; cursor:pointer}
   #warn{color:#b40000; font-size:13px; min-height:1.4em}
   .subtle{font-size:12px; color:var(--muted)}
 
-  /* bottom bar */
-  #bar{
-    height:var(--barH); display:flex; align-items:center; gap:8px; padding:8px 10px;
-    border-top:1px solid var(--border); background:var(--panel); z-index:2;
-    padding-bottom: calc(8px + env(safe-area-inset-bottom));
-  }
-  #msg{ flex:1; font-size:16px; padding:12px 12px; border:1px solid var(--border); border-radius:12px; outline:none; background:#fff; }
-  #msg:focus-visible{outline: var(--ring) solid var(--ringColor); outline-offset: 2px}
-  #helper{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted)}
-  .round{
-    appearance:none; border:0; background:var(--accent); color:var(--accent-ink);
-    border-radius:16px; padding:10px 12px; font-size:14px; font-weight:800; cursor:pointer; min-width:44px; min-height:40px;
-  }
-  .round.ghost{ background:transparent; color:var(--ink); border:1px solid var(--border); }
+  /* Bottom bar */
+  #bar{height:var(--barH); display:flex; align-items:center; gap:8px; padding:8px 10px; border-top:1px solid var(--border); background:var(--panel); z-index:2; padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+  #msg{flex:1; font-size:16px; padding:12px 12px; border:1px solid var(--border); border-radius:12px; outline:none; background:#fff}
+  #msg:focus-visible{outline:var(--ring) solid var(--ringColor); outline-offset:2px}
+  .round{appearance:none; border:0; background:var(--accent); color:var(--accent-ink); border-radius:16px; padding:10px 12px; font-size:14px; font-weight:800; cursor:pointer; min-width:44px; min-height:40px}
+  .round.ghost{background:transparent; color:var(--ink); border:1px solid var(--border)}
 
-  /* toast */
-  #hint{ position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom)); background:var(--toast); color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; z-index:5; opacity:.95; max-width:64vw}
-  #hint.hide{ display:none }
+  /* Toast & Help */
+  #hint{position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom)); background:var(--toast); color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; z-index:5; opacity:.95; max-width:72vw}
+  #hint.hide{display:none}
+  dialog#help{border:0; border-radius:16px; padding:0}
+  dialog#help .inner{padding:16px; max-width:min(560px,92vw)}
+  dialog#help h3{margin:0 0 8px}
+  dialog#help ul{margin:0 0 6px 18px; line-height:1.75; color:#374151; font-size:14px}
+  dialog#help .foot{display:flex; gap:8px; justify-content:flex-end; padding:0 0 10px}
 
-  dialog#help{ border:0; border-radius:16px; padding:0; }
-  dialog#help .inner{ padding:16px; max-width:min(560px, 92vw) }
-  dialog#help h3{ margin:0 0 8px }
-  dialog#help ul{ margin:0 0 6px 18px; line-height:1.75; color:#374151; font-size:14px }
-  dialog#help .foot{ display:flex; gap:8px; justify-content:flex-end; padding:0 0 10px 0 }
-
-  /* zoom HUD */
+  /* Zoom HUD */
   #zoomHud{font-weight:800}
 
   @media (max-width:480px){
-    header{gap:6px}
-    .btn{padding:8px 9px; font-size:13px}
+    .btn{padding:7px 9px; font-size:13px}
     .chip{font-size:12px; padding:6px 8px}
     .p{width:86px; height:86px}
     .cat{width:86px; height:86px}
@@ -138,43 +88,31 @@
     .bubble{font-size:13px; bottom:98px; max-width:78vw}
     .note{max-width:78vw}
   }
-  @media (prefers-reduced-motion: reduce){
-    .p{transition:none}
-  }
+  @media (prefers-reduced-motion: reduce){ .p{transition:none} }
 </style>
 </head>
 <body>
 <div id="app">
   <header id="topbar" aria-label="top-bar">
     <div class="brand">
-      <span class="logo" aria-hidden="true">🐈‍⬛</span>
+      <button id="showNames" class="btn sm"><span class="icon">🐈‍⬛</span></button>
       <h1 id="title">くろねこひろば</h1>
       <span class="chip" id="roomChip">room: -</span>
       <span class="chip"><span class="icon" aria-hidden="true">🐈‍⬛</span> <span id="count" class="count">0</span></span>
     </div>
-
     <button id="helpBtn" class="btn sm"><span class="icon">❔</span><span class="t-help">ヘルプ</span></button>
     <button id="sitBtn"  class="btn sm"><span class="icon">🪑</span><span class="t-sit">座る</span></button>
     <button id="angerBtn" class="btn sm"><span class="icon">💢</span><span class="t-anger">威嚇</span></button>
     <button id="muteBtn" class="btn sm"><span class="icon" id="muteIcon">🔔</span><span class="t-sound">音オン</span></button>
-
     <button id="newBtn"  class="btn sm"><span class="icon">🆕</span><span class="t-new">新部屋</span></button>
     <button id="shareBtn" class="btn sm"><span class="icon">🔗</span><span class="t-share">共有</span></button>
-
-    <button id="zoomOut" class="btn sm">－</button>
-    <span id="zoomHud" class="chip">100%</span>
-    <button id="zoomIn"  class="btn sm">＋</button>
-
+    <button id="zoomOut" class="btn sm">－</button><span id="zoomHud" class="chip">100%</span><button id="zoomIn" class="btn sm">＋</button>
     <button id="leaveBtn" class="btn sm"><span class="icon">🚪</span><span class="t-leave">退室</span></button>
     <button id="clearBtn" class="btn sm"><span class="icon">🗑️</span><span class="t-clear">クリア</span></button>
     <button id="langBtn" class="btn sm"><span class="t-lang">JP 日本語</span></button>
   </header>
 
-  <div id="canvasWrap">
-    <div id="world">
-      <div id="play" aria-label="shared-field"></div>
-    </div>
-  </div>
+  <div id="canvasWrap"><div id="world"><div id="play" aria-label="shared-field"></div></div></div>
 
   <div id="bar">
     <input id="msg" type="text" inputmode="text" autocomplete="off" placeholder="(15文字 / 10 words)">
@@ -186,12 +124,13 @@
   <div id="hint" class="hide"></div>
 </div>
 
+<!-- Join -->
 <div id="join" role="dialog" aria-modal="true" aria-label="名前入力">
   <div class="card">
     <h2>名前を入れて参加</h2>
     <p>名前は<strong>1〜3文字</strong>。同じURLで同じ部屋。落ち着いて遊ぶ場所。</p>
     <div class="row">
-      <input id="nameInput" maxlength="3" placeholder="" aria-label="名前（1〜3文字）">
+      <input id="nameInput" maxlength="3" aria-label="名前（1〜3文字）">
       <button id="enterBtn">はじめる</button>
     </div>
     <div id="warn" role="status" aria-live="polite"></div>
@@ -199,6 +138,7 @@
   </div>
 </div>
 
+<!-- Help -->
 <dialog id="help">
   <div class="inner">
     <h3>つかいかた</h3>
@@ -206,18 +146,16 @@
       <li>ドラッグでフィールドを移動。ピンチでズーム。</li>
       <li>ダブルクリック / ダブルタップでネコが移動。</li>
       <li>📨 チャット送信… 英語10語・日本語15文字まで。60秒で消える。</li>
-      <li>📌 ステータス… 頭上に小さく固定。もう一度📌で解除。</li>
-      <li>🖋️ 書き置き… 足元に小さく残す。ひとり一件。更新可。🗑️でクリア。8時間で自動削除（回線によっては表示のみ先に消える）。</li>
+      <li>📌 ステータス… 頭上に小さく固定（2/3サイズ）。もう一度📌で解除。</li>
+      <li>🖋️ 書き置き… 足元に小さく残す。ひとり一件。更新可。🗑️でクリア。8時間で自動削除。</li>
       <li>🔗 でリンクをコピーして、フレンドを招待。</li>
     </ul>
-    <div class="foot">
-      <button id="helpClose" class="btn primary">OK</button>
-    </div>
+    <div class="foot"><button id="helpClose" class="btn primary">OK</button></div>
   </div>
 </dialog>
 
 <script type="module">
-/* ===== Firebase config ===== */
+/* ================= Firebase ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyCUpt4XLfSSZLt0VhJon926--c-I2tRMkE",
   authDomain: "blackcat-67716.firebaseapp.com",
@@ -229,340 +167,196 @@ const firebaseConfig = {
   measurementId: "G-R47HW00266"
 };
 
-/* ===== RoomID ===== */
 const url = new URL(location.href);
 const qp = url.searchParams.get("room");
-function makeRoomId(){
-  const t = Date.now().toString(36).slice(-6);
-  const r = crypto.getRandomValues(new Uint32Array(1))[0].toString(36).slice(-5);
-  return `plaza-${t}-${r}`;
-}
-function setURLRoom(id){
-  const u = new URL(location.href);
-  u.searchParams.set("room", id);
-  history.replaceState({}, "", u.toString());
-}
-let WORLD_ID = qp || makeRoomId();
-setURLRoom(WORLD_ID);
+function makeRoomId(){ const t=Date.now().toString(36).slice(-6); const r=crypto.getRandomValues(new Uint32Array(1))[0].toString(36).slice(-5); return `plaza-${t}-${r}`; }
+function setURLRoom(id){ const u=new URL(location.href); u.searchParams.set("room",id); history.replaceState({}, "", u.toString()); }
+let WORLD_ID = qp || makeRoomId(); setURLRoom(WORLD_ID);
 
-/* ===== Firebase SDK ===== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, set, update, serverTimestamp, onDisconnect, off, query, orderByChild, endAt }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { getAuth, signInAnonymously, onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, onValue, set, update, serverTimestamp, onDisconnect, off } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const auth = getAuth(app);
+const db  = getDatabase(app);
+const auth= getAuth(app);
 
-/* ===== DOM ===== */
-const play      = document.getElementById("play");
-const world     = document.getElementById("world");
-const msgInput  = document.getElementById("msg");
-const sendBtn   = document.getElementById("sendBtn");
-const pinBtn    = document.getElementById("pinBtn");
-const noteBtn   = document.getElementById("noteBtn");
-const helpBtn   = document.getElementById("helpBtn");
-const helpDlg   = document.getElementById("help");
-const helpClose = document.getElementById("helpClose");
-const sitBtn    = document.getElementById("sitBtn");
-const angerBtn  = document.getElementById("angerBtn");
-const muteBtn   = document.getElementById("muteBtn");
-const muteIcon  = document.getElementById("muteIcon");
-const newBtn    = document.getElementById("newBtn");
-const shareBtn  = document.getElementById("shareBtn");
-const clearBtn  = document.getElementById("clearBtn");
-const leaveBtn  = document.getElementById("leaveBtn");
-const langBtn   = document.getElementById("langBtn");
-const roomChip  = document.getElementById("roomChip");
-const countEl   = document.getElementById("count");
-const join      = document.getElementById("join");
-const nameInput = document.getElementById("nameInput");
-const enterBtn  = document.getElementById("enterBtn");
-const warn      = document.getElementById("warn");
-const hint      = document.getElementById("hint");
-const zoomInBtn = document.getElementById("zoomIn");
-const zoomOutBtn= document.getElementById("zoomOut");
-const zoomHud   = document.getElementById("zoomHud");
+/* ================= DOM ================= */
+const play=document.getElementById("play"), world=document.getElementById("world");
+const msgInput=document.getElementById("msg"), sendBtn=document.getElementById("sendBtn");
+const pinBtn=document.getElementById("pinBtn"), noteBtn=document.getElementById("noteBtn");
+const helpBtn=document.getElementById("helpBtn"), helpDlg=document.getElementById("help"), helpClose=document.getElementById("helpClose");
+const sitBtn=document.getElementById("sitBtn"), angerBtn=document.getElementById("angerBtn");
+const muteBtn=document.getElementById("muteBtn"), muteIcon=document.getElementById("muteIcon");
+const newBtn=document.getElementById("newBtn"), shareBtn=document.getElementById("shareBtn");
+const clearBtn=document.getElementById("clearBtn"), leaveBtn=document.getElementById("leaveBtn");
+const langBtn=document.getElementById("langBtn"), showNames=document.getElementById("showNames");
+const roomChip=document.getElementById("roomChip"), countEl=document.getElementById("count");
+const join=document.getElementById("join"), nameInput=document.getElementById("nameInput"), enterBtn=document.getElementById("enterBtn"), warn=document.getElementById("warn");
+const hint=document.getElementById("hint");
+const zoomInBtn=document.getElementById("zoomIn"), zoomOutBtn=document.getElementById("zoomOut"), zoomHud=document.getElementById("zoomHud");
 
-/* ===== i18n (必要最小限) ===== */
+/* ================= i18n ================= */
 let LANG = localStorage.getItem("yuru_lang") || "jp";
-function t(key){
-  const jp = {
-    help:"ヘルプ", sit:"座る", anger:"威嚇", sound:"音オン", new:"新部屋", share:"共有",
-    leave:"退室", clear:"クリア", lang:"JP 日本語"
-  };
-  const en = {
-    help:"Help", sit:"Sit", anger:"Emote", sound:"Sound", new:"New", share:"Share",
-    leave:"Leave", clear:"Clear", lang:"EN English"
-  };
-  const d = LANG==="jp"?jp:en;
-  return d[key] || key;
+function i18n(){
+  const jp={help:"ヘルプ",sit:"座る",anger:"威嚇",sound:"音オン",new:"新部屋",share:"共有",leave:"退室",clear:"クリア",lang:"JP 日本語"};
+  const en={help:"Help",sit:"Sit", anger:"Emote",sound:"Sound",new:"New", share:"Share", leave:"Leave", clear:"Clear", lang:"EN English"};
+  const d=LANG==="jp"?jp:en;
+  helpBtn.lastElementChild.textContent=d.help; sitBtn.lastElementChild.textContent=d.sit;
+  angerBtn.lastElementChild.textContent=d.anger; muteBtn.lastElementChild.textContent=d.sound;
+  newBtn.lastElementChild.textContent=d.new; shareBtn.lastElementChild.textContent=d.share;
+  leaveBtn.lastElementChild.textContent=d.leave; clearBtn.lastElementChild.textContent=d.clear;
+  langBtn.firstElementChild.textContent=d.lang;
 }
-function renderTopText(){
-  helpBtn.lastElementChild.textContent = t("help");
-  sitBtn.lastElementChild.textContent  = t("sit");
-  angerBtn.lastElementChild.textContent= t("anger");
-  muteBtn.lastElementChild.textContent = t("sound");
-  newBtn.lastElementChild.textContent  = t("new");
-  shareBtn.lastElementChild.textContent= t("share");
-  leaveBtn.lastElementChild.textContent= t("leave");
-  clearBtn.lastElementChild.textContent= t("clear");
-  langBtn.firstElementChild.textContent= t("lang");
-}
+i18n();
+langBtn.addEventListener("click", ()=>{ LANG=LANG==="jp"?"en":"jp"; localStorage.setItem("yuru_lang",LANG); i18n(); });
 
-/* ===== Audio（簡易） ===== */
-let AC=null, masterGain=null, muted = localStorage.getItem("yuru_mute")==="1";
-function unlockAudio(){
-  if (!AC) {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return;
-    AC = new Ctx();
-    masterGain = AC.createGain();
-    masterGain.gain.value = muted ? 0 : 0.24;
-    masterGain.connect(AC.destination);
-  }
-  if (AC && AC.state === "suspended") AC.resume();
-}
-function tone({freq=880, dur=0.12, type="sine", vol=0.7, attack=0.005, release=0.12}={}){
-  if (!AC) return;
-  const osc = AC.createOscillator();
-  const g = AC.createGain();
-  osc.type = type; osc.frequency.value = freq;
-  osc.connect(g); g.connect(masterGain || AC.destination);
-  const t = AC.currentTime;
-  g.gain.setValueAtTime(0, t);
-  g.gain.linearRampToValueAtTime(vol, t + attack);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + attack + release);
-  osc.start(t); osc.stop(t + dur + 0.25);
-}
-function playLogin(){ if(!muted && AC){ tone({freq:880, type:"triangle", vol:0.55, dur:0.12}); setTimeout(()=> tone({freq:1320, type:"triangle", vol:0.55, dur:0.12}), 140); } }
-function playMessage(){ if(!muted && AC){ tone({freq:700, type:"sine", vol:0.5, dur:0.09}); } }
-function renderMute(){ muteIcon.textContent = muted ? "🔇" : "🔔"; }
-
+/* ================= Audio ================= */
+let AC=null, masterGain=null, muted=localStorage.getItem("yuru_mute")==="1";
+function unlockAudio(){ if(!AC){ const Ctx=window.AudioContext||window.webkitAudioContext; if(!Ctx) return; AC=new Ctx(); masterGain=AC.createGain(); masterGain.gain.value=muted?0:0.24; masterGain.connect(AC.destination);} if(AC && AC.state==="suspended") AC.resume(); }
+function tone({freq=880, dur=0.12, type="sine", vol=0.7, attack=0.005, release=0.12}={}){ if(!AC) return; const osc=AC.createOscillator(); const g=AC.createGain(); osc.type=type; osc.frequency.value=freq; osc.connect(g); g.connect(masterGain||AC.destination); const t=AC.currentTime; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+attack); g.gain.exponentialRampToValueAtTime(0.0001,t+attack+release); osc.start(t); osc.stop(t+dur+0.25); }
+function playLogin(){ if(!muted && AC){ tone({freq:880,type:"triangle",vol:0.55,dur:0.12}); setTimeout(()=>tone({freq:1320,type:"triangle",vol:0.55,dur:0.12}),140); } }
+function playMessage(){ if(!muted && AC){ tone({freq:700,type:"sine",vol:0.5,dur:0.09}); } }
+function renderMute(){ muteIcon.textContent=muted?"🔇":"🔔"; }
 document.addEventListener("pointerdown", unlockAudio, {once:true, passive:true});
 document.addEventListener("keydown", unlockAudio, {once:true});
+renderMute();
+muteBtn.addEventListener("click", ()=>{ muted=!muted; if(masterGain) masterGain.gain.value=muted?0:0.24; localStorage.setItem("yuru_mute",muted?"1":"0"); renderMute(); });
 
-/* ===== State ===== */
-roomChip.textContent = `room: ${WORLD_ID}`;
+/* ================= State ================= */
+roomChip.textContent=`room: ${WORLD_ID}`;
+let uid=null;
+let me={ name:"", x:0.5, y:0.7, dir:1, pose:"stand", msg:"", msgAt:0, pinMsg:"", pinAt:0, idle:false, connected:false };
+let target={x:me.x, y:me.y};
+const NON_ASCII_LIMIT=15, SPEED_PX_S=120, SYNC_MS=80, HEARTBEAT_MS=15000, BUBBLE_MS=60000, STAY_MS=6*3600*1000; // 6h
 
-let uid = null;
-let me = {
-  name:"", x:0.5, y:0.7, dir:1, pose:"stand",
-  msg:"", msgAt:0, pinMsg:"", pinAt:0,
-  idle:false, connected:false
-};
-let target = {x:me.x, y:me.y};
-let lastSync=0, lastHeartbeat=0;
-const SPEED_PX_S = 120;
-const SYNC_MS = 80, HEARTBEAT_MS = 15000, BUBBLE_MS = 60000;
-const NON_ASCII_LIMIT = 15;
-
-/* ===== Utils ===== */
 const now = ()=>performance.now();
-const clamp01 = v=> Math.max(0, Math.min(1, v));
-const escapeHTML = s => s.replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
-const isASCIIish = s => /^[\x00-\x7F]+$/.test(s);
-const countWordsASCII = s => s.trim().split(/\s+/).filter(Boolean).length;
+const clamp01=v=>Math.max(0,Math.min(1,v));
+const escapeHTML=s=>s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+const isASCIIish=s=>/^[\x00-\x7F]+$/.test(s);
+const countWordsASCII=s=>s.trim().split(/\s+/).filter(Boolean).length;
 function toNorm(cx,cy){ const r=play.getBoundingClientRect(); return {x:clamp01((cx-r.left)/r.width), y:clamp01((cy-r.top)/r.height)}; }
 function toPx(nx,ny){ const r=play.getBoundingClientRect(); return {x:nx*r.width, y:ny*r.height}; }
-function toast(text, ms=90000){ hint.textContent=text; hint.classList.remove("hide"); clearTimeout(toast._t); toast._t=setTimeout(()=>hint.classList.add("hide"), ms); }
+function toast(text,ms=90000){ hint.textContent=text; hint.classList.remove("hide"); clearTimeout(toast._t); toast._t=setTimeout(()=>hint.classList.add("hide"), ms); }
 hint.addEventListener("click", ()=> hint.classList.add("hide"));
 
-/* ===== DB Refs ===== */
-function playersRefOf(room){ return ref(db, `worlds/${room}/players`); }
-function myRef(){ return ref(db, `worlds/${WORLD_ID}/players/${uid}`); }
-function notesRefOf(room){ return ref(db, `worlds/${room}/notes`); }
-const playersRef = playersRefOf(WORLD_ID);
-const notesRef   = notesRefOf(WORLD_ID);
+/* ================= Refs ================= */
+function playersRefOf(room){ return ref(db,`worlds/${room}/players`); }
+function myRef(){ return ref(db,`worlds/${WORLD_ID}/players/${uid}`); }
+function notesRefOf(room){ return ref(db,`worlds/${room}/notes`); }
+const playersRef=playersRefOf(WORLD_ID), notesRef=notesRefOf(WORLD_ID);
 
-/* ===== Presence mount AFTER name confirm ===== */
-async function mountPresence(){
-  if(!uid) return;
-  if(!me.name || !me.name.trim()) return;
-  me.connected = true; me.idle=false;
-  try{
-    await set(myRef(), {
-      name: me.name, x: me.x, y: me.y, dir: me.dir, pose: me.pose,
-      msg:"", msgAt:0, pinMsg:"", pinAt:0,
-      connected:true, idle:false, lastActive: serverTimestamp()
-    });
-    // onDisconnect では退室しない。座らせて「不在」マークだけ付ける
-    try{ onDisconnect(myRef()).update({ connected:false, idle:true, pose:"sit", lastActive: serverTimestamp() }); }catch{}
-  }catch(e){
-    console.error("[rtdb] initial set failed:", e);
-    toast("接続エラー。拡張機能やネットワーク設定を確認してリロード。");
-  }
-}
-
-/* ===== Auth with backoff ===== */
-let authReady = false;
-(async function authLoop(){
-  let delay = 1000;
-  while(!authReady){
-    try{
-      await signInAnonymously(auth);
-      break;
-    }catch(e){
-      console.warn("[auth] signIn failed:", e?.message || e);
-      toast("認証サーバに到達できない。ネットワーク/拡張機能を確認して再試行。");
-      await new Promise(r=> setTimeout(r, delay));
-      delay = Math.min(delay*2, 10000);
-    }
-  }
-})();
+/* ================= Auth（バックオフ） ================= */
+(async function authLoop(){ let delay=700; for(;;){ try{ await signInAnonymously(auth); break; }catch(e){ console.warn("[auth] signIn failed:",e?.message||e); toast("認証サーバに到達できない。拡張機能/ネットワークを確認して再試行。"); await new Promise(r=>setTimeout(r,delay)); delay=Math.min(delay*1.8,8000);} } })();
 
 onAuthStateChanged(auth, user=>{
   if(!user) return;
-  uid = user.uid;
-  authReady = true;
-  // 認証だけ完了。presence は「はじめる」押下後に mountPresence() で作成
+  uid=user.uid;
+  // 認証は完了。presence は「はじめる」の後で set() する
   listenWorld();
   listenNotes();
 });
 
-/* ===== Join flow ===== */
-nameInput.addEventListener("input", ()=>{
-  // 半角・全角問わず 1〜3 文字
-  const v = Array.from(nameInput.value.trim()).slice(0,3).join("");
-  if(nameInput.value !== v) nameInput.value = v;
-});
-enterBtn.addEventListener("click", startJoin);
-nameInput.addEventListener("keydown", e=>{ if(e.key==="Enter") startJoin(); });
+/* ================= Join（名前確定後にだけ set） ================= */
+nameInput.addEventListener("input", ()=>{ const v=Array.from(nameInput.value.trim()).slice(0,3).join(""); if(nameInput.value!==v) nameInput.value=v; });
+enterBtn.addEventListener("click", startJoin); nameInput.addEventListener("keydown", e=>{ if(e.key==="Enter") startJoin(); });
 
 async function startJoin(){
-  const n = Array.from((nameInput.value||"").trim()).slice(0,3).join("");
-  if(n.length < 1){ warn.textContent = "1〜3文字の名前を入れてね"; return; }
-  warn.textContent = "";
-  me.name = n;
-  join.style.display = "none";
-  await mountPresence();
-  playLogin();
+  const n=Array.from((nameInput.value||"").trim()).slice(0,3).join("");
+  if(!n){ warn.textContent="1〜3文字の名前を入れてね"; return; }
+  // 10人上限（6h以内の在室を人数判定）
+  let can=true;
+  await new Promise(res=> onValue(playersRef, s=>{ const v=s.val()||{}; const nowMs=Date.now(); const alive=Object.values(v).filter(p=> (nowMs-(p.lastActive||0))<STAY_MS ); if(alive.length>=10 && !v[uid]){ can=false; } res(); }, {onlyOnce:true}));
+  if(!can){ warn.textContent="この部屋は満員（10）"; return; }
+
+  me.name=n; join.style.display="none"; await mountPresence(); playLogin();
 }
 
-/* ===== Listeners ===== */
-const domMap = new Map(); // uid -> dom bundle
-let unsubPlayers = null, unsubNotes = null;
+async function mountPresence(){
+  if(!uid || !me.name.trim()) return;
+  me.connected=true; me.idle=false;
+  try{
+    await set(myRef(), {
+      name:me.name, x:me.x, y:me.y, dir:me.dir, pose:me.pose,
+      msg:"", msgAt:0, pinMsg:"", pinAt:0,
+      connected:true, idle:false, lastActive: serverTimestamp()
+    });
+    // onDisconnect で消さない：退室は明示のみ。切断時は座って idle 表示。
+    try{ onDisconnect(myRef()).update({ connected:false, idle:true, pose:"sit", lastActive: serverTimestamp() }); }catch{}
+  }catch(e){ console.error("[rtdb] initial set failed:",e); toast("接続エラー。回線／拡張機能を確認してリロード。"); }
+}
 
+/* ================= Listeners ================= */
+const domMap=new Map();
 function listenWorld(){
-  if(unsubPlayers){ off(playersRef); unsubPlayers=null; }
-  roomChip.textContent = `room: ${WORLD_ID}`;
-
+  off(playersRef);
   onValue(playersRef, snap=>{
-    const data = snap.val() || {};
-    // connected === true を人数カウント
-    let c=0; for(const id in data){ if(data[id]?.connected) c++; }
-    countEl.textContent = String(c);
+    const data=snap.val()||{};
+    // 6時間以内を在室としてカウント
+    let c=0; const nowMs=Date.now();
+    const ids=Object.keys(data);
+    const seen=new Set(ids);
+    for(const id of ids){ const p=data[id]; if((nowMs-(p.lastActive||0))<STAY_MS) c++; }
+    countEl.textContent=String(c);
 
-    const ids = Object.keys(data);
-    const seen = new Set(ids);
-
-    // create/update
     for(const id of ids){
-      const p = data[id];
-      let bundle = domMap.get(id);
-      if(!bundle){
-        bundle = createPlayerDom(id);
-        domMap.set(id, bundle);
-        play.appendChild(bundle.wrap);
-      }
+      const p=data[id];
+      let bundle=domMap.get(id);
+      if(!bundle){ bundle=createPlayerDom(id); domMap.set(id,bundle); play.appendChild(bundle.wrap); }
       renderPlayer(bundle, p, id===uid);
     }
-    // remove
-    for(const [id,b] of domMap){
-      if(!seen.has(id)){ b.wrap.remove(); domMap.delete(id); }
-    }
+    for(const [id,b] of domMap){ if(!seen.has(id)){ b.wrap.remove(); domMap.delete(id);} }
   });
-  unsubPlayers = true;
 }
 
 function listenNotes(){
-  if(unsubNotes){ off(notesRef); unsubNotes=null; }
+  off(notesRef);
   onValue(notesRef, snap=>{
-    const data = snap.val() || {};
-    // 描画前に全ノートDOM破棄（簡易）
+    const data=snap.val()||{};
     document.querySelectorAll(".note").forEach(n=>n.remove());
-    const nowMs = Date.now();
+    const nowMs=Date.now();
     for(const nid in data){
-      const it = data[nid];
-      // 8時間超は表示しない（削除は Functions 推奨）
-      if(typeof it.at==="number" && (nowMs - it.at) > 8*3600*1000) continue;
+      const it=data[nid];
+      if(typeof it.at==="number" && (nowMs-it.at)>8*3600*1000) continue;
       spawnNote(it);
     }
   });
-  unsubNotes = true;
 }
 
-/* ===== DOM for player ===== */
+/* ================= Player DOM ================= */
 function createPlayerDom(id){
-  const wrap = document.createElement("div"); wrap.className = "p";
-  const name = document.createElement("div"); name.className = "name"; name.textContent = "";
-  const bubble = document.createElement("div"); bubble.className = "bubble"; bubble.style.display="none";
-
-  const img = document.createElement("img"); img.className="cat"; img.alt="cat";
-  // 立ち・座り PNG
-  img.dataset.stand = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png";
-  img.dataset.sit   = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png";
-  img.src = img.dataset.stand;
-  img.decoding="async"; img.loading="eager"; img.referrerPolicy="no-referrer";
-
+  const wrap=document.createElement("div"); wrap.className="p";
+  const name=document.createElement("div"); name.className="name";
+  const bubble=document.createElement("div"); bubble.className="bubble"; bubble.style.display="none";
+  const img=document.createElement("img"); img.className="cat"; img.alt="cat";
+  img.dataset.stand="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png";
+  img.dataset.sit  ="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png";
+  img.src=img.dataset.stand; img.decoding="async"; img.loading="eager";
   wrap.appendChild(name); wrap.appendChild(bubble); wrap.appendChild(img);
-  return {wrap, nameEl:name, bubbleEl:bubble, img, _lastMsgKey:null};
+  return {wrap, nameEl:name, bubbleEl:bubble, img, _lastKey:null};
+}
+function renderPlayer(dom,p,isSelf){
+  const r=play.getBoundingClientRect();
+  dom.wrap.style.left=`${p.x*r.width}px`; dom.wrap.style.top=`${p.y*r.height}px`;
+  dom.nameEl.textContent=p.name||"ななし"; dom.wrap.classList.toggle("self",!!isSelf);
+  dom.img.src=(p.pose==="sit")?dom.img.dataset.sit:dom.img.dataset.stand;
+  if(p.dir===1) dom.img.classList.add("face-right"); else dom.img.classList.remove("face-right");
+
+  const raw=p.msg||""; const msgAt=p.msgAt||0; const key=`${raw}|${msgAt}|${p.pinMsg||""}`;
+  if(p.pinMsg){ dom.bubbleEl.innerHTML=escapeHTML(p.pinMsg); dom.bubbleEl.classList.add("pin"); dom.bubbleEl.style.display="block"; }
+  else if(raw && key!==dom._lastKey){ dom._lastKey=key; dom.bubbleEl.innerHTML=escapeHTML(raw); dom.bubbleEl.classList.remove("pin"); dom.bubbleEl.style.display="block"; const age=typeof msgAt==="number"?(Date.now()-msgAt):0; const remain=Math.max(1200,BUBBLE_MS-Math.max(0,age)); clearTimeout(dom._timer); dom._timer=setTimeout(()=>dom.bubbleEl.style.display="none",remain); if(!isSelf) playMessage(); }
+  else if(!raw && !p.pinMsg){ dom.bubbleEl.style.display="none"; }
 }
 
-function renderPlayer(dom, p, isSelf){
-  // 座標
-  const r = play.getBoundingClientRect();
-  dom.wrap.style.left = `${p.x * r.width}px`;
-  dom.wrap.style.top  = `${p.y * r.height}px`;
-
-  // 名前
-  dom.nameEl.textContent = p.name || "ななし";
-  dom.wrap.classList.toggle("self", !!isSelf);
-
-  // 向きとポーズ
-  dom.img.src = (p.pose === "sit") ? dom.img.dataset.sit : dom.img.dataset.stand;
-  if(p.dir === 1) dom.img.classList.add("face-right"); else dom.img.classList.remove("face-right");
-
-  // 吹き出し
-  const raw = p.msg || ""; const msgAt = p.msgAt || 0; const key = `${raw}|${msgAt}`;
-  if(raw && key !== dom._lastMsgKey){
-    dom._lastMsgKey = key;
-    const safe = isASCIIish(raw) ? escapeHTML(raw) : escapeHTML(raw);
-    dom.bubbleEl.innerHTML = safe;
-    dom.bubbleEl.classList.toggle("pin", false);
-    dom.bubbleEl.style.display = "block";
-    const age = typeof msgAt==="number" ? (Date.now()-msgAt) : 0;
-    const remain = Math.max(1200, BUBBLE_MS - Math.max(0,age));
-    clearTimeout(dom._bubbleTimer); dom._bubbleTimer = setTimeout(()=> dom.bubbleEl.style.display="none", remain);
-    if(!isSelf) playMessage();
-  }else if(!raw && dom.bubbleEl.style.display!=="none" && !dom.bubbleEl.classList.contains("pin")){
-    dom.bubbleEl.style.display = "none";
-  }
-
-  // ピン
-  if(p.pinMsg){
-    dom.bubbleEl.innerHTML = escapeHTML(p.pinMsg);
-    dom.bubbleEl.classList.add("pin");
-    dom.bubbleEl.style.display = "block";
-  }else{
-    dom.bubbleEl.classList.remove("pin");
-  }
+/* ================= Notes ================= */
+function spawnNote(it){
+  const r=play.getBoundingClientRect();
+  const el=document.createElement("div"); el.className="note";
+  el.style.left=`${(it.x||0.5)*r.width}px`; el.style.top=`${(it.y||0.7)*r.height}px`;
+  el.textContent=it.text||""; play.appendChild(el);
 }
 
-/* ===== Notes ===== */
-function spawnNote(item){
-  const r = play.getBoundingClientRect();
-  const el = document.createElement("div");
-  el.className = "note";
-  el.style.left = `${item.x * r.width}px`;
-  el.style.top  = `${item.y * r.height}px`;
-  el.textContent = item.text || "";
-  play.appendChild(el);
-}
-
-/* ===== Input validate ===== */
+/* ================= Input ================= */
 function validateMessage(raw){
   if(!raw) return {ok:false};
   if(isASCIIish(raw)){ if(countWordsASCII(raw)>10 || raw.length>100) return {ok:false}; }
@@ -570,200 +364,87 @@ function validateMessage(raw){
   return {ok:true};
 }
 
-/* ===== Actions ===== */
+/* ================= Actions ================= */
 sendBtn.addEventListener("click", sendMsg);
 msgInput.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); sendMsg(); }});
-function sendMsg(){
-  const raw = (msgInput.value||"").trim(); if(!validateMessage(raw).ok) return;
-  me.msg = raw; me.msgAt = Date.now();
-  ensureMineDom(); // 即時表示
-  msgInput.value="";
-  safeUpdate({ msg: raw, msgAt: serverTimestamp() });
-}
+function sendMsg(){ const raw=(msgInput.value||"").trim(); if(!validateMessage(raw).ok) return; me.msg=raw; me.msgAt=Date.now(); ensureMineDom(); msgInput.value=""; safeUpdate({msg:raw, msgAt:serverTimestamp()}); }
 
-pinBtn.addEventListener("click", ()=>{
-  const raw = (msgInput.value||"").trim();
-  if(me.pinMsg){ me.pinMsg=""; safeUpdate({pinMsg:"", pinAt:0}); toast("ピンを外した", 2500); return; }
-  if(!validateMessage(raw).ok){ toast("ピンにする短い文を入力", 3000); return; }
-  me.pinMsg = raw; safeUpdate({ pinMsg: raw, pinAt: serverTimestamp() }); toast("ピンを固定した", 2500);
+pinBtn.addEventListener("click", ()=>{ const raw=(msgInput.value||"").trim(); if(me.pinMsg){ me.pinMsg=""; safeUpdate({pinMsg:"",pinAt:0}); toast("ピンを外した",2500); return;} if(!validateMessage(raw).ok){ toast("ピンにする短い文を入力",3000); return;} me.pinMsg=raw; safeUpdate({pinMsg:raw,pinAt:serverTimestamp()}); toast("ピンを固定した",2500); });
+
+noteBtn.addEventListener("click", async ()=>{ const raw=(msgInput.value||"").trim(); if(!validateMessage(raw).ok){ toast("書き置きの短い文を入力",3000); return;} try{ await set(ref(db,`worlds/${WORLD_ID}/notes/${uid}`), { text:raw, author:me.name, uid, at:serverTimestamp(), updatedAt:serverTimestamp(), x:me.x, y:me.y }); toast("書き置きを残した",2500);}catch(e){ console.warn(e); toast("書き置きに失敗",2500);} });
+
+clearBtn.addEventListener("click", async ()=>{ try{ await set(ref(db,`worlds/${WORLD_ID}/notes/${uid}`), null); toast("書き置きを消した",2500);}catch(e){ console.warn(e); } });
+
+sitBtn.addEventListener("click", ()=>{ me.pose=(me.pose==="stand")?"sit":"stand"; safeUpdate({pose:me.pose}); sitBtn.lastElementChild.textContent=(me.pose==="stand")?(LANG==="jp"?"座る":"Sit"):(LANG==="jp"?"立つ":"Stand"); });
+
+angerBtn.addEventListener("click", ()=>{ const b=domMap.get(uid); if(!b) return; const tmp="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/angerCAT.png"; const prev=b.img.src; b.img.src=tmp; setTimeout(()=>{ b.img.src=(me.pose==="sit")?b.img.dataset.sit:b.img.dataset.stand; }, 1200); });
+
+newBtn.addEventListener("click", ()=>{ const id=makeRoomId(); setURLRoom(id); location.reload(); });
+shareBtn.addEventListener("click", async ()=>{ const invite=new URL(location.href); invite.searchParams.set("room",WORLD_ID); try{ await navigator.clipboard.writeText(invite.toString()); toast("URLをコピーした（同じ部屋に入れる）",2500);}catch{ prompt("このURLをコピーして共有してね", invite.toString()); } });
+
+leaveBtn.addEventListener("click", async ()=>{ try{ await set(myRef(), null); }catch{} toast("退室した",2000); });
+
+helpBtn.addEventListener("click", ()=>helpDlg.showModal());
+helpClose.addEventListener("click", ()=>helpDlg.close());
+
+showNames.addEventListener("click", ()=>{
+  const names=[...document.querySelectorAll(".p .name")].map(n=>n.textContent||"ななし");
+  toast(`いまの参加者： ${names.join("、")}`, 4000);
 });
 
-noteBtn.addEventListener("click", async ()=>{
-  const raw = (msgInput.value||"").trim(); if(!validateMessage(raw).ok){ toast("書き置きの短い文を入力", 3000); return; }
-  const pos = toNorm(...Object.values(toPx(me.x,me.y)));
-  const myNoteRef = ref(db, `worlds/${WORLD_ID}/notes/${uid}`);
-  try{
-    await set(myNoteRef, {
-      text: raw, author: me.name, uid, at: serverTimestamp(), updatedAt: serverTimestamp(),
-      x: me.x, y: me.y
-    });
-    toast("書き置きを残した", 2500);
-  }catch(e){ console.warn("note failed:", e); toast("書き置きに失敗", 2500); }
-});
+/* ================= Camera: zoom & pan ================= */
+let zoom=1.0; function applyCam(){ world.style.transform=`translate(${worldOffset.x}px,${worldOffset.y}px) scale(${zoom})`; zoomHud.textContent=`${Math.round(zoom*100)}%`; }
+let worldOffset={x:0,y:0}, panning=false, panStart=null;
 
-clearBtn.addEventListener("click", async ()=>{
-  if(!uid) return;
-  try{
-    await set(ref(db, `worlds/${WORLD_ID}/notes/${uid}`), null);
-    toast("書き置きを消した", 2500);
-  }catch(e){ console.warn(e); }
-});
+zoomInBtn.addEventListener("click", ()=>{ zoom=Math.min(2.0, zoom+0.1); applyCam(); });
+zoomOutBtn.addEventListener("click", ()=>{ zoom=Math.max(0.4, zoom-0.1); applyCam(); });
 
-/* 座る／立つ */
-sitBtn.addEventListener("click", ()=>{
-  me.pose = (me.pose === "stand") ? "sit" : "stand";
-  safeUpdate({pose: me.pose});
-  sitBtn.lastElementChild.textContent = (me.pose === "stand") ? (LANG==="jp"?"座る":"Sit") : (LANG==="jp"?"立つ":"Stand");
-});
-
-/* 威嚇（怒りPNGを一瞬表示） */
-angerBtn.addEventListener("click", ()=>{
-  if(!uid) return;
-  const bundle = domMap.get(uid); if(!bundle) return;
-  const tmp = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/angerCAT.png";
-  const prev = bundle.img.src;
-  bundle.img.src = tmp;
-  setTimeout(()=>{ bundle.img.src = (me.pose==="sit")?bundle.img.dataset.sit:bundle.img.dataset.stand; }, 1200);
-});
-
-/* 新部屋 */
-newBtn.addEventListener("click", ()=>{
-  const id = makeRoomId();
-  setURLRoom(id); location.reload();
-});
-
-/* 共有 */
-shareBtn.addEventListener("click", async ()=>{
-  const invite = new URL(location.href);
-  invite.searchParams.set("room", WORLD_ID);
-  try{
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      await navigator.clipboard.writeText(invite.toString());
-      toast("URLをコピーした（同じ部屋に入れる）", 2500);
-    }else{
-      prompt("このURLをコピーして共有してね", invite.toString());
-    }
-  }catch(e){ console.warn("clipboard failed:", e); }
-});
-
-/* 退室 */
-leaveBtn.addEventListener("click", async ()=>{
-  try{ await set(myRef(), null); }catch{}
-  toast("退室した", 2000);
-});
-
-/* ヘルプ */
-helpBtn.addEventListener("click", ()=> helpDlg.showModal());
-helpClose.addEventListener("click", ()=> helpDlg.close());
-
-/* ミュート */
-renderMute();
-muteBtn.addEventListener("click", ()=>{
-  muted = !muted; if(masterGain) masterGain.gain.value = muted ? 0 : 0.24;
-  localStorage.setItem("yuru_mute", muted ? "1":"0");
-  renderMute();
-});
-
-/* 言語 */
-renderTopText();
-langBtn.addEventListener("click", ()=>{
-  LANG = (LANG==="jp")?"en":"jp";
-  localStorage.setItem("yuru_lang", LANG);
-  renderTopText();
-});
-
-/* ===== Camera: zoom & pan ===== */
-let zoom = 1.0; function applyCam(){ world.style.transform = `scale(${zoom})`; zoomHud.textContent = `${Math.round(zoom*100)}%`; }
-applyCam();
-zoomInBtn.addEventListener("click", ()=>{ zoom = Math.min(2.0, zoom+0.1); applyCam(); });
-zoomOutBtn.addEventListener("click", ()=>{ zoom = Math.max(0.4, zoom-0.1); applyCam(); });
-
-let panning=false, panStart=null, worldOffset={x:0,y:0};
-play.addEventListener("pointerdown", e=>{ panning=true; panStart={x:e.clientX-worldOffset.x, y:e.clientY-worldOffset.y}; play.setPointerCapture(e.pointerId); });
-play.addEventListener("pointermove", e=>{
-  if(!panning) return;
-  worldOffset.x = e.clientX - panStart.x;
-  worldOffset.y = e.clientY - panStart.y;
-  world.style.left = `${worldOffset.x}px`;
-  world.style.top  = `${worldOffset.y}px`;
-});
+play.addEventListener("pointerdown", e=>{ panning=true; panStart={x:e.clientX-(worldOffset.x), y:e.clientY-(worldOffset.y)}; play.setPointerCapture(e.pointerId); });
+play.addEventListener("pointermove", e=>{ if(!panning) return; worldOffset.x=e.clientX-panStart.x; worldOffset.y=e.clientY-panStart.y; applyCam(); });
 play.addEventListener("pointerup", ()=>{ panning=false; });
 
-/* ===== Move: dblclick / double-tap only ===== */
-play.addEventListener("dblclick", e=>{
-  e.preventDefault();
-  moveCatTo(e.clientX, e.clientY);
-});
-
+/* ================= Move: dblclick / double-tap ================= */
+play.addEventListener("dblclick", e=>{ e.preventDefault(); moveCatTo(e.clientX, e.clientY); });
 let lastTap=0, pinching=false;
 play.addEventListener("touchstart", e=>{
   if(e.touches.length>=2){ pinching=true; return; }
-  const now = performance.now();
-  if(!pinching && (now-lastTap)<280){
-    const t = e.touches[0];
-    moveCatTo(t.clientX, t.clientY);
-    lastTap=0;
-  }else{
-    lastTap=now;
-  }
+  const t=performance.now();
+  if(!pinching && (t-lastTap)<280){ const p=e.touches[0]; moveCatTo(p.clientX,p.clientY); lastTap=0; } else { lastTap=t; }
 },{passive:true});
 play.addEventListener("touchend", ()=>{ pinching=false; }, {passive:true});
+function moveCatTo(cx,cy){ const {x,y}=toNorm(cx,cy); const pxNow=toPx(me.x,me.y).x, pxNext=toPx(x,y).x; target.x=x; target.y=y; me.dir=(pxNext>=pxNow)?1:-1; safeUpdate({dir:me.dir}); }
 
-function moveCatTo(cx,cy){
-  const {x,y} = toNorm(cx,cy);
-  const pxNow = toPx(me.x, me.y).x; const pxNext = toPx(x, y).x;
-  target.x=x; target.y=y; me.dir = (pxNext >= pxNow) ? 1 : -1;
-  safeUpdate({dir: me.dir});
-}
-
-/* ===== Loop ===== */
-let lastT = now();
+/* ================= Loop ================= */
+let lastT=now();
 function loop(){
   const t=now(); const dt=Math.max(0, Math.min(0.05,(t-lastT)/1000)); lastT=t;
-  const r=play.getBoundingClientRect();
-  const pxPos=toPx(me.x,me.y), pxTarget=toPx(target.x,target.y);
-  const dx=pxTarget.x-pxPos.x, dy=pxTarget.y-pxPos.y, dist=Math.hypot(dx,dy);
-  const step=SPEED_PX_S*dt;
-  if(dist>1){ const nx=pxPos.x+(dx/dist)*step, ny=pxPos.y+(dy/dist)*step; const nn=toNorm(nx+r.left, ny+r.top); me.x=nn.x; me.y=nn.y; }
-  else { me.x=target.x; me.y=target.y; }
+  const r=play.getBoundingClientRect(), pxPos=toPx(me.x,me.y), pxTarget=toPx(target.x,target.y);
+  const dx=pxTarget.x-pxPos.x, dy=pxTarget.y-pxPos.y, dist=Math.hypot(dx,dy), step=SPEED_PX_S*dt;
+  if(dist>1){ const nx=pxPos.x+(dx/dist)*step, ny=pxPos.y+(dy/dist)*step; const nn=toNorm(nx+r.left, ny+r.top); me.x=nn.x; me.y=nn.y; } else { me.x=target.x; me.y=target.y; }
 
   ensureMineDom();
 
-  const T = performance.now();
-  if((T-lastSync)>=SYNC_MS){ safeUpdate({x:me.x, y:me.y}); lastSync=T; }
-  if((T-lastHeartbeat)>=HEARTBEAT_MS){ safeUpdate({lastActive: serverTimestamp(), connected:true}); lastHeartbeat=T; }
+  const T=performance.now();
+  if((T-loop._sync)||0 >= SYNC_MS){ safeUpdate({x:me.x, y:me.y}); loop._sync=T; }
+  if((T-loop._hb)||0 >= HEARTBEAT_MS){ safeUpdate({lastActive: serverTimestamp(), connected:true}); loop._hb=T; }
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
 
-/* ===== Safe update ===== */
-async function safeUpdate(patch){
-  if(!uid) return;
-  try{ await update(myRef(), patch); }catch(e){ /* 認可前は無視 */ }
-}
+/* ================= Safe update / self DOM ================= */
+async function safeUpdate(patch){ if(!uid) return; try{ await update(myRef(), patch); }catch(e){} }
+function ensureMineDom(){ if(!uid || !me.name) return; if(!domMap.get(uid)){ const d=createPlayerDom(uid); domMap.set(uid,d); play.appendChild(d.wrap); } renderPlayer(domMap.get(uid), {...me}, true); }
 
-/* ===== Ensure DOM for self ===== */
-function ensureMineDom(){
-  if(!uid || !me.name) return; // 初回 set 前は描画しない
-  if(!domMap.get(uid)){
-    const d=createPlayerDom(uid); domMap.set(uid,d); play.appendChild(d.wrap);
-  }
-  const selfData = { ...me };
-  renderPlayer(domMap.get(uid), selfData, true);
-}
-
-/* ===== Visibility & unload ===== */
+/* ================= Visibility & unload ================= */
 document.addEventListener("visibilitychange", ()=>{
   if(document.hidden){ me.idle=true; me.pose="sit"; safeUpdate({idle:true, pose:"sit", connected:true}); }
   else{ me.idle=false; safeUpdate({idle:false, connected:true}); }
 });
 window.addEventListener("pagehide", async ()=>{ try{ await set(myRef(), null); }catch{} });
-window.addEventListener("beforeunload", ()=>{ navigator.sendBeacon && navigator.sendBeacon(db.databaseURL||"", ""); });
+window.addEventListener("beforeunload", ()=>{ navigator.sendBeacon && navigator.sendBeacon(location.href, ""); });
 
-/* ===== Init ===== */
-renderTopText();
+/* ================= Init ================= */
 toast("ドラッグでフィールド移動。ダブルタップ/ダブルクリックでネコが移動。ピンチでズーム。", 90000);
-
 </script>
 </body>
 </html>

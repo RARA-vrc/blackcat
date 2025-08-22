@@ -132,20 +132,15 @@
       <span class="chip" id="countDock" aria-live="polite">🐈‍⬛ 0</span>
     </div>
     <div class="meta" id="meta">
-      <!-- ヘルプを一番左に -->
       <button id="helpBtn"      class="btn ghost" title="使い方"><span class="icon">❔</span><span class="txt" id="lblHelp"> ヘルプ</span></button>
-
       <button id="poseTopBtn"   class="btn ghost" title="立つ/座る"><span class="icon">🪑</span><span class="txt" id="lblPose"> 座る</span></button>
       <button id="angerBtn"     class="btn ghost" title="威嚇"><span class="icon">💢</span><span class="txt" id="lblAnger"> 威嚇</span></button>
       <button id="muteBtn"      class="btn ghost" title="音のオン/オフ"><span class="icon" id="soundIcon">🔔</span><span class="txt" id="lblSound"> 音オン</span></button>
       <button id="newRoomBtn"   class="btn ghost" title="新しい部屋を作る"><span class="icon">🆕</span><span class="txt" id="lblNew"> 新部屋</span></button>
       <button id="shareBtn"     class="btn ghost" title="URLをコピー"><span class="icon">🔗</span><span class="txt" id="lblShare"> 共有</span></button>
-
-      <!-- ズームコントロール -->
       <button id="zoomOutBtn"   class="btn ghost iconOnly" title="ズームアウト"><span class="icon">➖</span></button>
       <span   id="zoomLabel"    class="chip" aria-live="polite">100%</span>
       <button id="zoomInBtn"    class="btn ghost iconOnly" title="ズームイン"><span class="icon">➕</span></button>
-
       <button id="leaveBtn"     class="btn ghost" title="退室"><span class="icon">🚪</span><span class="txt" id="lblLeave"> 退室</span></button>
       <button id="noteClearBtn" class="btn ghost" title="自分の書き置きを消す"><span class="icon">🗑️</span><span class="txt" id="lblClear"> クリア</span></button>
       <button id="langBtn"      class="btn ghost" title="言語切替"><span class="icon" id="langIcon">🇯🇵</span><span class="txt" id="lblLang"> 日本語</span></button>
@@ -197,8 +192,7 @@
       <div>📨 チャット送信 英語は10語・日本語は15文字まで。60秒で消える</div>
       <div>📌 ステータス 頭上に小さく固定。もう一度📌タップで解除</div>
       <div>🖋️ 書置 足元に小さく残す。ひとり一件。更新可。🗑️でクリア。8時間で自動削除</div>
-      <div>🖱️ **PC**：<b>ドラッグでフィールド移動</b>・<b>ダブルクリックでネコ移動</b>。  
-           📱 **スマホ**：<b>ドラッグでフィールド移動</b>・<b>ダブルタップでネコ移動</b>。ピンチでズーム。</div>
+      <div>🖱️ <b>ドラッグでフィールド移動</b>・<b>ダブルクリックでネコ移動</b>。📱はダブルタップ＋ピンチでズーム</div>
       <div>🔗 でリンクをコピーしフレンドを招待</div>
     </div>
     <p class="subtle" id="joinHint">音が出ないときは一度画面をタップしてからミュートを確かめる。</p>
@@ -227,8 +221,8 @@ const BUBBLE_MS      = 60000;
 const ZMIN           = 0.4, ZMAX = 2.0;
 
 /* ========== i18n ========== */
-const I18N={ /* …元のまま… */ 
-  ja:{ /* 省略せず元の中身そのまま */ 
+const I18N={
+  ja:{
     brand:"くろねこひろば",
     roomCount:n=>`🐈‍⬛ ${n}`,
     namesPeek:list=>`いまの参加者： ${list}`,
@@ -260,7 +254,7 @@ const I18N={ /* …元のまま… */
       full:"満員だ。10人まで", online:"オンライン", offline:"オフライン。再接続待ち", errorAuth:"認証エラー。設定を確認"
     }
   },
-  en:{ /* 省略せず元の中身そのまま */ 
+  en:{
     brand:"Black Cats Plaza",
     roomCount:n=>`🐈‍⬛ ${n}`,
     namesPeek:list=>`Players: ${list}`,
@@ -318,7 +312,7 @@ let WORLD_ID=qp||hp||null; if(!WORLD_ID){ WORLD_ID=makeRoomId(); setURLRoom(WORL
 /* ========== Firebase SDK ========== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, onValue, set, update, onDisconnect, get, remove }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"; /* serverTimestamp 削除 */
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { getAuth, signInAnonymously, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -472,7 +466,7 @@ async function initAfterAuth(){
   await mountPresence(true);
   startLoop();
   subscribePlayers();
-  subscribeNotes();
+  subscribeNotes();   // ★ ここが未定義で落ちていた
   subscribeMeta();
   monitorReconnect();
   spawnPulse(me.x, me.y);
@@ -488,14 +482,14 @@ async function mountPresence(forceStand=false){
   try{
     await set(myRef(), {
       name:normalizeName(me.name), x:me.x, y:me.y, dir:me.dir, pose:forceStand?"stand":me.pose,
-      msg:"", msgAt:0, pinMsg:me.pinMsg||"", pinAt:me.pinMsg?Date.now():0, // NOTE: Date.now()
-      emo:"none", emoAt:0, lastActive:Date.now() // NOTE: Date.now()
+      msg:"", msgAt:0, pinMsg:me.pinMsg||"", pinAt:me.pinMsg?Date.now():0,
+      emo:"none", emoAt:0, lastActive:Date.now()
     });
   }catch(e){ console.error("[rtdb] initial set failed:", e); }
   try{ onDisconnect(myRef()).remove(); }catch(e){ console.warn("[rtdb] onDisconnect set failed:", e); }
 }
-window.addEventListener("visibilitychange", ()=>{ try{ update(myRef(), {lastActive:Date.now()}); }catch{} }); // NOTE: Date.now()
-window.addEventListener("pagehide", ()=>{ try{ update(myRef(), {lastActive:Date.now()}); }catch{} }); // NOTE: Date.now()
+window.addEventListener("visibilitychange", ()=>{ try{ update(myRef(), {lastActive:Date.now()}); }catch{} });
+window.addEventListener("pagehide", ()=>{ try{ update(myRef(), {lastActive:Date.now()}); }catch{} });
 
 /* 再接続監視 */
 function monitorReconnect(){
@@ -506,7 +500,7 @@ function monitorReconnect(){
       try{
         const s = await get(myRef());
         if(s.exists()){
-          await update(myRef(), { lastActive: Date.now() }); // NOTE: Date.now()
+          await update(myRef(), { lastActive: Date.now() });
         }else{
           await mountPresence(false);
         }
@@ -666,7 +660,7 @@ function sendMsg(){
   const nowMs=Date.now(); if(nowMs-lastSentAt<500) return; lastSentAt=nowMs;
   me.msg=raw; me.msgAt=nowMs; ensureMineDom(); const mine=domMap.get(uid); if(mine){ mine._lastShownMsgAt=nowMs; }
   msgInput.value=""; sendBtn.disabled=true;
-  safeUpdate({msg:raw, msgAt:Date.now()}); // NOTE: Date.now()
+  safeUpdate({msg:raw, msgAt:Date.now()});
 }
 
 function renderPinBtn(){ pinBtn.setAttribute("aria-pressed", me.pinMsg?"true":"false"); } renderPinBtn();
@@ -677,11 +671,11 @@ pinBtn.addEventListener("click", ()=>{
     toast(I18N[LANG].notify.pinOff, 1800); return;
   }
   const typed=msgInput.value.trim(); const pick=typed?typed:(me.msg?me.msg:"");
-  if(!pick){ toast(LANG==="ja"?"ピンに入れる文がない":"Nothing to pin", 2200); return; }
+  if(!pick){ toast(LANG==="ja"?"書き置きする文がない":"Nothing to pin", 2200); return; }
   if(typed && !validateMessage(typed).ok){ toast(LANG==="ja"?"文字数の上限":"Too long", 2200); return; }
   me.pinMsg=pick; renderPinBtn();
   const mine=domMap.get(uid); if(mine){ mine.pinBubbleEl.textContent=pick; mine.pinBubbleEl.style.display="block"; }
-  safeUpdate({pinMsg:pick, pinAt:Date.now()}); // NOTE: Date.now()
+  safeUpdate({pinMsg:pick, pinAt:Date.now()});
   toast(I18N[LANG].notify.pinOn, 1800);
 });
 noteBtn.addEventListener("click", async ()=>{
@@ -692,10 +686,10 @@ noteBtn.addEventListener("click", async ()=>{
     const r=noteRefOf(uid); const nowXY={x:me.x,y:me.y}; const snap=await get(r);
     const authorName=normalizeName(me.name);
     if(snap.exists()){
-      await update(r,{text:pick,author:authorName,uid:uid,x:nowXY.x,y:nowXY.y,updatedAt:Date.now()}); // NOTE: Date.now()
+      await update(r,{text:pick,author:authorName,uid:uid,x:nowXY.x,y:nowXY.y,updatedAt:Date.now()});
       toast(I18N[LANG].notify.noteUpdated, 1800);
     }else{
-      await set(r,{text:pick,author:authorName,uid:uid,x:nowXY.x,y:nowXY.y,at:Date.now(),updatedAt:Date.now()}); // NOTE: Date.now()
+      await set(r,{text:pick,author:authorName,uid:uid,x:nowXY.x,y:nowXY.y,at:Date.now(),updatedAt:Date.now()});
       toast(I18N[LANG].notify.noteSaved, 1800);
     }
   }catch(e){ console.error("note set/update failed:", e); toast(LANG==="ja"?"書き置きに失敗":"Failed to save note", 2200); }
@@ -707,7 +701,7 @@ noteClearBtn.addEventListener("click", async ()=>{
 });
 angerBtn.addEventListener("click", ()=>{
   me.emo="angry"; me.emoAt=Date.now(); ensureMineDom();
-  safeUpdate({emo:"angry", emoAt:Date.now()}); // NOTE: Date.now()
+  safeUpdate({emo:"angry", emoAt:Date.now()});
   setTimeout(()=>{ if(Date.now()-me.emoAt>=EMO_SHOW_MS){ me.emo="none"; ensureMineDom(); } }, EMO_SHOW_MS+120);
 });
 function renderPoseTopBtn(){ lblPose.textContent=" "+(me.pose==="stand"?I18N[LANG].poseSit:I18N[LANG].poseStand); } renderPoseTopBtn();
@@ -748,7 +742,6 @@ function setZoomCentered(nz){
 }
 zoomInBtn.addEventListener("click", ()=> setZoomCentered(zoom*1.15));
 zoomOutBtn.addEventListener("click", ()=> setZoomCentered(zoom/1.15));
-
 play.addEventListener("wheel", e=>{
   e.preventDefault();
   const r=play.getBoundingClientRect();
@@ -810,7 +803,7 @@ function endPan(e){ if(!panning) return; panning=false; play.classList.remove("d
 play.addEventListener("pointerup", endPan);
 play.addEventListener("pointercancel", endPan);
 
-/* PC：ダブルクリックでネコ移動 */
+/* PC：ダブルクリックで移動 */
 play.addEventListener("dblclick", e=>{
   e.preventDefault();
   const {x,y}=toNormFromClient(e.clientX, e.clientY);
@@ -855,26 +848,28 @@ function loop(){
   ensureMineDom();
 
   if(mounted && (t-lastSync)>=80){ safeUpdate({x:me.x,y:me.y}); lastSync=t; }
-  if(mounted && (t-lastHeartbeat)>=HEARTBEAT_MS){ safeUpdate({lastActive:Date.now()}); lastHeartbeat=t; } // NOTE: Date.now()
+  if(mounted && (t-lastHeartbeat)>=HEARTBEAT_MS){ safeUpdate({lastActive:Date.now()}); lastHeartbeat=t; }
   requestAnimationFrame(loop);
 }
 
 /* ========== 安全更新 ========== */
 async function safeUpdate(patch){ if(!uid || !mounted) return; try{ await update(myRef(), patch); }catch(e){ console.error("[rtdb] update failed:", patch, e); } }
 
-/* ========== 書き置き購読 ========== */
+/* ========== 書き置き購読（関数定義を追加） ========== */
 const notesDomMap=new Map();
-onValue(notesRootRef(), snap=>{
-  const nowMs=Date.now(); const seen=new Set(); hasOwnNote=false;
-  snap.forEach(ch=>{
-    const v=ch.val()||{}; const ts=Number(v.updatedAt||v.at||0);
-    const alive=ts>0 && (nowMs-ts)<=NOTE_TTL_MS; const id=ch.key;
-    if(alive){ upsertNoteDom(id,v); seen.add(id); if(id===uid) hasOwnNote=true; }
-    else{ if(id===uid){ remove(noteRefOf(uid)).catch(()=>{}); } }
+function subscribeNotes(){
+  onValue(notesRootRef(), snap=>{
+    const nowMs=Date.now(); const seen=new Set(); hasOwnNote=false;
+    snap.forEach(ch=>{
+      const v=ch.val()||{}; const ts=Number(v.updatedAt||v.at||0);
+      const alive=ts>0 && (nowMs-ts)<=NOTE_TTL_MS; const id=ch.key;
+      if(alive){ upsertNoteDom(id,v); seen.add(id); if(id===uid) hasOwnNote=true; }
+      else{ if(id===uid){ remove(noteRefOf(uid)).catch(()=>{}); } }
+    });
+    for(const [id,el] of notesDomMap){ if(!seen.has(id)){ el.remove(); notesDomMap.delete(id); } }
+    noteClearBtn.disabled=!hasOwnNote;
   });
-  for(const [id,el] of notesDomMap){ if(!seen.has(id)){ el.remove(); notesDomMap.delete(id); } }
-  noteClearBtn.disabled=!hasOwnNote;
-});
+}
 function upsertNoteDom(ownerUid,data){
   let el=notesDomMap.get(ownerUid);
   if(!el){ el=document.createElement("div"); el.className="noteItem"; world.appendChild(el); notesDomMap.set(ownerUid, el); }
@@ -913,7 +908,7 @@ function subscribeMeta(){
 newRoomBtn.addEventListener("click", async ()=>{
   const id=makeRoomId();
   try{
-    await update(metaRef(), {nextRoom:id, by:uid||"", at:Date.now()}); // NOTE: Date.now()
+    await update(metaRef(), {nextRoom:id, by:uid||"", at:Date.now()});
     const byName = normalizeName(me.name) || (LANG==="ja"?"自分":"me");
     showLocalMigrate(id, byName);
   }catch(e){ console.error("set nextRoom failed:", e); toast(LANG==="ja"?"新しい部屋の作成に失敗":"Failed to create room", 2500); }

@@ -218,55 +218,13 @@ const BUBBLE_MS      = 60000;
 const ZMIN           = 0.4, ZMAX = 2.0;
 /* 無反応の退室扱い: 1h */
 const STALE_MS_PLAYERS = 60*60*1000;
-/* 名前の定期再主張間隔（過剰書込み防止） */
+/* 名前の定期再主張間隔 */
 const NAME_REASSERT_MS = 60*1000;
 
 /* ========== i18n ========== */
 const I18N={
-  ja:{
-    brand:"くろねこひろば",
-    roomCount:n=>`🐈‍⬛ ${n}`,
-    namesPeek:list=>`いまの参加者： ${list}`,
-    poseSit:"座る", poseStand:"立つ", anger:"威嚇",
-    soundOn:"音オン", soundMute:"ミュート",
-    newRoom:"新部屋", share:"共有", clear:"クリア", help:"ヘルプ", lang:"日本語", leave:"退室",
-    msgPlaceholder:"(15文字 / 10 words)", hintKeys:"Enterで送信  Sで座る",
-    hint:"ドラッグでフィールド移動。ダブルタップ/ダブルクリックでネコが移動。ピンチでズーム。",
-    joinTitle:"名前を入れて参加", joinDesc:"名前は3文字まで。URLが同じなら同じ部屋。落ち着いて遊ぶ場。", joinStart:"はじめる",
-    joinHint:"音が出ないときは一度画面をタップしてからミュートを確かめる。",
-    confirmLeave:"今の部屋から退室する。OK？", left:"退室した",
-    notify:{
-      join:n=>`${n} が入室した`, leave:n=>`${n} が退室した`,
-      pinOn:"ピンを固定した", pinOff:"ピンを外した",
-      noteSaved:"書き置きを残した", noteUpdated:"書き置きを更新した", noteCleared:"書き置きを消した",
-      urlCopied:"リンクをコピーした。フレンドを招待できる",
-      newRoomBy:n=>`${n} が新しい部屋を作成`,
-      full:n=>`満員だ。${n}人まで`,
-      online:"オンライン", offline:"オフライン。再接続待ち", errorAuth:"認証エラー。設定を確認"
-    }
-  },
-  en:{
-    brand:"Black Cats Plaza",
-    roomCount:n=>`🐈‍⬛ ${n}`,
-    namesPeek:list=>`Players: ${list}`,
-    poseSit:"Sit", poseStand:"Stand", anger:"Angry",
-    soundOn:"Sound", soundMute:"Muted",
-    newRoom:"New", share:"Share", clear:"Clear", help:"Help", lang:"English", leave:"Leave",
-    msgPlaceholder:"(15 chars / 10 words)", hintKeys:"Enter to send  S to sit/stand",
-    hint:"Drag to move the field. Double-tap/double-click to move your cat. Pinch to zoom.",
-    joinTitle:"Enter name to join", joinDesc:"Up to 3 characters. Same URL, same room. A chill place.", joinStart:"Start",
-    joinHint:"No sound? Tap once and toggle the bell.",
-    confirmLeave:"Leave this room?", left:"Left",
-    notify:{
-      join:n=>`${n} joined`, leave:n=>`${n} left`,
-      pinOn:"Pinned", pinOff:"Unpinned",
-      noteSaved:"Note saved", noteUpdated:"Note updated", noteCleared:"Note cleared",
-      urlCopied:"Link copied. Invite friends",
-      newRoomBy:n=>`${n} created a new room`,
-      full:n=>`Room is full (max ${n})`,
-      online:"Online", offline:"Offline. Reconnecting", errorAuth:"Auth error"
-    }
-  }
+  ja:{brand:"くろねこひろば",roomCount:n=>`🐈‍⬛ ${n}`,namesPeek:list=>`いまの参加者： ${list}`,poseSit:"座る",poseStand:"立つ",anger:"威嚇",soundOn:"音オン",soundMute:"ミュート",newRoom:"新部屋",share:"共有",clear:"クリア",help:"ヘルプ",lang:"日本語",leave:"退室",msgPlaceholder:"(15文字 / 10 words)",hintKeys:"Enterで送信  Sで座る",hint:"ドラッグでフィールド移動。ダブルタップ/ダブルクリックでネコが移動。ピンチでズーム。",joinTitle:"名前を入れて参加",joinDesc:"名前は3文字まで。URLが同じなら同じ部屋。落ち着いて遊ぶ場。",joinStart:"はじめる",joinHint:"音が出ないときは一度画面をタップしてからミュートを確かめる。",confirmLeave:"今の部屋から退室する。OK？",left:"退室した",notify:{join:n=>`${n} が入室した`,leave:n=>`${n} が退室した`,pinOn:"ピンを固定した",pinOff:"ピンを外した",noteSaved:"書き置きを残した",noteUpdated:"書き置きを更新した",noteCleared:"書き置きを消した",urlCopied:"リンクをコピーした。フレンドを招待できる",newRoomBy:n=>`${n} が新しい部屋を作成`,full:n=>`満員だ。${n}人まで`,online:"オンライン",offline:"オフライン。再接続待ち",errorAuth:"認証エラー。設定を確認"}},
+  en:{brand:"Black Cats Plaza",roomCount:n=>`🐈‍⬛ ${n}`,namesPeek:list=>`Players: ${list}`,poseSit:"Sit",poseStand:"Stand",anger:"Angry",soundOn:"Sound",soundMute:"Muted",newRoom:"New",share:"Share",clear:"Clear",help:"Help",lang:"English",leave:"Leave",msgPlaceholder:"(15 chars / 10 words)",hintKeys:"Enter to send  S to sit/stand",hint:"Drag to move the field. Double-tap/double-click to move your cat. Pinch to zoom.",joinTitle:"Enter name to join",joinDesc:"Up to 3 characters. Same URL, same room. A chill place.",joinStart:"Start",joinHint:"No sound? Tap once and toggle the bell.",confirmLeave:"Leave this room?",left:"Left",notify:{join:n=>`${n} joined`,leave:n=>`${n} left`,pinOn:"Pinned",pinOff:"Unpinned",noteSaved:"Note saved",noteUpdated:"Note updated",noteCleared:"Note cleared",urlCopied:"Link copied. Invite friends",newRoomBy:n=>`${n} created a new room`,full:n=>`Room is full (max ${n})`,online:"Online",offline:"Offline. Reconnecting",errorAuth:"Auth error"}}
 };
 let LANG="ja";
 
@@ -483,7 +441,7 @@ async function startJoin(){
 
 /* ========== 匿名ログイン ========== */
 initAuthOnBoot();
-async function initAuthOnBoot(){ try{ await signInAnonymously(auth); }catch(e){ console.error("[auth] anon failed:", e); toast(I18N[LANG].notify.errorAuth, 6000); } }
+async function initAuthOnBoot(){ try{ await signInAnonymously(auth); }catch(e){ console.error("[auth] anon failed]", e); toast(I18N[LANG].notify.errorAuth, 6000); } }
 onAuthStateChanged(auth, async u=>{ if(!u) return; uid=u.uid; if(joined && !mounted){ await initAfterAuth(); } });
 
 /* ========== 満員判定 & クリーンアップ ========== */
@@ -516,13 +474,12 @@ async function cleanupStalePlayers(){
   }catch(e){ console.warn("cleanupStalePlayers failed:", e); }
 }
 
-/* ========== 名前の強制同期（これが今回のキモ） ========== */
+/* ========== 名前の強制同期 ========== */
 async function forceNameSync(){
   try{
     const snap = await get(myRef());
     const want = normalizeName(me.name);
     if(!snap.exists()){
-      // まれな競合時、ノード自体が無ければ作り直す
       await set(myRef(), {
         name: want, x:me.x, y:me.y, dir:me.dir, pose:me.pose,
         msg:"", msgAt:0, pinMsg:me.pinMsg||"", pinAt:me.pinMsg?Date.now():0,
@@ -548,7 +505,7 @@ async function initAfterAuth(){
   ensureMineDom();
 
   await mountPresence(true);
-  await forceNameSync();              // ★ 参加直後に必ず name を主張
+  await forceNameSync();
 
   startLoop();
   subscribePlayers();
@@ -582,7 +539,7 @@ async function mountPresence(forceStand=false){
 window.addEventListener("visibilitychange", ()=>{ try{ update(myRef(), {lastActive:Date.now()}); }catch{} });
 window.addEventListener("pagehide",        ()=>{ try{ update(myRef(), {lastActive:Date.now()}); }catch{} });
 
-/* 再接続監視：復帰時にも name を必ず載せる */
+/* 再接続監視：復帰時にも name を再主張 */
 function monitorReconnect(){
   const conn = ref(db, ".info/connected");
   onValue(conn, async snap=>{
@@ -591,7 +548,6 @@ function monitorReconnect(){
       try{
         const s = await get(myRef());
         if(s.exists()){
-          // ★ lastActive と一緒に name も再主張
           await update(myRef(), { lastActive: Date.now(), name: normalizeName(me.name) });
         }else{
           await mountPresence(false);
@@ -704,7 +660,7 @@ function renderPlayer(pdom, data, isSelf){
   pdom.nameEl.style.display = decidedName ? "block":"none";
   if(decidedName && pdom.nameEl.textContent!==decidedName) pdom.nameEl.textContent=decidedName;
 
-  // 画面下端で反転
+  // 下端で反転
   const wr=world.getBoundingClientRect();
   const screenY = wr.top + (data.y??0.7)*wr.height;
   const visibleBottom = window.innerHeight - (bar.getBoundingClientRect().height||0);
@@ -774,7 +730,7 @@ pinBtn.addEventListener("click", ()=>{
     toast((LANG==="ja"?I18N.ja:I18N.en).notify.pinOff, 1800); return;
   }
   const typed=msgInput.value.trim(); const pick=typed?typed:(me.msg?me.msg:"");
-  if(!pick){ toast(LANG==="ja"?"書き置きする文がない":"Nothing to pin", 2200); return; }
+  if(!pick){ toast(LANG==="ja"?"ピンに入れる文がない":"Nothing to pin", 2200); return; }
   if(typed && !validateMessage(typed).ok){ toast(LANG==="ja"?"文字数の上限":"Too long", 2200); return; }
   me.pinMsg=pick; renderPinBtn();
   const mine=domMap.get(uid); if(mine){ mine.pinBubbleEl.textContent=pick; mine.pinBubbleEl.style.display="block"; }
@@ -846,7 +802,7 @@ function setZoomCentered(nz){
 zoomInBtn.addEventListener("click", ()=> setZoomCentered(zoom*1.15));
 zoomOutBtn.addEventListener("click", ()=> setZoomCentered(zoom/1.15));
 
-/* ホイールズーム */
+/* ホイールズーム（PC）は現状維持 */
 play.addEventListener("wheel", e=>{
   e.preventDefault();
   const r=play.getBoundingClientRect();
@@ -860,34 +816,39 @@ play.addEventListener("wheel", e=>{
   userPanned=true; applyView();
 }, {passive:false});
 
-/* ピンチズーム（二本指） */
+/* ピンチズーム（二本指）— ★ ピンチ改善：毎フレームの中点で固定 */
 let gesture=null, gesturing=false;
 play.addEventListener("touchstart", e=>{
   if(e.touches.length===2){
     e.preventDefault();
     gesturing=true;
     const [a,b]=e.touches;
-    const cx=(a.clientX+b.clientX)/2, cy=(a.clientY+b.clientY)/2;
     const dx=a.clientX-b.clientX, dy=a.clientY-b.clientY;
-    gesture={startDist:Math.hypot(dx,dy), startZoom:zoom, startPanX:panX, startPanY:panY, centerX:cx, centerY:cy};
+    gesture={startDist:Math.hypot(dx,dy), startZoom:zoom};
   }
 },{passive:false});
 play.addEventListener("touchmove", e=>{
   if(gesture && e.touches.length===2){
     e.preventDefault();
     const [a,b]=e.touches;
-    const cx=(a.clientX+b.clientX)/2, cy=(a.clientY+b.clientY)/2;
+    const cx=(a.clientX+b.clientX)/2, cy=(a.clientY+b.clientY)/2;   // 常に“現在の中点”
     const dx=a.clientX-b.clientX, dy=a.clientY-b.clientY;
     const dist=Math.hypot(dx,dy);
+    // 新しいズーム
     const nz=Math.max(ZMIN, Math.min(ZMAX, gesture.startZoom*(dist/gesture.startDist)));
-    const worldX=(gesture.centerX - gesture.startPanX)/gesture.startZoom;
+    // 中点が示すワールド座標を、拡大率変更前の状態で取得
+    const worldX=(cx - panX)/zoom;
+    const worldY=(cy - panY)/zoom;
+    // ズームを更新し、そのワールド点が中点に居続けるように pan を再計算
     zoom=nz;
     panX = cx - worldX*zoom;
     panY = cy - worldY*zoom;
     userPanned=true; applyView();
   }
 },{passive:false});
-play.addEventListener("touchend", e=>{ if(e.touches.length===0) { gesture=null; setTimeout(()=>{ gesturing=false; }, 0); }},{passive:true});
+play.addEventListener("touchend", e=>{
+  if(e.touches.length===0) { gesture=null; setTimeout(()=>{ gesturing=false; }, 0); }
+},{passive:true});
 
 /* ドラッグでパン＋ダブルクリック/ダブルタップで移動 */
 let panning=false, panStartX=0, panStartY=0, dragStartX=0, dragStartY=0;
@@ -954,7 +915,6 @@ function loop(){
   if(mounted && (t-lastSync)>=80){ safeUpdate({x:me.x,y:me.y}); lastSync=t; }
   if(mounted && (t-lastHeartbeat)>=HEARTBEAT_MS){
     const patch={ lastActive:Date.now() };
-    // ★ 60秒ごとに name も一緒に再主張（念のため）
     if(Date.now()-lastNameAssert >= NAME_REASSERT_MS){ patch.name = normalizeName(me.name); lastNameAssert = Date.now(); }
     safeUpdate(patch);
     lastHeartbeat=t;

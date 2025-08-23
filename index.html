@@ -208,18 +208,20 @@ const CAT_ANGRY_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/
 /* ========== 各種パラメータ ========== */
 const HEARTBEAT_MS   = 7000;
 const IDLE_MS        = 90*1000;
-const NOTE_TTL_MS    = 8*60*60*1000;   // 8h
+const NOTE_TTL_MS    = 8*60*60*1000;
 const EMO_SHOW_MS    = 3000;
-const ROOM_CAP       = 10;             // ここを増やせば上限も増える
+const ROOM_CAP       = 10;
 const MIGRATE_TTL_MS = 30000;
 const SPEED_PX_PER_S = 120;
 const NON_ASCII_LIMIT= 15;
 const BUBBLE_MS      = 60000;
 const ZMIN           = 0.4, ZMAX = 2.0;
-/* ★ 無反応を“退室扱い”にする閾値：1時間 */
+/* 無反応の退室扱い: 1h */
 const STALE_MS_PLAYERS = 60*60*1000;
+/* 名前の定期再主張間隔（過剰書込み防止） */
+const NAME_REASSERT_MS = 60*1000;
 
-/* ========== i18n（動的文言は applyLang 内で組み立て） ========== */
+/* ========== i18n ========== */
 const I18N={
   ja:{
     brand:"くろねこひろば",
@@ -375,7 +377,7 @@ let hasOwnNote=false;
 let uid=null, joined=false, mounted=false;
 let me={ name:"", x:0.5, y:0.7, dir:1, pose:"stand", msg:"", msgAt:0, pinMsg:"", emo:"none", emoAt:0 };
 let target={x:me.x,y:me.y};
-let lastSync=0, lastHeartbeat=0;
+let lastSync=0, lastHeartbeat=0, lastNameAssert=0;
 let zoom=1, panX=0, panY=0, userPanned=false;
 
 /* ========== util ========== */
@@ -407,7 +409,7 @@ function helpHtml(){
         <li>🖋️ 足元に書き置き（ひとり一件・更新可・<b>8時間で自動削除</b>/🗑️で消す）</li>
         <li>🪑 立つ/座る、💢 威嚇（3秒）</li>
         <li>🐈‍⬛ 参加者名表示、🔗 リンクコピー、🆕 新部屋、🚪 退室</li>
-        <li>部屋は最大<b>${ROOM_CAP}人</b>。<b>1時間無反応のネコは自動退室扱い</b>（インアプリブラウザの閉じ忘れ対策）</li>
+        <li>部屋は最大<b>${ROOM_CAP}人</b>。<b>1時間無反応のネコは自動退室扱い</b></li>
       </ul>`;
   }else{
     return `<h3 style="margin:0 0 8px">How to play</h3>
@@ -415,11 +417,11 @@ function helpHtml(){
         <li><b>Drag to move the field</b>. Two fingers to zoom & pan</li>
         <li>📍 <b>Double-tap/double-click to move your cat</b></li>
         <li>📨 English up to 10 words / others up to 15 chars. Fades in 60s</li>
-        <li>📌 Small status above head (toggle to clear)</li>
-        <li>🖋️ Note near feet (one per person, editable, <b>auto-clears in 8h</b> / 🗑️ to delete)</li>
+        <li>📌 Status above head (toggle to clear)</li>
+        <li>🖋️ Note near feet (one per person, <b>auto-clears in 8h</b>)</li>
         <li>🪑 Sit/Stand, 💢 Angry (3s)</li>
         <li>🐈‍⬛ Show names, 🔗 copy link, 🆕 new room, 🚪 leave</li>
-        <li>Max <b>${ROOM_CAP}</b> players. <b>Inactive for 1h = auto-removed</b> (in-app browser safety)</li>
+        <li>Max <b>${ROOM_CAP}</b>. <b>Inactive for 1h = auto-removed</b></li>
       </ul>`;
   }
 }
@@ -429,13 +431,13 @@ function joinGuideHtml(){
       <div>📌 ステータス 頭上に小さく固定。もう一度📌タップで解除</div>
       <div>🖋️ 書置 足元に小さく残す。ひとり一件。更新可。🗑️でクリア。8時間で自動削除</div>
       <div>🖱️ <b>ドラッグでフィールド移動</b>・<b>ダブルクリックでネコ移動</b>。📱はダブルタップ＋ピンチでズーム</div>
-      <div>👥 この部屋の上限は <b>${ROOM_CAP}人</b>。<b>1時間無反応のネコは自動退室扱い</b></div>
+      <div>👥 上限 <b>${ROOM_CAP}人</b>。<b>1時間無反応のネコは自動退室扱い</b></div>
       <div>🔗 でリンクをコピーしフレンドを招待</div>`;
   }else{
-    return `<div>📨 Chat: 10 words in English / 15 chars in others. Fades in 60s</div>
-      <div>📌 Small status above head. Tap again to clear</div>
-      <div>🖋️ Note near feet (one per person). Auto-clears in 8h</div>
-      <div>🖱️ <b>Drag to move</b>, double-click/tap to move your cat, pinch to zoom</div>
+    return `<div>📨 Chat: 10 words / 15 chars. Fades in 60s</div>
+      <div>📌 Small status above head (toggle to clear)</div>
+      <div>🖋️ One note near feet. Auto-clears in 8h</div>
+      <div>🖱️ <b>Drag</b>, double-click/tap to move, pinch to zoom</div>
       <div>👥 Max <b>${ROOM_CAP}</b>. <b>Inactive for 1h = auto-removed</b></div>
       <div>🔗 Copy link to invite friends</div>`;
   }
@@ -455,10 +457,9 @@ function applyLang(){
   lblLang.textContent  =" "+T.lang;
   lblLeave.textContent =" "+T.leave;
   langIcon.textContent=(LANG==="ja")?"🇯🇵":"🇺🇸";
-  // 参加モーダルの文言も更新
   document.getElementById("joinTitle").textContent=T.joinTitle;
   document.getElementById("joinDesc").textContent=T.joinDesc;
-  document.getElementById("joinHint").textContent=LANG==="ja"?"音が出ないときは一度画面をタップしてからミュートを確かめる。":"No sound? Tap once and toggle the bell.";
+  document.getElementById("joinHint").textContent=(LANG==="ja")?"音が出ないときは一度画面をタップしてからミュートを確かめる。":"No sound? Tap once and toggle the bell.";
   document.getElementById("joinGuide").innerHTML = joinGuideHtml();
 }
 applyLang();
@@ -485,8 +486,7 @@ initAuthOnBoot();
 async function initAuthOnBoot(){ try{ await signInAnonymously(auth); }catch(e){ console.error("[auth] anon failed:", e); toast(I18N[LANG].notify.errorAuth, 6000); } }
 onAuthStateChanged(auth, async u=>{ if(!u) return; uid=u.uid; if(joined && !mounted){ await initAfterAuth(); } });
 
-/* ========== 満員判定とクリーンアップ ========== */
-/* active (=1h以内更新)だけ数える */
+/* ========== 満員判定 & クリーンアップ ========== */
 async function ensureCapacity(){
   try{
     const snap=await get(playersRef);
@@ -500,7 +500,6 @@ async function ensureCapacity(){
     return nActive < ROOM_CAP;
   }catch{ return true; }
 }
-/* 1時間以上古いプレイヤーを削除（ルールで delete 許可があると実削除、無くても失敗は無視） */
 async function cleanupStalePlayers(){
   try{
     const snap=await get(playersRef);
@@ -517,16 +516,40 @@ async function cleanupStalePlayers(){
   }catch(e){ console.warn("cleanupStalePlayers failed:", e); }
 }
 
+/* ========== 名前の強制同期（これが今回のキモ） ========== */
+async function forceNameSync(){
+  try{
+    const snap = await get(myRef());
+    const want = normalizeName(me.name);
+    if(!snap.exists()){
+      // まれな競合時、ノード自体が無ければ作り直す
+      await set(myRef(), {
+        name: want, x:me.x, y:me.y, dir:me.dir, pose:me.pose,
+        msg:"", msgAt:0, pinMsg:me.pinMsg||"", pinAt:me.pinMsg?Date.now():0,
+        emo:"none", emoAt:0, lastActive:Date.now()
+      });
+      try{ onDisconnect(myRef()).remove(); }catch{}
+      return;
+    }
+    const cur = (snap.val()||{}).name || "";
+    if(normalizeName(cur) !== want){
+      await update(myRef(), { name: want, lastActive: Date.now() });
+    }
+  }catch(e){ console.warn("forceNameSync failed:", e); }
+}
+
 /* ========== 初期化 ========== */
 async function initAfterAuth(){
-  // 先に掃除 → 満員チェック
   await cleanupStalePlayers();
   const ok=await ensureCapacity(); if(!ok){ showFull(); return; }
 
   me.x=Math.random()*0.8+0.1; me.y=Math.random()*0.4+0.5; target={x:me.x,y:me.y};
   centerWorld(); applyView();
   ensureMineDom();
+
   await mountPresence(true);
+  await forceNameSync();              // ★ 参加直後に必ず name を主張
+
   startLoop();
   subscribePlayers();
   subscribeNotes();
@@ -535,7 +558,6 @@ async function initAfterAuth(){
   spawnPulse(me.x, me.y);
   mounted=true;
 
-  // 保険で5分毎に掃除
   setInterval(()=>cleanupStalePlayers(), 5*60*1000);
 }
 
@@ -558,9 +580,9 @@ async function mountPresence(forceStand=false){
   try{ onDisconnect(myRef()).remove(); }catch(e){ console.warn("[rtdb] onDisconnect set failed:", e); }
 }
 window.addEventListener("visibilitychange", ()=>{ try{ update(myRef(), {lastActive:Date.now()}); }catch{} });
-window.addEventListener("pagehide", ()=>{ try{ update(myRef(), {lastActive:Date.now()}); }catch{} });
+window.addEventListener("pagehide",        ()=>{ try{ update(myRef(), {lastActive:Date.now()}); }catch{} });
 
-/* 再接続監視 */
+/* 再接続監視：復帰時にも name を必ず載せる */
 function monitorReconnect(){
   const conn = ref(db, ".info/connected");
   onValue(conn, async snap=>{
@@ -569,9 +591,11 @@ function monitorReconnect(){
       try{
         const s = await get(myRef());
         if(s.exists()){
-          await update(myRef(), { lastActive: Date.now() });
+          // ★ lastActive と一緒に name も再主張
+          await update(myRef(), { lastActive: Date.now(), name: normalizeName(me.name) });
         }else{
           await mountPresence(false);
+          await forceNameSync();
         }
       }catch(e){ console.warn("reconnect ensure presence failed:", e); }
     }
@@ -589,7 +613,6 @@ function subscribePlayers(){
     latestPlayers=data;
     const ids=Object.keys(data);
 
-    // アクティブ人数で表示
     const now=Date.now();
     let nActive=0;
     for(const id of ids){
@@ -681,7 +704,7 @@ function renderPlayer(pdom, data, isSelf){
   pdom.nameEl.style.display = decidedName ? "block":"none";
   if(decidedName && pdom.nameEl.textContent!==decidedName) pdom.nameEl.textContent=decidedName;
 
-  // 下端でバブル反転
+  // 画面下端で反転
   const wr=world.getBoundingClientRect();
   const screenY = wr.top + (data.y??0.7)*wr.height;
   const visibleBottom = window.innerHeight - (bar.getBoundingClientRect().height||0);
@@ -691,6 +714,7 @@ function renderPlayer(pdom, data, isSelf){
   pdom.bubbleEl.classList.toggle("bump", pdom._flip);
   pdom.pinBubbleEl.classList.toggle("bump", pdom._flip);
 
+  // チャット
   const raw=data.msg||""; const msgAt=Number(data.msgAt||0);
   if(raw && msgAt>0){
     const nowAbs=Date.now(); const REPLAY_GUARD_MS=4000;
@@ -704,6 +728,7 @@ function renderPlayer(pdom, data, isSelf){
     }
   }else{ pdom.bubbleEl.style.display="none"; }
 
+  // ピン
   const pinText=data.pinMsg||"";
   pdom.pinBubbleEl.style.display=pinText?"block":"none";
   if(pinText) pdom.pinBubbleEl.textContent=pinText;
@@ -749,7 +774,7 @@ pinBtn.addEventListener("click", ()=>{
     toast((LANG==="ja"?I18N.ja:I18N.en).notify.pinOff, 1800); return;
   }
   const typed=msgInput.value.trim(); const pick=typed?typed:(me.msg?me.msg:"");
-  if(!pick){ toast(LANG==="ja"?"ピンに入れる文がない":"Nothing to pin", 2200); return; }
+  if(!pick){ toast(LANG==="ja"?"書き置きする文がない":"Nothing to pin", 2200); return; }
   if(typed && !validateMessage(typed).ok){ toast(LANG==="ja"?"文字数の上限":"Too long", 2200); return; }
   me.pinMsg=pick; renderPinBtn();
   const mine=domMap.get(uid); if(mine){ mine.pinBubbleEl.textContent=pick; mine.pinBubbleEl.style.display="block"; }
@@ -821,7 +846,7 @@ function setZoomCentered(nz){
 zoomInBtn.addEventListener("click", ()=> setZoomCentered(zoom*1.15));
 zoomOutBtn.addEventListener("click", ()=> setZoomCentered(zoom/1.15));
 
-/* ホイールズーム（カーソル固定） */
+/* ホイールズーム */
 play.addEventListener("wheel", e=>{
   e.preventDefault();
   const r=play.getBoundingClientRect();
@@ -927,7 +952,13 @@ function loop(){
   ensureMineDom();
 
   if(mounted && (t-lastSync)>=80){ safeUpdate({x:me.x,y:me.y}); lastSync=t; }
-  if(mounted && (t-lastHeartbeat)>=HEARTBEAT_MS){ safeUpdate({lastActive:Date.now()}); lastHeartbeat=t; }
+  if(mounted && (t-lastHeartbeat)>=HEARTBEAT_MS){
+    const patch={ lastActive:Date.now() };
+    // ★ 60秒ごとに name も一緒に再主張（念のため）
+    if(Date.now()-lastNameAssert >= NAME_REASSERT_MS){ patch.name = normalizeName(me.name); lastNameAssert = Date.now(); }
+    safeUpdate(patch);
+    lastHeartbeat=t;
+  }
   requestAnimationFrame(loop);
 }
 
@@ -943,10 +974,7 @@ function subscribeNotes(){
       const v=ch.val()||{}; const ts=Number(v.updatedAt||v.at||0);
       const alive=ts>0 && (nowMs-ts)<=NOTE_TTL_MS; const id=ch.key;
       if(alive){ upsertNoteDom(id,v); seen.add(id); if(id===uid) hasOwnNote=true; }
-      else{
-        // 自動掃除（ルールが許せば他人の分も消える。失敗は無視）
-        remove(noteRefOf(id)).catch(()=>{});
-      }
+      else{ remove(noteRefOf(id)).catch(()=>{}); }
     });
     for(const [id,el] of notesDomMap){ if(!seen.has(id)){ el.remove(); notesDomMap.delete(id); } }
     noteClearBtn.disabled=!hasOwnNote;

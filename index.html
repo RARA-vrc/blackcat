@@ -89,36 +89,6 @@
 
   .spawn{position:absolute; width:26px; height:26px; border:2px solid var(--accent); border-radius:999px; transform:translate(-50%,-50%); pointer-events:none; animation:spawnPulse 1.6s ease-out infinite; z-index:4}
   @keyframes spawnPulse{0%{transform:translate(-50%,-50%) scale(.6); opacity:.9} 100%{transform:translate(-50%,-50%) scale(2.2); opacity:0}}
-
-  /* ===== お知らせ（右下・✕で閉じられる） ===== */
-  #hint{position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom)); background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.92; z-index:4; display:flex; align-items:center; gap:8px}
-  #hint button{background:transparent; border:0; color:#fff; font-weight:900; cursor:pointer; padding:0 2px}
-
-  /* ===== 参加モーダル ===== */
-  #join{position:fixed; inset:0; background:rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center; z-index:100}
-  #join .card{width:min(92vw,560px); border:1px solid var(--border); border-radius:18px; background:#fff; padding:18px 16px 16px; box-shadow:0 18px 60px rgba(0,0,0,.08)}
-  #join h2{margin:0 0 8px; font-size:18px}
-  #join p{margin:0 0 12px; font-size:14px; color:#555; line-height:1.6}
-  #join .row{display:flex; gap:10px}
-  #join input{flex:1; font-size:18px; padding:12px 12px; border:1px solid var(--border); border-radius:12px; outline:none; background:#fff}
-  #join input:focus-visible{outline:var(--ring) solid var(--ringColor); outline-offset:2px}
-  #join button{padding:12px 14px; border-radius:12px; background:var(--accent); color:#fff; font-weight:800; font-size:16px; border:0; cursor:pointer; white-space:nowrap}
-  #warn{color:#b40000; font-size:13px; min-height:1.4em}
-  .subtle{font-size:12px; color:#6b7280}
-  #joinGuide{font-size:12px; color:#374151; background:#fafafa; border:1px solid var(--border); padding:10px 10px; border-radius:12px; line-height:1.65; margin-top:8px}
-  #joinGuide b{color:#111}
-
-  #namesPeek{position:fixed; left:50%; top:calc(8px + env(safe-area-inset-top)); transform:translateX(-50%); z-index:4; background:rgba(0,0,0,.84); color:#fff; font-size:13px; border-radius:12px; padding:8px 10px; max-width:90vw; white-space:normal; display:none; pointer-events:none}
-
-  #migrate{position:fixed; left:50%; top:64px; transform:translateX(-50%); z-index:50; background:#111; color:#fff; border-radius:12px; padding:8px 10px; font-size:14px; display:none; align-items:center; gap:8px}
-  #migrate .go{border:0; background:#fff; color:#111; font-weight:800; padding:6px 10px; border-radius:10px; cursor:pointer}
-  #migrate .close{border:0; background:transparent; color:#fff; font-weight:800; padding:4px 8px; cursor:pointer}
-
-  #full{position:fixed; inset:0; background:rgba(255,255,255,.9); display:none; align-items:center; justify-content:center; z-index:200}
-
-  @media (prefers-reduced-motion: reduce){
-    .p{transition:none} .join-burst{display:none} .spawn{animation:none} .ping{animation:none; display:none}
-  }
 </style>
 </head>
 <body>
@@ -158,7 +128,7 @@
   <div id="bar">
     <div id="msgWrap">
       <input id="msg" type="text" inputmode="text" autocomplete="off" placeholder="(15文字 / 10 words)" aria-label="メッセージ入力">
-      <div id="helper"><span id="hintLang">非英語：0/15</span><span id="hintKeys">Enter送信 / Sで座る</span></div>
+      <div id="helper"><span id="hintLang">非英語：0/15</span><span id="hintKeys">Enterで送信  Sで座る</span></div>
     </div>
     <button id="pinBtn"  class="btn iconOnly" title="ピン留め"><span class="icon">📌</span></button>
     <button id="noteBtn" class="btn iconOnly" title="書き置き"><span class="icon">🖋️</span></button>
@@ -438,7 +408,10 @@ langBtn.addEventListener("click", ()=>{ LANG=(LANG==="ja")?"en":"ja"; applyLang(
 
 worldLabel.textContent=`room: ${WORLD_ID}`;
 
-/* ========== 参加 ========== */
+/* ========== 参加（★保存された名前の自動投入を追加） ========== */
+const savedName = localStorage.getItem("blackcat_name") || "";
+if(savedName) nameInput.value = normalizeName(savedName);
+
 nameInput.addEventListener("input", ()=>{ const n=nameInput.value.trim(); if([...n].length>3) nameInput.value=Array.from(n).slice(0,3).join(""); });
 enterBtn.addEventListener("click", startJoin);
 nameInput.addEventListener("keydown", e=>{ if(e.key==="Enter") startJoin(); });
@@ -448,6 +421,7 @@ async function startJoin(){
   if(!n){ warn.textContent=LANG==="ja"?"1〜3文字":"1–3 characters"; return; }
   warn.textContent="";
   me.name=n; joined=true; me.pose="stand"; me.pinMsg="";
+  localStorage.setItem("blackcat_name", n); // ★追加：次回自動入力
   join.style.display="none";
   if(uid && !mounted){ await initAfterAuth(); }
 }
@@ -466,7 +440,7 @@ async function initAfterAuth(){
   await mountPresence(true);
   startLoop();
   subscribePlayers();
-  subscribeNotes();   // ★ ここが未定義で落ちていた
+  subscribeNotes();
   subscribeMeta();
   monitorReconnect();
   spawnPulse(me.x, me.y);
@@ -742,6 +716,8 @@ function setZoomCentered(nz){
 }
 zoomInBtn.addEventListener("click", ()=> setZoomCentered(zoom*1.15));
 zoomOutBtn.addEventListener("click", ()=> setZoomCentered(zoom/1.15));
+
+/* ホイールズーム（カーソル固定） */
 play.addEventListener("wheel", e=>{
   e.preventDefault();
   const r=play.getBoundingClientRect();
@@ -755,7 +731,7 @@ play.addEventListener("wheel", e=>{
   userPanned=true; applyView();
 }, {passive:false});
 
-/* ピンチズーム */
+/* ピンチズーム（二本指） */
 let gesture=null, gesturing=false;
 play.addEventListener("touchstart", e=>{
   if(e.touches.length===2){
@@ -855,7 +831,7 @@ function loop(){
 /* ========== 安全更新 ========== */
 async function safeUpdate(patch){ if(!uid || !mounted) return; try{ await update(myRef(), patch); }catch(e){ console.error("[rtdb] update failed:", patch, e); } }
 
-/* ========== 書き置き購読（関数定義を追加） ========== */
+/* ========== 書き置き購読 ========== */
 const notesDomMap=new Map();
 function subscribeNotes(){
   onValue(notesRootRef(), snap=>{
@@ -955,7 +931,6 @@ helpBtn.addEventListener("click", ()=>{
 })();
 function renderMuteButton(){ soundIcon.textContent = muted ? "🔇" : "🔔"; lblSound.textContent = " " + (muted ? (LANG==="ja"?"ミュート":"Muted") : (LANG==="ja"?"音オン":"Sound")); }
 muteBtn.addEventListener("click", ()=>{ muted=!muted; localStorage.setItem("yuru_mute", muted ? "1":"0"); if(masterGain) masterGain.gain.value = muted ? 0 : 0.24; renderMuteButton(); });
-
 </script>
 </body>
 </html>

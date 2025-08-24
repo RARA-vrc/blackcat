@@ -6,6 +6,12 @@
 <title>くろねこひろば</title>
 <meta name="color-scheme" content="light only">
 
+<!-- ▼ タブアイコン（favicon / iOS用アイコン） -->
+<link rel="icon" type="image/png" sizes="any" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png">
+<link rel="shortcut icon" type="image/png" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png">
+<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png">
+<!-- ▲ ここまで追記 -->
+
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png" as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png"  as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/angerCAT.png"    as="image" crossorigin>
@@ -23,7 +29,6 @@
   body,button,input{touch-action:manipulation}
   #app{position:fixed; inset:0; display:flex; flex-direction:column}
 
-  /* ===== ヘッダ ===== */
   header{position:sticky; top:0; z-index:50; padding:calc(env(safe-area-inset-top)+4px) 10px 8px; padding-right:calc(10px + env(safe-area-inset-right)); border-bottom:1px solid var(--border); background:var(--panel)}
   .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px}
   .brand{display:flex; align-items:center; gap:10px; min-width:0}
@@ -43,21 +48,18 @@
   .txt{display:inline-block}
   @media (max-width:940px){ .btn.ghost .txt{display:none} }
 
-  /* ===== プレイ領域 ===== */
   #play{position:relative; flex:1; overflow:hidden; background-image:radial-gradient(circle at 1px 1px,#f1f3f5 1px,transparent 0), radial-gradient(1200px 420px at 50% 120%, #f7f7f7 0%, transparent 60%); background-size:18px 18px, auto; user-select:none; touch-action:none; cursor:grab}
   #play.dragging{cursor:grabbing}
   #worldWrap{position:absolute; inset:0; transform-origin:0 0; will-change:transform}
   #world{position:absolute; left:0; top:0; width:100vmax; height:100vmax; border:2px dashed #e5e7eb; border-radius:16px; box-shadow:0 0 0 6px rgba(255,255,255,.6) inset}
   #notesLayer{position:absolute; inset:0; pointer-events:none; z-index:0}
 
-  /* ===== 入力バー ===== */
   #bar{height:var(--barH); display:flex; align-items:center; gap:8px; border-top:1px solid var(--border); background:var(--panel); padding:8px 10px; padding-bottom:calc(8px + env(safe-area-inset-bottom)); overflow:hidden}
   #msgWrap{flex:1 1 auto; display:flex; align-items:center; gap:8px; min-width:0; overflow:hidden; white-space:nowrap}
   #msg{flex:1 1 auto; min-width:160px; font-size:16px; padding:8px 10px; border:1px solid var(--border); border-radius:12px; outline:none; background:#fff; height:38px; line-height:22px; white-space:nowrap}
   #helper{flex:0 0 auto; display:flex; align-items:center; gap:8px; font-size:12px; color:#6b7280; max-width:34%; overflow:hidden; text-overflow:ellipsis; user-select:none}
   @media (max-width:980px){ #helper{display:none} }
 
-  /* ===== レイヤ順 ===== */
   .p{position:absolute; width:78px; height:78px; transform:translate(-50%, -80%); z-index:10; will-change:left,top}
   .p.idle{opacity:.7}
   .catImg{width:78px; height:78px; display:block; object-fit:contain; pointer-events:none; transition:transform .18s ease; position:relative; z-index:0}
@@ -74,7 +76,7 @@
 
   .bubble{position:absolute; left:50%; transform:translateX(-50%); background:#fff; color:#111; border:1px solid var(--border); border-radius:12px; padding:8px 10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:min(86vw,520px); box-shadow:0 8px 22px rgba(0,0,0,.06); pointer-events:none; display:none}
   .bubble.chat{bottom:94px; font-size:14px; z-index:30}
-  .bubble.pin{bottom:122px; background:var(--pin-bg); border-color:var(--pin-bd); font-size:0.66em; padding:6px 9px; z-index:10}
+  .bubble.pin{bottom:122px; background:var(--pin-bg); border-color:var(--pin-bd); font-size:12px; z-index:26}
   .bubble.chat.bump{bottom:148px}
   .bubble.pin.bump{bottom:182px}
 
@@ -90,11 +92,9 @@
   .spawn{position:absolute; width:26px; height:26px; border:2px solid var(--accent); border-radius:999px; transform:translate(-50%,-50%); pointer-events:none; animation:spawnPulse 1.6s ease-out infinite; z-index:4}
   @keyframes spawnPulse{0%{transform:translate(-50%,-50%) scale(.6); opacity:.9} 100%{transform:translate(-50%,-50%) scale(2.2); opacity:0}}
 
-  /* ===== お知らせ ===== */
   #hint{position:fixed; right:10px; bottom:calc(var(--barH) + 10px + env(safe-area-inset-bottom)); background:#000; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.92; z-index:4; display:flex; align-items:center; gap:8px}
   #hint button{background:transparent; border:0; color:#fff; font-weight:900; cursor:pointer; padding:0 2px}
 
-  /* ===== 参加モーダル ===== */
   #join{position:fixed; inset:0; background:rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center; z-index:100}
   #join .card{width:min(92vw,560px); border:1px solid var(--border); border-radius:18px; background:#fff; padding:18px 16px 16px; box-shadow:0 18px 60px rgba(0,0,0,.08)}
   #join h2{margin:0 0 8px; font-size:18px}
@@ -200,12 +200,12 @@
 <div id="full" style="display:none"></div>
 
 <script type="module">
-/* ========== 画像URL ========== */
+/* ===== 画像URL ===== */
 const CAT_STAND_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png";
 const CAT_SIT_URL   = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png";
 const CAT_ANGRY_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/angerCAT.png";
 
-/* ========== 各種パラメータ ========== */
+/* ===== パラメータ ===== */
 const HEARTBEAT_MS   = 7000;
 const IDLE_MS        = 90*1000;
 const NOTE_TTL_MS    = 8*60*60*1000;
@@ -216,19 +216,17 @@ const SPEED_PX_PER_S = 120;
 const NON_ASCII_LIMIT= 15;
 const BUBBLE_MS      = 60000;
 const ZMIN           = 0.4, ZMAX = 2.0;
-/* 無反応の退室扱い: 1h */
 const STALE_MS_PLAYERS = 60*60*1000;
-/* 名前の定期再主張間隔 */
 const NAME_REASSERT_MS = 60*1000;
 
-/* ========== i18n ========== */
+/* ===== i18n ===== */
 const I18N={
   ja:{brand:"くろねこひろば",roomCount:n=>`🐈‍⬛ ${n}`,namesPeek:list=>`いまの参加者： ${list}`,poseSit:"座る",poseStand:"立つ",anger:"威嚇",soundOn:"音オン",soundMute:"ミュート",newRoom:"新部屋",share:"共有",clear:"クリア",help:"ヘルプ",lang:"日本語",leave:"退室",msgPlaceholder:"(15文字 / 10 words)",hintKeys:"Enterで送信  Sで座る",hint:"ドラッグでフィールド移動。ダブルタップ/ダブルクリックでネコが移動。ピンチでズーム。",joinTitle:"名前を入れて参加",joinDesc:"名前は3文字まで。URLが同じなら同じ部屋。落ち着いて遊ぶ場。",joinStart:"はじめる",joinHint:"音が出ないときは一度画面をタップしてからミュートを確かめる。",confirmLeave:"今の部屋から退室する。OK？",left:"退室した",notify:{join:n=>`${n} が入室した`,leave:n=>`${n} が退室した`,pinOn:"ピンを固定した",pinOff:"ピンを外した",noteSaved:"書き置きを残した",noteUpdated:"書き置きを更新した",noteCleared:"書き置きを消した",urlCopied:"リンクをコピーした。フレンドを招待できる",newRoomBy:n=>`${n} が新しい部屋を作成`,full:n=>`満員だ。${n}人まで`,online:"オンライン",offline:"オフライン。再接続待ち",errorAuth:"認証エラー。設定を確認"}},
   en:{brand:"Black Cats Plaza",roomCount:n=>`🐈‍⬛ ${n}`,namesPeek:list=>`Players: ${list}`,poseSit:"Sit",poseStand:"Stand",anger:"Angry",soundOn:"Sound",soundMute:"Muted",newRoom:"New",share:"Share",clear:"Clear",help:"Help",lang:"English",leave:"Leave",msgPlaceholder:"(15 chars / 10 words)",hintKeys:"Enter to send  S to sit/stand",hint:"Drag to move the field. Double-tap/double-click to move your cat. Pinch to zoom.",joinTitle:"Enter name to join",joinDesc:"Up to 3 characters. Same URL, same room. A chill place.",joinStart:"Start",joinHint:"No sound? Tap once and toggle the bell.",confirmLeave:"Leave this room?",left:"Left",notify:{join:n=>`${n} joined`,leave:n=>`${n} left`,pinOn:"Pinned",pinOff:"Unpinned",noteSaved:"Note saved",noteUpdated:"Note updated",noteCleared:"Note cleared",urlCopied:"Link copied. Invite friends",newRoomBy:n=>`${n} created a new room`,full:n=>`Room is full (max ${n})`,online:"Online",offline:"Offline. Reconnecting",errorAuth:"Auth error"}}
 };
 let LANG="ja";
 
-/* ========== Firebase ========== */
+/* ===== Firebase ===== */
 const firebaseConfig = {
   apiKey:"AIzaSyCUpt4XLfSSZLt0VhJon926--c-I2tRMkE",
   authDomain:"blackcat-67716.firebaseapp.com",
@@ -240,7 +238,7 @@ const firebaseConfig = {
   measurementId:"G-R47HW00266"
 };
 
-/* ========== ルームID ========== */
+/* ===== ルームID ===== */
 const url=new URL(location.href);
 const qp=url.searchParams.get("room");
 const hp=(location.hash.match(/room=([^&]+)/)||[])[1];
@@ -248,18 +246,16 @@ function makeRoomId(){ const t=Date.now().toString(36).slice(-6); const r=crypto
 function setURLRoom(id){ const u=new URL(location.href); u.searchParams.set("room",id); u.hash=u.hash.replace(/room=[^&]+&?/,'').replace(/[#&]$/,''); history.replaceState({}, "", u.toString()); }
 let WORLD_ID=qp||hp||null; if(!WORLD_ID){ WORLD_ID=makeRoomId(); setURLRoom(WORLD_ID); }
 
-/* ========== Firebase SDK ========== */
+/* ===== Firebase SDK ===== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, set, update, onDisconnect, get, remove }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { getAuth, signInAnonymously, onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, onValue, set, update, onDisconnect, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const app=initializeApp(firebaseConfig);
 const db=getDatabase(app);
 const auth=getAuth(app);
 
-/* ========== DOM 取得 ========== */
+/* ===== DOM ===== */
 const play=document.getElementById("play");
 const worldWrap=document.getElementById("worldWrap");
 const world=document.getElementById("world");
@@ -316,20 +312,20 @@ const leaveBtn=document.getElementById("leaveBtn");
 worldLabel.textContent=`room: ${WORLD_ID}`;
 countDock.textContent="🐈‍⬛ 0";
 
-/* ========== サウンド ========== */
+/* ===== サウンド ===== */
 let AC=null, masterGain=null; let muted=localStorage.getItem("yuru_mute")==="1";
 function unlockAudio(){ const Ctx=window.AudioContext||window.webkitAudioContext; if(!AC && Ctx){ AC=new Ctx(); masterGain=AC.createGain(); masterGain.gain.value=muted?0:0.24; masterGain.connect(AC.destination);} if(AC&&AC.state==="suspended") AC.resume(); }
 function setupAudioUnlock(){ const once=()=>{unlockAudio(); document.removeEventListener("pointerdown", once); document.removeEventListener("keydown", once);}; document.addEventListener("pointerdown", once, {passive:true}); document.addEventListener("keydown", once); enterBtn.addEventListener("click", unlockAudio, {once:true}); } setupAudioUnlock();
-function tone({freq=880,dur=0.12,type="sine",vol=0.7,attack=0.005,release=0.12}={}){ if(!AC) return; const o=AC.createOscillator(); const g=AC.createGain(); o.type=type; o.frequency.value=freq; o.connect(g); g.connect(masterGain||AC.destination); const t=AC.currentTime; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+attack); g.gain.exponentialRampToValueAtTime(0.0001,t+attack+release); o.start(t); o.stop(t+dur+0.25); }
+function tone({freq=880,dur=0.12,type="sine",vol=0.7,attack=0.005,release=0.12}={}){ if(!AC) return; const o=AC.createOscillator(); const g=AC.createGain(); o.type=type; o.frequency.value=freq; o.connect(g); g.connect(masterGain||AC.destination); const t=AC.currentTime; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+attack); g.gain.exponentialRampToValueAtTime(0.0001,t+attack+release); o.start(t); o.stop(t+dur+0.25); } /* ← タイポ修正済み */
 function playLogin(){ if(!muted&&AC){ tone({freq:880,type:"triangle",vol:0.55,dur:0.12}); setTimeout(()=>tone({freq:1320,type:"triangle",vol:0.55,dur:0.12}),140); } }
 function playMessage(){ if(!muted&&AC){ tone({freq:700,type:"sine",vol:0.5,dur:0.09}); } }
 
-/* お知らせ */
+/* ===== お知らせ ===== */
 function notify(text, ttl=90000){ hintText.textContent=text; hintBox.style.display="flex"; hintBox.style.opacity=.95; clearTimeout(notify._t); notify._t=setTimeout(()=>{ hintBox.style.display="none"; }, ttl); }
 function toast(text, ttl=2200){ notify(text, ttl); }
 hintClose.addEventListener("click", ()=>{ hintBox.style.display="none"; clearTimeout(notify._t); });
 
-/* ========== 状態 ========== */
+/* ===== 状態 ===== */
 const lastShownName=new Map();
 let hasOwnNote=false;
 let uid=null, joined=false, mounted=false;
@@ -338,7 +334,7 @@ let target={x:me.x,y:me.y};
 let lastSync=0, lastHeartbeat=0, lastNameAssert=0;
 let zoom=1, panX=0, panY=0, userPanned=false;
 
-/* ========== util ========== */
+/* ===== util ===== */
 const clamp01=v=>Math.max(0,Math.min(1,v));
 const isASCIIish=s=>/^[\x00-\x7F]+$/.test(s);
 const countWordsASCII=s=>s.trim().split(/\s+/).filter(Boolean).length;
@@ -347,7 +343,7 @@ function toPxLocal(nx,ny){ const {w,h}=worldSize(); return {x:nx*w, y:ny*h}; }
 function toNormFromClient(cx,cy){ const r=world.getBoundingClientRect(); return {x:clamp01((cx-r.left)/r.width), y:clamp01((cy-r.top)/r.height)}; }
 function normalizeName(s){ if(typeof s!=="string") return ""; const t=s.trim(); return t.length?Array.from(t).slice(0,3).join(""):""; }
 
-/* ========== Refs ========== */
+/* ===== Refs ===== */
 function playersRefOf(room){ return ref(db, `worlds/${room}/players`); }
 function myRef(){ return ref(db, `worlds/${WORLD_ID}/players/${uid}`); }
 function notesRootRef(){ return ref(db, `worlds/${WORLD_ID}/notes`); }
@@ -355,7 +351,7 @@ function noteRefOf(u){ return ref(db, `worlds/${WORLD_ID}/notes/${u}`); }
 function metaRef(){ return ref(db, `worlds/${WORLD_ID}/meta`); }
 const playersRef=playersRefOf(WORLD_ID);
 
-/* ========== 言語適用（動的ヘルプ/ガイド） ========== */
+/* ===== i18n適用 ===== */
 function helpHtml(){
   if(LANG==="ja"){
     return `<h3 style="margin:0 0 8px">使い方</h3>
@@ -364,40 +360,38 @@ function helpHtml(){
         <li>📍 <b>ダブルクリック/ダブルタップでネコ移動</b></li>
         <li>📨 英語10語/日本語など15文字。60秒で消える</li>
         <li>📌 頭上固定（再押しで解除）</li>
-        <li>🖋️ 足元に書き置き（ひとり一件・更新可・<b>8時間で自動削除</b>/🗑️で消す）</li>
+        <li>🖋️ 足元に書き置き（ひとり一件・更新可・<b>8時間で自動削除</b>）</li>
         <li>🪑 立つ/座る、💢 威嚇（3秒）</li>
-        <li>🐈‍⬛ 参加者名表示、🔗 リンクコピー、🆕 新部屋、🚪 退室</li>
-        <li>部屋は最大<b>${ROOM_CAP}人</b>。<b>1時間無反応のネコは自動退室扱い</b></li>
+        <li>🐈‍⬛ 名簿表示、🔗 共有、🆕 新部屋、🚪 退室</li>
+        <li>最大<b>${ROOM_CAP}人</b>。<b>1時間無反応は自動退室扱い</b></li>
       </ul>`;
   }else{
     return `<h3 style="margin:0 0 8px">How to play</h3>
       <ul style="margin:0 0 12px 18px; line-height:1.7; color:#374151; font-size:14px">
-        <li><b>Drag to move the field</b>. Two fingers to zoom & pan</li>
+        <li><b>Drag</b> to move. Two fingers to zoom & pan</li>
         <li>📍 <b>Double-tap/double-click to move your cat</b></li>
-        <li>📨 English up to 10 words / others up to 15 chars. Fades in 60s</li>
+        <li>📨 English ≤10 words / others ≤15 chars. Fades in 60s</li>
         <li>📌 Status above head (toggle to clear)</li>
-        <li>🖋️ Note near feet (one per person, <b>auto-clears in 8h</b>)</li>
+        <li>🖋️ One note near feet (<b>auto-clears in 8h</b>)</li>
         <li>🪑 Sit/Stand, 💢 Angry (3s)</li>
-        <li>🐈‍⬛ Show names, 🔗 copy link, 🆕 new room, 🚪 leave</li>
-        <li>Max <b>${ROOM_CAP}</b>. <b>Inactive for 1h = auto-removed</b></li>
+        <li>🐈‍⬛ Roster, 🔗 share, 🆕 new room, 🚪 leave</li>
+        <li>Max <b>${ROOM_CAP}</b>. <b>Inactive 1h ⇒ auto-removed</b></li>
       </ul>`;
   }
 }
 function joinGuideHtml(){
   if(LANG==="ja"){
-    return `<div>📨 チャット送信 英語は10語・日本語は15文字まで。60秒で消える</div>
-      <div>📌 ステータス 頭上に小さく固定。もう一度📌タップで解除</div>
-      <div>🖋️ 書置 足元に小さく残す。ひとり一件。更新可。🗑️でクリア。8時間で自動削除</div>
-      <div>🖱️ <b>ドラッグでフィールド移動</b>・<b>ダブルクリックでネコ移動</b>。📱はダブルタップ＋ピンチでズーム</div>
-      <div>👥 上限 <b>${ROOM_CAP}人</b>。<b>1時間無反応のネコは自動退室扱い</b></div>
-      <div>🔗 でリンクをコピーしフレンドを招待</div>`;
+    return `<div>📨 チャット：英語10語/日本語15文字、60秒で消える</div>
+      <div>📌 頭上に固定（再押しで解除）</div>
+      <div>🖋️ 書置は8時間で自動削除</div>
+      <div>🖱️ ドラッグ移動／ダブルタップ移動／ピンチズーム</div>
+      <div>👥 上限 <b>${ROOM_CAP}人</b>、<b>1時間無反応は自動退室扱い</b></div>`;
   }else{
-    return `<div>📨 Chat: 10 words / 15 chars. Fades in 60s</div>
-      <div>📌 Small status above head (toggle to clear)</div>
-      <div>🖋️ One note near feet. Auto-clears in 8h</div>
-      <div>🖱️ <b>Drag</b>, double-click/tap to move, pinch to zoom</div>
-      <div>👥 Max <b>${ROOM_CAP}</b>. <b>Inactive for 1h = auto-removed</b></div>
-      <div>🔗 Copy link to invite friends</div>`;
+    return `<div>📨 Chat fades in 60s</div>
+      <div>📌 Small status above head</div>
+      <div>🖋️ Notes auto-clear in 8h</div>
+      <div>🖱️ Drag / double-tap / pinch-zoom</div>
+      <div>👥 Max <b>${ROOM_CAP}</b>; <b>inactive 1h = auto-removed</b></div>`;
   }
 }
 function applyLang(){
@@ -425,11 +419,10 @@ langBtn.addEventListener("click", ()=>{ LANG=(LANG==="ja")?"en":"ja"; applyLang(
 
 worldLabel.textContent=`room: ${WORLD_ID}`;
 
-/* ========== 参加 ========== */
+/* ===== 参加 ===== */
 nameInput.addEventListener("input", ()=>{ const n=nameInput.value.trim(); if([...n].length>3) nameInput.value=Array.from(n).slice(0,3).join(""); });
 enterBtn.addEventListener("click", startJoin);
 nameInput.addEventListener("keydown", e=>{ if(e.key==="Enter") startJoin(); });
-
 async function startJoin(){
   const n=normalizeName(nameInput.value);
   if(!n){ warn.textContent=LANG==="ja"?"1〜3文字":"1–3 characters"; return; }
@@ -439,63 +432,48 @@ async function startJoin(){
   if(uid && !mounted){ await initAfterAuth(); }
 }
 
-/* ========== 匿名ログイン ========== */
+/* ===== 認証 ===== */
 initAuthOnBoot();
-async function initAuthOnBoot(){ try{ await signInAnonymously(auth); }catch(e){ console.error("[auth] anon failed]", e); toast(I18N[LANG].notify.errorAuth, 6000); } }
+async function initAuthOnBoot(){ try{ await signInAnonymously(auth); }catch(e){ console.error("[auth] anon failed:", e); toast(I18N[LANG].notify.errorAuth, 6000); } }
 onAuthStateChanged(auth, async u=>{ if(!u) return; uid=u.uid; if(joined && !mounted){ await initAfterAuth(); } });
 
-/* ========== 満員判定 & クリーンアップ ========== */
+/* ===== 満員判定＆掃除 ===== */
 async function ensureCapacity(){
   try{
     const snap=await get(playersRef);
-    const now=Date.now();
-    let nActive=0;
-    snap.forEach(ch=>{
-      const v=ch.val()||{};
-      const la=Number(v.lastActive||0);
-      if(la && (now-la)<=STALE_MS_PLAYERS) nActive++;
-    });
+    const now=Date.now(); let nActive=0;
+    snap.forEach(ch=>{ const v=ch.val()||{}; const la=Number(v.lastActive||0); if(la && now-la<=STALE_MS_PLAYERS) nActive++; });
     return nActive < ROOM_CAP;
   }catch{ return true; }
 }
 async function cleanupStalePlayers(){
   try{
     const snap=await get(playersRef);
-    const now=Date.now();
-    const jobs=[];
+    const now=Date.now(); const jobs=[];
     snap.forEach(ch=>{
-      const v=ch.val()||{};
-      const la=Number(v.lastActive||0);
-      if(!la || (now-la) > STALE_MS_PLAYERS){
-        jobs.push( remove(ref(db, `worlds/${WORLD_ID}/players/${ch.key}`)).catch(()=>{}) );
-      }
+      const v=ch.val()||{}; const la=Number(v.lastActive||0);
+      if(!la || (now-la)>STALE_MS_PLAYERS){ jobs.push( remove(ref(db, `worlds/${WORLD_ID}/players/${ch.key}`)).catch(()=>{}) ); }
     });
     if(jobs.length) await Promise.allSettled(jobs);
   }catch(e){ console.warn("cleanupStalePlayers failed:", e); }
 }
 
-/* ========== 名前の強制同期 ========== */
+/* ===== 名前の強制同期 ===== */
 async function forceNameSync(){
   try{
     const snap = await get(myRef());
     const want = normalizeName(me.name);
     if(!snap.exists()){
-      await set(myRef(), {
-        name: want, x:me.x, y:me.y, dir:me.dir, pose:me.pose,
-        msg:"", msgAt:0, pinMsg:me.pinMsg||"", pinAt:me.pinMsg?Date.now():0,
-        emo:"none", emoAt:0, lastActive:Date.now()
-      });
+      await set(myRef(), {name:want, x:me.x, y:me.y, dir:me.dir, pose:me.pose, msg:"", msgAt:0, pinMsg:me.pinMsg||"", pinAt:me.pinMsg?Date.now():0, emo:"none", emoAt:0, lastActive:Date.now()});
       try{ onDisconnect(myRef()).remove(); }catch{}
       return;
     }
     const cur = (snap.val()||{}).name || "";
-    if(normalizeName(cur) !== want){
-      await update(myRef(), { name: want, lastActive: Date.now() });
-    }
+    if(normalizeName(cur)!==want){ await update(myRef(), { name: want, lastActive: Date.now() }); }
   }catch(e){ console.warn("forceNameSync failed:", e); }
 }
 
-/* ========== 初期化 ========== */
+/* ===== 初期化 ===== */
 async function initAfterAuth(){
   await cleanupStalePlayers();
   const ok=await ensureCapacity(); if(!ok){ showFull(); return; }
@@ -517,38 +495,30 @@ async function initAfterAuth(){
 
   setInterval(()=>cleanupStalePlayers(), 5*60*1000);
 }
-
-/* ========== 満員UI ========= */
 function showFull(){
   full.style.display="flex";
-  const msg = (LANG==="ja")? I18N.ja.notify.full(ROOM_CAP) : I18N.en.notify.full(ROOM_CAP);
+  const msg=(LANG==="ja")?I18N.ja.notify.full(ROOM_CAP):I18N.en.notify.full(ROOM_CAP);
   full.innerHTML=`<div class="card"><h3>${msg.split("。")[0]}</h3><p>${ROOM_CAP}${LANG==="ja"?"人まで":" max"}</p></div>`;
 }
 
-/* ========== プレゼンス ========= */
+/* ===== プレゼンス ===== */
 async function mountPresence(forceStand=false){
   try{
-    await set(myRef(), {
-      name:normalizeName(me.name), x:me.x, y:me.y, dir:me.dir, pose:forceStand?"stand":me.pose,
-      msg:"", msgAt:0, pinMsg:me.pinMsg||"", pinAt:me.pinMsg?Date.now():0,
-      emo:"none", emoAt:0, lastActive:Date.now()
-    });
+    await set(myRef(), {name:normalizeName(me.name), x:me.x, y:me.y, dir:me.dir, pose:forceStand?"stand":me.pose, msg:"", msgAt:0, pinMsg:me.pinMsg||"", pinAt:me.pinMsg?Date.now():0, emo:"none", emoAt:0, lastActive:Date.now()});
   }catch(e){ console.error("[rtdb] initial set failed:", e); }
   try{ onDisconnect(myRef()).remove(); }catch(e){ console.warn("[rtdb] onDisconnect set failed:", e); }
 }
 window.addEventListener("visibilitychange", ()=>{ try{ update(myRef(), {lastActive:Date.now()}); }catch{} });
-window.addEventListener("pagehide",        ()=>{ try{ update(myRef(), {lastActive:Date.now()}); }catch{} });
-
-/* 再接続監視：復帰時にも name を再主張 */
+window.addEventListener("pagehide", ()=>{ try{ update(myRef(), {lastActive:Date.now()}); }catch{} });
 function monitorReconnect(){
-  const conn = ref(db, ".info/connected");
-  onValue(conn, async snap=>{
-    const c = snap.val();
+  const conn=ref(db,".info/connected");
+  onValue(conn, async s=>{
+    const c=s.val();
     if(c===true && uid && joined){
       try{
-        const s = await get(myRef());
-        if(s.exists()){
-          await update(myRef(), { lastActive: Date.now(), name: normalizeName(me.name) });
+        const snap=await get(myRef());
+        if(snap.exists()){
+          await update(myRef(), { lastActive:Date.now(), name:normalizeName(me.name) });
         }else{
           await mountPresence(false);
           await forceNameSync();
@@ -558,27 +528,19 @@ function monitorReconnect(){
   });
 }
 
-/* ========== players購読 ========= */
+/* ===== players購読 ===== */
 const domMap=new Map();
 let initialPlayersLoaded=false;
 let latestPlayers={};
-
 function subscribePlayers(){
   onValue(playersRef, snap=>{
-    const data=snap.val()||{};
-    latestPlayers=data;
-    const ids=Object.keys(data);
+    const data=snap.val()||{}; latestPlayers=data; const ids=Object.keys(data);
 
-    const now=Date.now();
-    let nActive=0;
-    for(const id of ids){
-      const la=Number((data[id]||{}).lastActive||0);
-      if(la && (now-la)<=STALE_MS_PLAYERS) nActive++;
-    }
+    const now=Date.now(); let nActive=0;
+    for(const id of ids){ const la=Number((data[id]||{}).lastActive||0); if(la && now-la<=STALE_MS_PLAYERS) nActive++; }
     countDock.textContent=(LANG==="ja"?I18N.ja.roomCount:I18N.en.roomCount)(nActive);
 
-    const seen=new Set(ids);
-    const nowMs=Date.now();
+    const seen=new Set(ids); const nowMs=Date.now();
 
     for(const id of ids){
       const p=data[id]||{};
@@ -612,7 +574,7 @@ function subscribePlayers(){
   });
 }
 
-/* ========== 入室演出・DOM生成・描画 ========= */
+/* ===== DOM生成・描画 ===== */
 function joinBurstAt(nx,ny){
   const r=world.getBoundingClientRect();
   const x=r.left + nx*r.width, y=r.top + ny*r.height;
@@ -660,7 +622,6 @@ function renderPlayer(pdom, data, isSelf){
   pdom.nameEl.style.display = decidedName ? "block":"none";
   if(decidedName && pdom.nameEl.textContent!==decidedName) pdom.nameEl.textContent=decidedName;
 
-  // 下端で反転
   const wr=world.getBoundingClientRect();
   const screenY = wr.top + (data.y??0.7)*wr.height;
   const visibleBottom = window.innerHeight - (bar.getBoundingClientRect().height||0);
@@ -670,7 +631,6 @@ function renderPlayer(pdom, data, isSelf){
   pdom.bubbleEl.classList.toggle("bump", pdom._flip);
   pdom.pinBubbleEl.classList.toggle("bump", pdom._flip);
 
-  // チャット
   const raw=data.msg||""; const msgAt=Number(data.msgAt||0);
   if(raw && msgAt>0){
     const nowAbs=Date.now(); const REPLAY_GUARD_MS=4000;
@@ -684,13 +644,12 @@ function renderPlayer(pdom, data, isSelf){
     }
   }else{ pdom.bubbleEl.style.display="none"; }
 
-  // ピン
   const pinText=data.pinMsg||"";
-  pdom.pinBubbleEl.style.display=pinText?"block":"none";
-  if(pinText) pdom.pinBubbleEl.textContent=pinText;
+  if(pinText){ pdom.pinBubbleEl.textContent=pinText; pdom.pinBubbleEl.style.display="block"; }
+  else{ pdom.pinBubbleEl.style.display="none"; }
 }
 
-/* ========== 自分DOM ========= */
+/* ===== 自分DOM ===== */
 function ensureMineDom(){
   if(!uid) return;
   if(!domMap.get(uid)){ const d=createPlayerDom(uid); domMap.set(uid,d); world.appendChild(d.wrap); }
@@ -698,7 +657,7 @@ function ensureMineDom(){
   renderPlayer(domMap.get(uid), data, true);
 }
 
-/* ========== 入力/ピン/書置/威嚇/退室 ========= */
+/* ===== 入力/ピン/書置/威嚇/退室 ===== */
 let lastSentAt=0;
 function validateMessage(raw){
   if(!raw) return {ok:false};
@@ -721,7 +680,6 @@ function sendMsg(){
   msgInput.value=""; sendBtn.disabled=true;
   safeUpdate({msg:raw, msgAt:Date.now()});
 }
-
 function renderPinBtn(){ pinBtn.setAttribute("aria-pressed", me.pinMsg?"true":"false"); } renderPinBtn();
 pinBtn.addEventListener("click", ()=>{
   if(me.pinMsg){
@@ -768,7 +726,7 @@ poseTopBtn.addEventListener("click", togglePose);
 window.addEventListener("keydown", e=>{ const tag=(e.target&&e.target.tagName)?e.target.tagName.toLowerCase():""; if(tag==="input"||tag==="textarea"||(e.target&&e.target.isContentEditable)) return; if(e.key.toLowerCase()==="s"){ togglePose(); }});
 function togglePose(){ me.pose=(me.pose==="stand")?"sit":"stand"; renderPoseTopBtn(); safeUpdate({pose:me.pose}); }
 
-/* 退室 */
+/* ===== 退室 ===== */
 leaveBtn.addEventListener("click", async ()=>{
   if(!uid) return;
   if(!confirm(I18N[LANG].confirmLeave)) return;
@@ -780,95 +738,130 @@ leaveBtn.addEventListener("click", async ()=>{
   join.style.display="flex"; toast(I18N[LANG].left, 2000);
 });
 
-/* ========== ズーム/パン ========== */
+/* ===== ズーム/パン（PC） ===== */
 function centerWorld(){
   const r=play.getBoundingClientRect();
   const {w,h}=worldSize();
   zoom=1;
-  panX = (r.width  - w*zoom)/2;
-  panY = (r.height - h*zoom)/2;
+  panX=(r.width-w*zoom)/2;
+  panY=(r.height-h*zoom)/2;
 }
-function applyView(){ worldWrap.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`; zoomLabel.textContent = `${Math.round(zoom*100)}%`; }
+function applyView(){ worldWrap.style.transform=`translate(${panX}px, ${panY}px) scale(${zoom})`; zoomLabel.textContent=`${Math.round(zoom*100)}%`; }
 function setZoomCentered(nz){
-  nz = Math.max(ZMIN, Math.min(ZMAX, nz));
+  nz=Math.max(ZMIN,Math.min(ZMAX,nz));
   const r=play.getBoundingClientRect();
   const cx=r.width/2, cy=r.height/2;
   const worldX=(cx - panX)/zoom, worldY=(cy - panY)/zoom;
   zoom=nz;
-  panX = cx - worldX*zoom;
-  panY = cy - worldY*zoom;
+  panX=cx - worldX*zoom;
+  panY=cy - worldY*zoom;
   userPanned=true; applyView();
 }
 zoomInBtn.addEventListener("click", ()=> setZoomCentered(zoom*1.15));
 zoomOutBtn.addEventListener("click", ()=> setZoomCentered(zoom/1.15));
-
-/* ホイールズーム（PC）は現状維持 */
 play.addEventListener("wheel", e=>{
   e.preventDefault();
   const r=play.getBoundingClientRect();
   const cx=e.clientX - r.left, cy=e.clientY - r.top;
   const beforeX=(cx - panX)/zoom, beforeY=(cy - panY)/zoom;
   const k=Math.exp(-e.deltaY*0.0015);
-  const nz=Math.max(ZMIN, Math.min(ZMAX, zoom*k));
+  const nz=Math.max(ZMIN,Math.min(ZMAX,zoom*k));
   zoom=nz;
-  panX = cx - beforeX*zoom;
-  panY = cy - beforeY*zoom;
+  panX=cx - beforeX*zoom;
+  panY=cy - beforeY*zoom;
   userPanned=true; applyView();
-}, {passive:false});
-
-/* ピンチズーム（二本指）— ★ ピンチ改善：毎フレームの中点で固定 */
-let gesture=null, gesturing=false;
-play.addEventListener("touchstart", e=>{
-  if(e.touches.length===2){
-    e.preventDefault();
-    gesturing=true;
-    const [a,b]=e.touches;
-    const dx=a.clientX-b.clientX, dy=a.clientY-b.clientY;
-    gesture={startDist:Math.hypot(dx,dy), startZoom:zoom};
-  }
 },{passive:false});
-play.addEventListener("touchmove", e=>{
-  if(gesture && e.touches.length===2){
-    e.preventDefault();
-    const [a,b]=e.touches;
-    const cx=(a.clientX+b.clientX)/2, cy=(a.clientY+b.clientY)/2;   // 常に“現在の中点”
-    const dx=a.clientX-b.clientX, dy=a.clientY-b.clientY;
-    const dist=Math.hypot(dx,dy);
-    // 新しいズーム
-    const nz=Math.max(ZMIN, Math.min(ZMAX, gesture.startZoom*(dist/gesture.startDist)));
-    // 中点が示すワールド座標を、拡大率変更前の状態で取得
-    const worldX=(cx - panX)/zoom;
-    const worldY=(cy - panY)/zoom;
-    // ズームを更新し、そのワールド点が中点に居続けるように pan を再計算
-    zoom=nz;
-    panX = cx - worldX*zoom;
-    panY = cy - worldY*zoom;
-    userPanned=true; applyView();
-  }
-},{passive:false});
-play.addEventListener("touchend", e=>{
-  if(e.touches.length===0) { gesture=null; setTimeout(()=>{ gesturing=false; }, 0); }
-},{passive:true});
 
-/* ドラッグでパン＋ダブルクリック/ダブルタップで移動 */
-let panning=false, panStartX=0, panStartY=0, dragStartX=0, dragStartY=0;
+/* ===== Pointer Events でパン/ピンチ（スマホ改善） ===== */
+const pointers=new Map(); // id -> {x,y,type}
+let panning=false, panStartX=0, panStartY=0, dragStartX=0, dragStartY=0, panningTouchId=null;
+let pinch=null; // {id1,id2,prevDist,prevCx,prevCy,prevZoom}
+function isTouchPointer(e){ return e.pointerType==="touch"; }
+
+/* pointerdown */
 play.addEventListener("pointerdown", e=>{
-  if(gesturing) return;
+  if(isTouchPointer(e)){
+    pointers.set(e.pointerId,{x:e.clientX,y:e.clientY,type:"touch"});
+    if(pointers.size===1){
+      panning=true; panningTouchId=e.pointerId;
+      dragStartX=e.clientX; dragStartY=e.clientY; panStartX=panX; panStartY=panY;
+    }else if(pointers.size===2){
+      panning=false; panningTouchId=null;
+      const ids=[...pointers.keys()]; const a=pointers.get(ids[0]); const b=pointers.get(ids[1]);
+      const dx=a.x-b.x, dy=a.y-b.y;
+      const dist=Math.hypot(dx,dy);
+      const cx=(a.x+b.x)/2, cy=(a.y+b.y)/2;
+      pinch={id1:ids[0], id2:ids[1], prevDist:dist, prevCx:cx, prevCy:cy, prevZoom:zoom};
+    }
+    try{ play.setPointerCapture(e.pointerId); }catch{}
+    return;
+  }
+  // マウス
   if(e.button!==0 && e.buttons!==1) return;
+  if(pointers.size>0) return; // タッチ優先
   panning=true; dragStartX=e.clientX; dragStartY=e.clientY; panStartX=panX; panStartY=panY;
-  play.classList.add("dragging");
   try{ play.setPointerCapture(e.pointerId); }catch{}
 });
-play.addEventListener("pointermove", e=>{
-  if(!panning) return;
-  const dx=e.clientX-dragStartX, dy=e.clientY-dragStartY;
-  panX = panStartX + dx; panY = panStartY + dy; userPanned=true; applyView();
-});
-function endPan(e){ if(!panning) return; panning=false; play.classList.remove("dragging"); try{ play.releasePointerCapture(e.pointerId); }catch{} }
-play.addEventListener("pointerup", endPan);
-play.addEventListener("pointercancel", endPan);
 
-/* PC：ダブルクリックで移動 */
+/* pointermove */
+play.addEventListener("pointermove", e=>{
+  if(isTouchPointer(e)){
+    if(!pointers.has(e.pointerId)) return;
+    pointers.get(e.pointerId).x=e.clientX;
+    pointers.get(e.pointerId).y=e.clientY;
+
+    if(pinch && pointers.has(pinch.id1) && pointers.has(pinch.id2)){
+      const a=pointers.get(pinch.id1), b=pointers.get(pinch.id2);
+      const cx=(a.x+b.x)/2, cy=(a.y+b.y)/2;
+      const dx=a.x-b.x, dy=a.y-b.y;
+      const dist=Math.hypot(dx,dy);
+
+      const scale=dist / pinch.prevDist || 1;
+      const nz=Math.max(ZMIN,Math.min(ZMAX,zoom*scale));
+
+      const worldX=(cx - panX)/zoom, worldY=(cy - panY)/zoom;
+      zoom=nz;
+      panX=cx - worldX*zoom;
+      panY=cy - worldY*zoom;
+
+      panX += (cx - pinch.prevCx);
+      panY += (cy - pinch.prevCy);
+
+      pinch.prevDist=dist; pinch.prevCx=cx; pinch.prevCy=cy;
+
+      userPanned=true; applyView();
+      return;
+    }
+
+    if(panning && panningTouchId===e.pointerId){
+      const dx=e.clientX-dragStartX, dy=e.clientY-dragStartY;
+      panX=panStartX+dx; panY=panStartY+dy; userPanned=true; applyView();
+    }
+    return;
+  }
+
+  // マウスのパン
+  if(panning && pointers.size===0){
+    const dx=e.clientX-dragStartX, dy=e.clientY-dragStartY;
+    panX=panStartX+dx; panY=panStartY+dy; userPanned=true; applyView();
+  }
+});
+
+/* pointerup / cancel */
+function endPointer(e){
+  if(isTouchPointer(e)){
+    pointers.delete(e.pointerId);
+    if(pinch && (e.pointerId===pinch.id1 || e.pointerId===pinch.id2)){ pinch=null; }
+    if(panning && panningTouchId===e.pointerId){ panning=false; panningTouchId=null; }
+    try{ play.releasePointerCapture(e.pointerId); }catch{}
+    return;
+  }
+  if(panning){ panning=false; try{ play.releasePointerCapture(e.pointerId); }catch{} }
+}
+play.addEventListener("pointerup", endPointer);
+play.addEventListener("pointercancel", endPointer);
+
+/* PC：ダブルクリック移動 */
 play.addEventListener("dblclick", e=>{
   e.preventDefault();
   const {x,y}=toNormFromClient(e.clientX, e.clientY);
@@ -877,55 +870,50 @@ play.addEventListener("dblclick", e=>{
   safeUpdate({dir:me.dir});
 });
 
-/* スマホ：ダブルタップで移動 */
-let lastTapTime=0, lastTapX=0, lastTapY=0;
+/* スマホ：ダブルタップ移動（Pointer Eventsと競合しない） */
+let lastTapTime=0,lastTapX=0,lastTapY=0;
 play.addEventListener("touchend", e=>{
-  if(gesturing) return;
   if(e.touches.length>0) return;
-  const t=Date.now();
-  const touch=e.changedTouches[0];
+  const t=Date.now(); const touch=e.changedTouches[0];
   const x=touch.clientX, y=touch.clientY;
-  const dt=t-lastTapTime, dist=Math.hypot(x-lastTapX, y-lastTapY);
+  const dt=t-lastTapTime, dist=Math.hypot(x-lastTapX,y-lastTapY);
   if(dt<300 && dist<24){
-    const {x:nx,y:ny}=toNormFromClient(x,y);
-    const pxNow=toPxLocal(me.x, me.y).x; const pxNext=toPxLocal(nx, ny).x;
-    target.x=nx; target.y=ny; me.dir=(pxNext>=pxNow)?1:-1;
-    safeUpdate({dir:me.dir});
+    const p=toNormFromClient(x,y);
+    const pxNow=toPxLocal(me.x, me.y).x; const pxNext=toPxLocal(p.x, p.y).x;
+    target=p; me.dir=(pxNext>=pxNow)?1:-1; safeUpdate({dir:me.dir});
     lastTapTime=0;
-  }else{
-    lastTapTime=t; lastTapX=x; lastTapY=y;
-  }
-}, {passive:true});
+  }else{ lastTapTime=t; lastTapX=x; lastTapY=y; }
+},{passive:true});
 
 /* リサイズ */
 window.addEventListener("resize", ()=>{ if(!userPanned){ centerWorld(); applyView(); }});
 
-/* ========== ループ ========= */
+/* ===== ループ ===== */
 let loopStarted=false; let lastT=performance.now();
 function startLoop(){ if(loopStarted) return; loopStarted=true; requestAnimationFrame(loop); }
 function loop(){
-  const t=performance.now(); const dt=Math.max(0, Math.min(0.05,(t-lastT)/1000)); lastT=t;
+  const t=performance.now(); const dt=Math.max(0,Math.min(0.05,(t-lastT)/1000)); lastT=t;
   const {w}=worldSize();
   const dxn=target.x - me.x, dyn=target.y - me.y;
   const distn=Math.hypot(dxn,dyn);
-  const stepNorm=(SPEED_PX_PER_S * dt) / w;
-  if(distn>stepNorm){ me.x += dxn/distn*stepNorm; me.y += dyn/distn*stepNorm; } else { me.x=target.x; me.y=target.y; }
+  const stepNorm=(SPEED_PX_PER_S * dt)/w;
+  if(distn>stepNorm){ me.x+=dxn/distn*stepNorm; me.y+=dyn/distn*stepNorm; } else { me.x=target.x; me.y=target.y; }
   ensureMineDom();
 
   if(mounted && (t-lastSync)>=80){ safeUpdate({x:me.x,y:me.y}); lastSync=t; }
   if(mounted && (t-lastHeartbeat)>=HEARTBEAT_MS){
     const patch={ lastActive:Date.now() };
-    if(Date.now()-lastNameAssert >= NAME_REASSERT_MS){ patch.name = normalizeName(me.name); lastNameAssert = Date.now(); }
+    if(Date.now()-lastNameAssert>=NAME_REASSERT_MS){ patch.name=normalizeName(me.name); lastNameAssert=Date.now(); }
     safeUpdate(patch);
     lastHeartbeat=t;
   }
   requestAnimationFrame(loop);
 }
 
-/* ========== 安全更新 ========== */
-async function safeUpdate(patch){ if(!uid || !mounted) return; try{ await update(myRef(), patch); }catch(e){ console.error("[rtdb] update failed:", patch, e); } }
+/* ===== 安全更新 ===== */
+async function safeUpdate(patch){ if(!uid||!mounted) return; try{ await update(myRef(), patch); }catch(e){ console.error("[rtdb] update failed:", patch, e); } }
 
-/* ========== 書き置き購読 ========== */
+/* ===== 書き置き購読 ===== */
 const notesDomMap=new Map();
 function subscribeNotes(){
   onValue(notesRootRef(), snap=>{
@@ -952,7 +940,7 @@ function upsertNoteDom(ownerUid,data){
   if(screenY<120) el.classList.add("flip"); else if(screenY>140) el.classList.remove("flip");
 }
 
-/* ========== 新部屋（ローカル通知） ========== */
+/* ===== 新部屋通知 ===== */
 let NEXT_ROOM_ID=null; let migrateHideTimer=null;
 function showLocalMigrate(nextRoomId, byName){
   NEXT_ROOM_ID=nextRoomId;
@@ -967,40 +955,32 @@ function subscribeMeta(){
     const m=snap.val()||{};
     clearTimeout(migrateHideTimer);
     const at=Number(m.at||0);
-    const fresh = m.nextRoom && at>0 && (Date.now() - at) <= MIGRATE_TTL_MS;
+    const fresh=m.nextRoom && at>0 && (Date.now()-at)<=MIGRATE_TTL_MS;
     if(fresh){
       const byName=(latestPlayers[m.by]?.name)?normalizeName(latestPlayers[m.by].name):"";
       showLocalMigrate(m.nextRoom, byName);
-    }else{
-      migrate.style.display="none";
-    }
+    }else{ migrate.style.display="none"; }
   });
 }
 newRoomBtn.addEventListener("click", async ()=>{
   const id=makeRoomId();
   try{
     await update(metaRef(), {nextRoom:id, by:uid||"", at:Date.now()});
-    const byName = normalizeName(me.name) || (LANG==="ja"?"自分":"me");
+    const byName=normalizeName(me.name) || (LANG==="ja"?"自分":"me");
     showLocalMigrate(id, byName);
   }catch(e){ console.error("set nextRoom failed:", e); toast(LANG==="ja"?"新しい部屋の作成に失敗":"Failed to create room", 2500); }
 });
-migrateGo.addEventListener("click", ()=>{
-  if(!NEXT_ROOM_ID) return;
-  const u=new URL(location.href);
-  u.searchParams.set("room", NEXT_ROOM_ID);
-  location.href=u.toString();
-});
+migrateGo.addEventListener("click", ()=>{ if(!NEXT_ROOM_ID) return; const u=new URL(location.href); u.searchParams.set("room", NEXT_ROOM_ID); location.href=u.toString(); });
 migrateClose.addEventListener("click", ()=>{ migrate.style.display="none"; });
 
 /* 名簿・共有・ヘルプ */
 function peekNames(){
-  const list = Object.entries(latestPlayers).map(([id,p])=> id===uid ? normalizeName(me.name) : normalizeName(p.name||"")).filter(Boolean).join(" / ") || (LANG==="ja"?"いまは誰もいない":"no one");
+  const list=Object.entries(latestPlayers).map(([id,p])=> id===uid ? normalizeName(me.name) : normalizeName(p.name||"")).filter(Boolean).join(" / ") || (LANG==="ja"?"いまは誰もいない":"no one");
   namesPeek.textContent=(LANG==="ja"?I18N.ja:I18N.en).namesPeek(list);
   namesPeek.style.display="block";
   clearTimeout(peekNames._t); peekNames._t=setTimeout(()=>namesPeek.style.display="none", 2500);
 }
 brandTitle.addEventListener("click", peekNames);
-
 shareBtn.addEventListener("click", async ()=>{
   const invite=new URL(location.href);
   invite.searchParams.set("room", WORLD_ID);
@@ -1014,7 +994,6 @@ shareBtn.addEventListener("click", async ()=>{
     }
   }catch(e){ console.warn("clipboard failed:", e); }
 });
-
 helpBtn.addEventListener("click", ()=>{
   helpDialog.innerHTML=`<div style="padding:16px 16px 12px; max-width:560px">${helpHtml()}<div style="display:flex; gap:8px; justify-content:flex-end"><button id="helpClose" class="btn">OK</button></div></div>`;
   helpDialog.showModal();
@@ -1029,9 +1008,8 @@ helpBtn.addEventListener("click", ()=>{
   centerWorld(); applyView();
   notify(I18N[LANG].hint, 90000);
 })();
-function renderMuteButton(){ soundIcon.textContent = muted ? "🔇" : "🔔"; lblSound.textContent = " " + (muted ? (LANG==="ja"?"ミュート":"Muted") : (LANG==="ja"?"音オン":"Sound")); }
+function renderMuteButton(){ soundIcon.textContent=muted?"🔇":"🔔"; lblSound.textContent=" "+(muted?(LANG==="ja"?"ミュート":"Muted"):(LANG==="ja"?"音オン":"Sound")); }
 muteBtn.addEventListener("click", ()=>{ muted=!muted; localStorage.setItem("yuru_mute", muted ? "1":"0"); if(masterGain) masterGain.gain.value = muted ? 0 : 0.24; renderMuteButton(); });
-
 </script>
 </body>
 </html>

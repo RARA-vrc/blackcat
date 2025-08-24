@@ -15,8 +15,9 @@
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png" as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png"  as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/angerCAT.png"    as="image" crossorigin>
-<!-- ▼ 追加：ロゴのプリロード -->
+<!-- ▼ 追加：ロゴのプリロード（スプラッシュ/ヘッダ） -->
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/kuronekologo2.png" as="image" crossorigin>
+<link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/kuronekologo3.png" as="image" crossorigin>
 <!-- ▲ -->
 
 <style>
@@ -35,12 +36,12 @@
   header{position:sticky; top:0; z-index:50; padding:calc(env(safe-area-inset-top)+4px) 10px 8px; padding-right:calc(10px + env(safe-area-inset-right)); border-bottom:1px solid var(--border); background:var(--panel)}
   .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px}
   .brand{display:flex; align-items:center; gap:10px; min-width:0}
-  /* ▼ 追加：ブランドロゴ（テキストはスクリーンリーダ用に残す） */
+  .brand h1{font-size:clamp(13px,2.2vw,16px); font-weight:800; margin:0; white-space:nowrap; cursor:pointer}
+  /* ▼ 追加：ヘッダロゴ（初期は非表示） & 視覚的非表示クラス */
   .vh{position:absolute!important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0}
-  #brandLogo{height:22px; width:auto; display:block; cursor:pointer}
+  #brandLogo{height:22px; width:auto; display:none; cursor:pointer}
   @media (max-width:640px){ #brandLogo{height:18px} }
   /* ▲ */
-  .brand h1{font-size:clamp(13px,2.2vw,16px); font-weight:800; margin:0; white-space:nowrap; cursor:pointer}
   .chip{border:1px solid var(--border); background:#fafafa; border-radius:999px; padding:6px 10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:clamp(12px,1.6vw,14px)}
   #worldLabel{max-width:clamp(120px,38vw,360px)}
   #countDock{flex:0 0 auto; font-weight:800; background:#fff}
@@ -134,12 +135,12 @@
     min-width:64px; text-align:center; font-weight:800;
     padding:8px 12px; font-variant-numeric:tabular-nums; line-height:1.1;
   }
-  @media (max-width:880px){  /* スマホ幅ではパーセンテージを隠す */
+  @media (max-width:880px){
     #zoomLabel{ display:none; }
   }
   /* ▲ ここまで */
 
-  /* ▼ 追加：入室スプラッシュ */
+  /* ▼ 追加：入室前スプラッシュ */
   #splash{position:fixed; inset:0; background:#fff; display:none; align-items:center; justify-content:center; z-index:3000}
   #splash.show{display:flex}
   #splash img{width:min(60vw, 280px); height:auto; filter:drop-shadow(0 10px 24px rgba(0,0,0,.12))}
@@ -151,10 +152,10 @@
   <header>
     <div class="topbar">
       <div class="brand">
-        <!-- ▼ 追加：ロゴを表示、テキストは視覚的に隠す -->
-        <img id="brandLogo" src="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/kuronekologo2.png" alt="くろねこひろば">
-        <h1 id="brandTitle" class="vh">くろねこひろば</h1>
+        <!-- ▼ 追加：ヘッダロゴ（入室後に表示） -->
+        <img id="brandLogo" src="" alt="logo">
         <!-- ▲ -->
+        <h1 id="brandTitle">くろねこひろば</h1>
         <span class="chip" id="worldLabel"></span>
       </div>
       <span class="chip" id="countDock" aria-live="polite">🐈‍⬛ 0</span>
@@ -189,7 +190,7 @@
   <div id="bar">
     <div id="msgWrap">
       <input id="msg" type="text" inputmode="text" autocomplete="off" placeholder="(15文字 / 10 words)" aria-label="メッセージ入力">
-      <div id="helper"><span id="hintLang">非英語：0/15</span><span id="hintKeys">Enter送信 / Sで座る</span></div>
+      <div id="helper"><span id="hintLang">非英語：0/15</span><span id="hintKeys">Enterで送信  Sで座る</span></div>
     </div>
     <button id="pinBtn"  class="btn iconOnly" title="ピン留め"><span class="icon">📌</span></button>
     <button id="noteBtn" class="btn iconOnly" title="書き置き"><span class="icon">🖋️</span></button>
@@ -224,7 +225,7 @@
   </div>
 </div>
 
-<!-- ▼ 追加：入室スプラッシュ -->
+<!-- ▼ 追加：入室前スプラッシュ（アクセス直後に2秒表示） -->
 <div id="splash"><img src="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/kuronekologo2.png" alt="logo"></div>
 <!-- ▲ -->
 
@@ -236,10 +237,9 @@
 const CAT_STAND_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png";
 const CAT_SIT_URL   = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png";
 const CAT_ANGRY_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/angerCAT.png";
-/* ▼ 追加：ロゴURLと表示時間 */
-const LOGO_URL      = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/kuronekologo2.png";
-const SPLASH_MS     = 2000;
-/* ▲ */
+const LOGO_SPLASH_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/kuronekologo2.png";  // 起動時
+const LOGO_HEADER_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/kuronekologo3.png";  // 入室後ヘッダ
+const SPLASH_MS = 2000;
 
 /* ===== パラメータ ===== */
 const HEARTBEAT_MS   = 7000;
@@ -371,7 +371,7 @@ const migrateGo=document.getElementById("migrateGo");
 const migrateClose=document.getElementById("migrateClose");
 const langBtn=document.getElementById("langBtn");
 const brandTitle=document.getElementById("brandTitle");
-/* ▼ 追加：ロゴ要素とスプラッシュ要素 */
+/* ▼ 追加: ヘッダロゴ＆スプラッシュ */
 const brandLogo=document.getElementById("brandLogo");
 const splash=document.getElementById("splash");
 /* ▲ */
@@ -480,7 +480,7 @@ function joinGuideHtml(){
 }
 function applyLang(){
   const T=I18N[LANG];
-  document.getElementById("brandTitle").textContent=T.brand; // SR向けテキスト
+  document.getElementById("brandTitle").textContent=T.brand;
   msgInput.placeholder=T.msgPlaceholder;
   document.getElementById("hintKeys").textContent=T.hintKeys;
   notify(T.hint, 90000);
@@ -497,7 +497,7 @@ function applyLang(){
   document.getElementById("joinDesc").textContent=T.joinDesc;
   document.getElementById("joinHint").textContent=(LANG==="ja"?"音が出ないときは一度画面をタップしてからミュートを確かめる。":"No sound? Tap once and toggle the bell.");
   document.getElementById("joinGuide").innerHTML = joinGuideHtml();
-  renderMuteButton(); // ★ 言語切替後にも正しい「Sound / Muted」へ
+  renderMuteButton();
 }
 applyLang();
 langBtn.addEventListener("click", ()=>{ LANG=(LANG==="ja")?"en":"ja"; applyLang(); });
@@ -509,13 +509,13 @@ nameInput.addEventListener("input", ()=>{ const n=nameInput.value.trim(); if([..
 enterBtn.addEventListener("click", startJoin);
 nameInput.addEventListener("keydown", e=>{ if(e.key==="Enter") startJoin(); });
 
-/* ▼ 追加：スプラッシュ表示関数 */
-function showSplash(){
+/* ▼ 追加：アクセス直後スプラッシュ（名前入力前） */
+function showSplashOnBoot(){
   if(!splash) return;
+  splash.firstElementChild?.setAttribute("src", LOGO_SPLASH_URL);
   splash.classList.add("show");
   splash.style.display="flex";
-  clearTimeout(showSplash._t);
-  showSplash._t=setTimeout(()=>{ splash.classList.remove("show"); splash.style.display="none"; }, SPLASH_MS);
+  setTimeout(()=>{ splash.classList.remove("show"); splash.style.display="none"; }, SPLASH_MS);
 }
 /* ▲ */
 
@@ -525,7 +525,6 @@ async function startJoin(){
   warn.textContent="";
   me.name=n; joined=true; me.pose="stand"; me.pinMsg="";
   join.style.display="none";
-  showSplash();          // ★ 追加：入室2秒スプラッシュ
   if(uid && !mounted){ await initAfterAuth(); }
 }
 
@@ -583,6 +582,15 @@ async function initAfterAuth(){
 
   await mountPresence(true);
   await forceNameSync();
+
+  // ★ 入室後：ヘッダをテキスト→ロゴ（kuronekologo3.png）に切替
+  if(brandLogo){
+    brandLogo.src = LOGO_HEADER_URL;
+    brandLogo.style.display = "block";
+    brandLogo.alt = I18N[LANG].brand || "logo";
+    brandLogo.addEventListener("click", peekNames);
+    brandTitle.classList.add("vh");
+  }
 
   startLoop();
   subscribePlayers();
@@ -972,7 +980,9 @@ play.addEventListener("touchend", e=>{
     const pxNow=toPxLocal(me.x, me.y).x; const pxNext=toPxLocal(p.x, p.y).x;
     target=p; me.dir=(pxNext>=pxNow)?1:-1; safeUpdate({dir:me.dir});
     lastTapTime=0;
-  }else{ lastTapTime=t; lastTapX=x; lastTapY=y; }
+  }else{
+    lastTapTime=t; lastTapX=x; lastTapY=y;
+  }
 },{passive:true});
 
 /* リサイズ */
@@ -1077,9 +1087,8 @@ function peekNames(){
   namesPeek.style.display="block";
   clearTimeout(peekNames._t); peekNames._t=setTimeout(()=>namesPeek.style.display="none", 2500);
 }
-/* クリック先をタイトル→ロゴにも拡張 */
 brandTitle.addEventListener("click", peekNames);
-brandLogo.addEventListener("click", peekNames);
+if(brandLogo) brandLogo.addEventListener("click", peekNames);
 
 shareBtn.addEventListener("click", async ()=>{
   const invite=new URL(location.href);
@@ -1108,11 +1117,11 @@ helpBtn.addEventListener("click", ()=>{
   msgInput.dispatchEvent(new Event("input"));
   centerWorld(); applyView();
   notify(I18N[LANG].hint, 90000);
-  /* ロゴsrc（念のため定数を適用） */
-  if(brandLogo) brandLogo.src = LOGO_URL;
+  // ★ 起動時スプラッシュ（名前入力前）
+  showSplashOnBoot();
 })();
 function renderMuteButton(){
-  const T = I18N[LANG];                // ★ i18n連動に修正
+  const T = I18N[LANG];
   soundIcon.textContent = muted ? "🔇" : "🔔";
   lblSound.textContent = " " + (muted ? T.soundMute : T.soundOn);
 }

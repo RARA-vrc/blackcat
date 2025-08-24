@@ -119,6 +119,19 @@
   @media (prefers-reduced-motion: reduce){
     .p{transition:none} .join-burst{display:none} .spawn{animation:none} .ping{animation:none; display:none}
   }
+
+  /* ▼ ここだけ新規: ズーム表示の視認性アップ */
+  #zoomLabel{
+    background:#fff;             /* 高コントラスト */
+    border:1px solid var(--border);
+    min-width:64px;              /* 76% 〜 100% でも切れない */
+    text-align:center;
+    font-weight:800;
+    padding:8px 12px;            /* 余白多め */
+    font-variant-numeric: tabular-nums; /* 等幅数字でブレない */
+    line-height:1.1;
+  }
+  /* ▲ 追加終了 */
 </style>
 </head>
 <body>
@@ -316,7 +329,7 @@ countDock.textContent="🐈‍⬛ 0";
 let AC=null, masterGain=null; let muted=localStorage.getItem("yuru_mute")==="1";
 function unlockAudio(){ const Ctx=window.AudioContext||window.webkitAudioContext; if(!AC && Ctx){ AC=new Ctx(); masterGain=AC.createGain(); masterGain.gain.value=muted?0:0.24; masterGain.connect(AC.destination);} if(AC&&AC.state==="suspended") AC.resume(); }
 function setupAudioUnlock(){ const once=()=>{unlockAudio(); document.removeEventListener("pointerdown", once); document.removeEventListener("keydown", once);}; document.addEventListener("pointerdown", once, {passive:true}); document.addEventListener("keydown", once); enterBtn.addEventListener("click", unlockAudio, {once:true}); } setupAudioUnlock();
-function tone({freq=880,dur=0.12,type="sine",vol=0.7,attack=0.005,release=0.12}={}){ if(!AC) return; const o=AC.createOscillator(); const g=AC.createGain(); o.type=type; o.frequency.value=freq; o.connect(g); g.connect(masterGain||AC.destination); const t=AC.currentTime; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+attack); g.gain.exponentialRampToValueAtTime(0.0001,t+attack+release); o.start(t); o.stop(t+dur+0.25); } /* ← タイポ修正済み */
+function tone({freq=880,dur=0.12,type="sine",vol=0.7,attack=0.005,release=0.12}={}){ if(!AC) return; const o=AC.createOscillator(); const g=AC.createGain(); o.type=type; o.frequency.value=freq; o.connect(g); g.connect(masterGain||AC.destination); const t=AC.currentTime; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+attack); g.gain.exponentialRampToValueAtTime(0.0001,t+attack+release); o.start(t); o.stop(t+dur+0.25); }
 function playLogin(){ if(!muted&&AC){ tone({freq:880,type:"triangle",vol:0.55,dur:0.12}); setTimeout(()=>tone({freq:1320,type:"triangle",vol:0.55,dur:0.12}),140); } }
 function playMessage(){ if(!muted&&AC){ tone({freq:700,type:"sine",vol:0.5,dur:0.09}); } }
 
@@ -772,16 +785,14 @@ play.addEventListener("wheel", e=>{
   userPanned=true; applyView();
 },{passive:false});
 
-/* ===== Pointer Events でパン/ピンチ（スマホ改善） ===== */
-const pointers=new Map(); // id -> {x,y,type}
+/* ===== Pointer Events：スマホのパン/ピンチ ===== */
+const pointers=new Map();
 let panning=false, panStartX=0, panStartY=0, dragStartX=0, dragStartY=0, panningTouchId=null;
-let pinch=null; // {id1,id2,prevDist,prevCx,prevCy,prevZoom}
+let pinch=null; // {id1,id2,prevDist,prevCx,prevCy}
 function isTouchPointer(e){ return e.pointerType==="touch"; }
-
-/* pointerdown */
 play.addEventListener("pointerdown", e=>{
   if(isTouchPointer(e)){
-    pointers.set(e.pointerId,{x:e.clientX,y:e.clientY,type:"touch"});
+    pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(pointers.size===1){
       panning=true; panningTouchId=e.pointerId;
       dragStartX=e.clientX; dragStartY=e.clientY; panStartX=panX; panStartY=panY;
@@ -789,21 +800,16 @@ play.addEventListener("pointerdown", e=>{
       panning=false; panningTouchId=null;
       const ids=[...pointers.keys()]; const a=pointers.get(ids[0]); const b=pointers.get(ids[1]);
       const dx=a.x-b.x, dy=a.y-b.y;
-      const dist=Math.hypot(dx,dy);
-      const cx=(a.x+b.x)/2, cy=(a.y+b.y)/2;
-      pinch={id1:ids[0], id2:ids[1], prevDist:dist, prevCx:cx, prevCy:cy, prevZoom:zoom};
+      pinch={id1:ids[0],id2:ids[1],prevDist:Math.hypot(dx,dy),prevCx:(a.x+b.x)/2,prevCy:(a.y+b.y)/2};
     }
     try{ play.setPointerCapture(e.pointerId); }catch{}
     return;
   }
-  // マウス
   if(e.button!==0 && e.buttons!==1) return;
-  if(pointers.size>0) return; // タッチ優先
+  if(pointers.size>0) return;
   panning=true; dragStartX=e.clientX; dragStartY=e.clientY; panStartX=panX; panStartY=panY;
   try{ play.setPointerCapture(e.pointerId); }catch{}
 });
-
-/* pointermove */
 play.addEventListener("pointermove", e=>{
   if(isTouchPointer(e)){
     if(!pointers.has(e.pointerId)) return;
@@ -832,22 +838,17 @@ play.addEventListener("pointermove", e=>{
       userPanned=true; applyView();
       return;
     }
-
     if(panning && panningTouchId===e.pointerId){
       const dx=e.clientX-dragStartX, dy=e.clientY-dragStartY;
       panX=panStartX+dx; panY=panStartY+dy; userPanned=true; applyView();
     }
     return;
   }
-
-  // マウスのパン
   if(panning && pointers.size===0){
     const dx=e.clientX-dragStartX, dy=e.clientY-dragStartY;
     panX=panStartX+dx; panY=panStartY+dy; userPanned=true; applyView();
   }
 });
-
-/* pointerup / cancel */
 function endPointer(e){
   if(isTouchPointer(e)){
     pointers.delete(e.pointerId);
@@ -911,7 +912,7 @@ function loop(){
 }
 
 /* ===== 安全更新 ===== */
-async function safeUpdate(patch){ if(!uid||!mounted) return; try{ await update(myRef(), patch); }catch(e){ console.error("[rtdb] update failed:", patch, e); } }
+async function safeUpdate(patch){ if(!uid||!mounted) return; try{ await update(myRef(), patch); }catch(e){ console.error("[rtdb] update failed]", patch, e); } }
 
 /* ===== 書き置き購読 ===== */
 const notesDomMap=new Map();

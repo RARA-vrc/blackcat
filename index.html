@@ -15,9 +15,10 @@
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png" as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png"  as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/angerCAT.png"    as="image" crossorigin>
-<!-- ▼ スプラッシュ/ヘッダロゴのプリロード -->
+<!-- ▼ 先読み：スプラッシュ/ヘッダロゴ/ワールド背景 -->
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/kuronekologo2.png" as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/DF473A5F-2FD9-4440-92F7-D72FBC621075.jpeg" as="image" crossorigin>
+<link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/56954E64-9618-4A55-95A5-F777E9AF099F.jpeg" as="image" crossorigin>
 <!-- ▲ -->
 
 <style>
@@ -27,6 +28,8 @@
     --barH:60px; --ring:3px; --ringColor:rgba(255,122,162,.45);
     --pin-bg:#ffe7ef; --pin-bd:#ffc6d7;
     --burstA:#ff7aa2; --burstB:#ffc0d2;
+    /* ワールド背景URLをCSS変数でも持っておく（JS不要で差し替え可） */
+    --world-bg-url: url("https://raw.githubusercontent.com/RARA-vrc/blackcat/main/56954E64-9618-4A55-95A5-F777E9AF099F.jpeg");
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
   html,body{height:100%; margin:0; font-family:ui-sans-serif,system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink)}
@@ -35,9 +38,8 @@
 
   header{position:sticky; top:0; z-index:50; padding:calc(env(safe-area-inset-top)+4px) 10px 8px; padding-right:calc(10px + env(safe-area-inset-right)); border-bottom:1px solid var(--border); background:var(--panel)}
   .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px}
-  .brand{display:flex; align-items:center; gap:10px; min-width:0; padding-left:10px;} /* 左に10px余地 */
+  .brand{display:flex; align-items:center; gap:10px; min-width:0; padding-left:10px;} /* 左端に10pxの余白 */
   .brand h1{font-size:clamp(13px,2.2vw,16px); font-weight:800; margin:0; white-space:nowrap; cursor:pointer}
-  /* ヘッダロゴ（入室後表示） & 視覚的非表示クラス */
   .vh{position:absolute!important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0}
   #brandLogo{height:22px; width:auto; display:none; cursor:pointer}
   @media (max-width:640px){ #brandLogo{height:18px} }
@@ -62,6 +64,15 @@
   #worldWrap{position:absolute; inset:0; transform-origin:0 0; will-change:transform}
   #world{position:absolute; left:0; top:0; width:100vmax; height:100vmax; border:2px dashed #e5e7eb; border-radius:16px; box-shadow:0 0 0 6px rgba(255,255,255,.6) inset}
   #notesLayer{position:absolute; inset:0; pointer-events:none; z-index:0}
+
+  /* ▼ 追加：ワールド背景（ズーム・パンに追従） */
+  #world{
+    background-image: var(--world-bg-url);
+    background-size: cover;         /* 正方形エリアをいい感じにカバー */
+    background-position: center;    /* 常に中央基準 */
+    background-repeat: no-repeat;   /* タイルしない */
+  }
+  /* ▲ */
 
   #bar{height:var(--barH); display:flex; align-items:center; gap:8px; border-top:1px solid var(--border); background:var(--panel); padding:8px 10px; padding-bottom:calc(8px + env(safe-area-inset-bottom)); overflow:hidden}
   #msgWrap{flex:1 1 auto; display:flex; align-items:center; gap:8px; min-width:0; overflow:hidden; white-space:nowrap}
@@ -129,7 +140,7 @@
     .p{transition:none} .join-burst{display:none} .spawn{animation:none} .ping{animation:none; display:none}
   }
 
-  /* ズーム表示の視認性＆スマホでは非表示 */
+  /* ズーム%：スマホは非表示 */
   #zoomLabel{ background:#fff; border:1px solid var(--border); min-width:64px; text-align:center; font-weight:800; padding:8px 12px; font-variant-numeric:tabular-nums; line-height:1.1 }
   @media (max-width:880px){ #zoomLabel{ display:none } }
 
@@ -392,7 +403,6 @@ function setupAudioUnlock(){ const once=()=>{unlockAudio(); document.removeEvent
 function tone({freq=880,dur=0.12,type="sine",vol=0.7,attack=0.005,release=0.12}={}){ if(!AC) return; const o=AC.createOscillator(); const g=AC.createGain(); o.type=type; o.frequency.value=freq; o.connect(g); g.connect(masterGain||AC.destination); const t=AC.currentTime; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+attack); g.gain.exponentialRampToValueAtTime(0.0001,t+attack+release); o.start(t); o.stop(t+dur+0.25); }
 function playLogin(){ if(!muted&&AC){ tone({freq:880,type:"triangle",vol:0.55,dur:0.12}); setTimeout(()=>tone({freq:1320,type:"triangle",vol:0.55,dur:0.12}),140); } }
 function playMessage(){ if(!muted&&AC){ tone({freq:700,type:"sine",vol:0.5,dur:0.09}); } }
-/* かわいいログイン効果音（3音） */
 function playCuteLogin(){
   if(muted || !AC) return;
   tone({freq:880,type:"sine",vol:0.55,dur:0.10});

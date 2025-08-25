@@ -28,7 +28,6 @@
     --barH:60px; --ring:3px; --ringColor:rgba(255,122,162,.45);
     --pin-bg:#ffe7ef; --pin-bd:#ffc6d7;
     --burstA:#ff7aa2; --burstB:#ffc0d2;
-    /* ワールド背景URLをCSS変数でも持っておく（JS不要で差し替え可） */
     --world-bg-url: url("https://raw.githubusercontent.com/RARA-vrc/blackcat/main/56954E64-9618-4A55-95A5-F777E9AF099F.jpeg");
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
@@ -38,7 +37,7 @@
 
   header{position:sticky; top:0; z-index:50; padding:calc(env(safe-area-inset-top)+4px) 10px 8px; padding-right:calc(10px + env(safe-area-inset-right)); border-bottom:1px solid var(--border); background:var(--panel)}
   .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px}
-  .brand{display:flex; align-items:center; gap:10px; min-width:0; padding-left:10px;} /* 左端に10pxの余白 */
+  .brand{display:flex; align-items:center; gap:10px; min-width:0; padding-left:10px;}
   .brand h1{font-size:clamp(13px,2.2vw,16px); font-weight:800; margin:0; white-space:nowrap; cursor:pointer}
   .vh{position:absolute!important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0}
   #brandLogo{height:22px; width:auto; display:none; cursor:pointer}
@@ -62,17 +61,17 @@
   #play{position:relative; flex:1; overflow:hidden; background-image:radial-gradient(circle at 1px 1px,#f1f3f5 1px,transparent 0), radial-gradient(1200px 420px at 50% 120%, #f7f7f7 0%, transparent 60%); background-size:18px 18px, auto; user-select:none; touch-action:none; cursor:grab}
   #play.dragging{cursor:grabbing}
   #worldWrap{position:absolute; inset:0; transform-origin:0 0; will-change:transform}
-  #world{position:absolute; left:0; top:0; width:100vmax; height:100vmax; border:2px dashed #e5e7eb; border-radius:16px; box-shadow:0 0 0 6px rgba(255,255,255,.6) inset}
-  #notesLayer{position:absolute; inset:0; pointer-events:none; z-index:0}
-
-  /* ▼ 追加：ワールド背景（ズーム・パンに追従） */
   #world{
+    position:absolute; left:0; top:0; width:100vmax; height:100vmax;
+    border:2px dashed #e5e7eb; border-radius:16px; box-shadow:0 0 0 6px rgba(255,255,255,.6) inset;
+    /* ▼ 背景画像（ズーム・パンに追従） */
     background-image: var(--world-bg-url);
-    background-size: cover;         /* 正方形エリアをいい感じにカバー */
-    background-position: center;    /* 常に中央基準 */
-    background-repeat: no-repeat;   /* タイルしない */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* ▲ */
   }
-  /* ▲ */
+  #notesLayer{position:absolute; inset:0; pointer-events:none; z-index:0}
 
   #bar{height:var(--barH); display:flex; align-items:center; gap:8px; border-top:1px solid var(--border); background:var(--panel); padding:8px 10px; padding-bottom:calc(8px + env(safe-area-inset-bottom)); overflow:hidden}
   #msgWrap{flex:1 1 auto; display:flex; align-items:center; gap:8px; min-width:0; overflow:hidden; white-space:nowrap}
@@ -150,6 +149,17 @@
   #splash.fadeOut{ animation:splashFade .35s ease forwards }
   #splash img{width:min(60vw, 280px); height:auto; filter:drop-shadow(0 10px 24px rgba(0,0,0,.12))}
   @keyframes splashFade{to{opacity:0}}
+
+  /* ▼ 共有メニュー */
+  #shareMenu{
+    position:fixed; z-index:60; display:none; background:#fff; color:#111;
+    border:1px solid var(--border); border-radius:12px; box-shadow:0 12px 32px rgba(0,0,0,.12);
+    padding:6px; min-width:210px;
+  }
+  #shareMenu .item{display:flex; gap:10px; align-items:center; width:100%; border:0; background:transparent; padding:10px 12px; border-radius:10px; font-weight:800; cursor:pointer}
+  #shareMenu .item:active{background:#f3f4f6}
+  #shareMenu .sep{height:1px; background:var(--border); margin:4px 2px}
+  /* ▲ */
 </style>
 </head>
 <body>
@@ -170,7 +180,7 @@
       <button id="angerBtn"     class="btn ghost" title="威嚇"><span class="icon">💢</span><span class="txt" id="lblAnger"> 威嚇</span></button>
       <button id="muteBtn"      class="btn ghost" title="音のオン/オフ"><span class="icon" id="soundIcon">🔔</span><span class="txt" id="lblSound"> 音オン</span></button>
       <button id="newRoomBtn"   class="btn ghost" title="新しい部屋を作る"><span class="icon">🆕</span><span class="txt" id="lblNew"> 新部屋</span></button>
-      <button id="shareBtn"     class="btn ghost" title="URLをコピー"><span class="icon">🔗</span><span class="txt" id="lblShare"> 共有</span></button>
+      <button id="shareBtn"     class="btn ghost" title="共有"><span class="icon">🔗</span><span class="txt" id="lblShare"> 共有</span></button>
 
       <button id="zoomOutBtn"   class="btn ghost iconOnly" title="ズームアウト"><span class="icon">➖</span></button>
       <span   id="zoomLabel"    class="chip" aria-live="polite">100%</span>
@@ -231,6 +241,14 @@
 <!-- 入室前スプラッシュ -->
 <div id="splash"><img src="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/kuronekologo2.png" alt="logo"></div>
 
+<!-- ▼ 共有メニュー（ポップアップ） -->
+<div id="shareMenu" role="menu" aria-hidden="true">
+  <button id="shareCopyBtn" class="item">📋 リンクをコピー</button>
+  <div class="sep"></div>
+  <button id="shareXBtn" class="item">𝕏 で共有</button>
+</div>
+<!-- ▲ -->
+
 <dialog id="helpDialog"></dialog>
 <div id="full" style="display:none"></div>
 
@@ -271,6 +289,8 @@ const I18N={
     joinTitle:"名前を入れて参加", joinDesc:"名前は3文字まで。URLが同じなら同じ部屋。落ち着いて遊ぶ場。", joinStart:"はじめる",
     joinHint:"音が出ないときは一度画面をタップしてからミュートを確かめる。",
     confirmLeave:"今の部屋から退室する。OK？", left:"退室した",
+    shareCopy:"リンクをコピー",
+    shareX:"Xで共有",
     notify:{
       join:n=>`${n} が入室した`, leave:n=>`${n} が退室した`,
       pinOn:"ピンを固定した", pinOff:"ピンを外した",
@@ -293,6 +313,8 @@ const I18N={
     joinTitle:"Enter name to join", joinDesc:"Up to 3 characters. Same URL, same room. A chill place.", joinStart:"Start",
     joinHint:"No sound? Tap once and toggle the bell.",
     confirmLeave:"Leave this room?", left:"Left",
+    shareCopy:"Copy link",
+    shareX:"Share on X",
     notify:{
       join:n=>`${n} joined`, leave:n=>`${n} left`,
       pinOn:"Pinned", pinOff:"Unpinned",
@@ -392,6 +414,10 @@ const hintBox=document.getElementById("hint");
 const hintText=document.getElementById("hintText");
 const hintClose=document.getElementById("hintClose");
 const leaveBtn=document.getElementById("leaveBtn");
+/* 共有メニュー */
+const shareMenu=document.getElementById("shareMenu");
+const shareCopyBtn=document.getElementById("shareCopyBtn");
+const shareXBtn=document.getElementById("shareXBtn");
 
 worldLabel.textContent=`room: ${WORLD_ID}`;
 countDock.textContent="🐈‍⬛ 0";
@@ -489,6 +515,9 @@ function applyLang(){
   document.getElementById("brandTitle").textContent=T.brand;
   msgInput.placeholder=T.msgPlaceholder;
   document.getElementById("hintKeys").textContent=T.hintKeys;
+  // 共有メニューのラベル
+  shareCopyBtn.textContent = (LANG==="ja") ? `📋 ${I18N.ja.shareCopy}` : `📋 ${I18N.en.shareCopy}`;
+  shareXBtn.textContent    = (LANG==="ja") ? `𝕏 ${I18N.ja.shareX}`    : `𝕏 ${I18N.en.shareX}`;
   notify(T.hint, 90000);
   lblPose.textContent  =" "+(me.pose==="stand"?T.poseSit:T.poseStand);
   lblAnger.textContent =" "+T.anger;
@@ -906,12 +935,12 @@ play.addEventListener("pointerdown", e=>{
     if(pointers.size===1){
       panning=true; panningTouchId=e.pointerId;
       dragStartX=e.clientX; dragStartY=e.clientY; panStartX=panX; panStartY=panY;
-    }else if(pointers.size===2){
+    }else{ if(pointers.size===2){
       panning=false; panningTouchId=null;
       const ids=[...pointers.keys()]; const a=pointers.get(ids[0]); const b=pointers.get(ids[1]);
       const dx=a.x-b.x, dy=a.y-b.y;
       pinch={id1:ids[0],id2:ids[1],prevDist:Math.hypot(dx,dy),prevCx:(a.x+b.x)/2,prevCy:(a.y+b.y)/2};
-    }
+    }}
     try{ play.setPointerCapture(e.pointerId); }catch{}; return;
   }
   if(e.button!==0 && e.buttons!==1) return; if(pointers.size>0) return;
@@ -1098,19 +1127,65 @@ function peekNames(){
 brandTitle.addEventListener("click", peekNames);
 if(brandLogo) brandLogo.addEventListener("click", peekNames);
 
-shareBtn.addEventListener("click", async ()=>{
+/* ▼ 共有メニューの実装（旧 shareBtn の直接コピー挙動を内包） */
+function inviteURL(){
   const invite=new URL(location.href);
   invite.searchParams.set("room", WORLD_ID);
   invite.hash=invite.hash.replace(/room=[^&]+&?/,'').replace(/[#&]$/,'');
+  return invite.toString();
+}
+function positionShareMenu(){
+  const r=shareBtn.getBoundingClientRect();
+  const left=Math.min(window.innerWidth-230, Math.max(8, r.left));
+  const top = r.bottom + 8;
+  shareMenu.style.left=`${left}px`;
+  shareMenu.style.top =`${top}px`;
+}
+function openShareMenu(){
+  positionShareMenu();
+  shareMenu.style.display="block";
+  shareMenu.setAttribute("aria-hidden","false");
+}
+function closeShareMenu(){
+  shareMenu.style.display="none";
+  shareMenu.setAttribute("aria-hidden","true");
+}
+shareBtn.addEventListener("click", (e)=>{
+  e.stopPropagation();
+  if(shareMenu.style.display==="block"){ closeShareMenu(); } else { openShareMenu(); }
+});
+document.addEventListener("pointerdown", (e)=>{
+  if(shareMenu.style.display!=="block") return;
+  const t=e.target;
+  if(t===shareMenu || shareMenu.contains(t) || t===shareBtn) return;
+  closeShareMenu();
+});
+window.addEventListener("resize", ()=>{ if(shareMenu.style.display==="block"){ positionShareMenu(); }});
+
+/* 共有：リンクをコピー */
+shareCopyBtn.addEventListener("click", async ()=>{
+  const link=inviteURL();
   try{
     if(navigator.clipboard && navigator.clipboard.writeText){
-      await navigator.clipboard.writeText(invite.toString());
-      toast((LANG==="ja"?I18N.ja:I18N.en).notify.urlCopied, 2600);
+      await navigator.clipboard.writeText(link);
+      toast(I18N[LANG].notify.urlCopied, 2600);
     }else{
-      prompt(LANG==="ja"?"このURLをコピーして共有してね":"Copy this URL to invite", invite.toString());
+      prompt(LANG==="ja"?"このURLをコピーして共有してね":"Copy this URL to invite", link);
     }
   }catch(e){ console.warn("clipboard failed:", e); }
+  closeShareMenu();
 });
+
+/* 共有：Xで共有（#くろねこひろば 添付） */
+shareXBtn.addEventListener("click", ()=>{
+  const link=inviteURL();
+  const u=new URL("https://x.com/intent/tweet");
+  u.searchParams.set("text", "#くろねこひろば");
+  u.searchParams.set("url", link);
+  window.open(u.toString(), "_blank", "noopener,noreferrer");
+  closeShareMenu();
+});
+/* ▲ */
 
 helpBtn.addEventListener("click", ()=>{
   helpDialog.innerHTML=`<div style="padding:16px 16px 12px; max-width:560px">${helpHtml()}<div style="display:flex; gap:8px; justify-content:flex-end"><button id="helpClose" class="btn">OK</button></div></div>`;

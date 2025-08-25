@@ -15,9 +15,9 @@
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png" as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png"  as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/angerCAT.png"    as="image" crossorigin>
-<!-- ▼ 追加：ロゴのプリロード（スプラッシュ/ヘッダ） -->
+<!-- ▼ スプラッシュ/ヘッダロゴのプリロード -->
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/kuronekologo2.png" as="image" crossorigin>
-<link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/kuronekologo3.png" as="image" crossorigin>
+<link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/DF473A5F-2FD9-4440-92F7-D72FBC621075.jpeg" as="image" crossorigin>
 <!-- ▲ -->
 
 <style>
@@ -35,13 +35,13 @@
 
   header{position:sticky; top:0; z-index:50; padding:calc(env(safe-area-inset-top)+4px) 10px 8px; padding-right:calc(10px + env(safe-area-inset-right)); border-bottom:1px solid var(--border); background:var(--panel)}
   .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px}
-  .brand{display:flex; align-items:center; gap:10px; min-width:0}
+  .brand{display:flex; align-items:center; gap:10px; min-width:0; padding-left:10px;} /* 左に10px余地 */
   .brand h1{font-size:clamp(13px,2.2vw,16px); font-weight:800; margin:0; white-space:nowrap; cursor:pointer}
-  /* ▼ ヘッダロゴ（入室後表示） & 視覚的非表示クラス */
+  /* ヘッダロゴ（入室後表示） & 視覚的非表示クラス */
   .vh{position:absolute!important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0}
   #brandLogo{height:22px; width:auto; display:none; cursor:pointer}
   @media (max-width:640px){ #brandLogo{height:18px} }
-  /* ▲ */
+
   .chip{border:1px solid var(--border); background:#fafafa; border-radius:999px; padding:6px 10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:clamp(12px,1.6vw,14px)}
   #worldLabel{max-width:clamp(120px,38vw,360px)}
   #countDock{flex:0 0 auto; font-weight:800; background:#fff}
@@ -129,24 +129,16 @@
     .p{transition:none} .join-burst{display:none} .spawn{animation:none} .ping{animation:none; display:none}
   }
 
-  /* ▼ ズーム表示の視認性＆スマホでは非表示 */
-  #zoomLabel{
-    background:#fff; border:1px solid var(--border);
-    min-width:64px; text-align:center; font-weight:800;
-    padding:8px 12px; font-variant-numeric:tabular-nums; line-height:1.1;
-  }
-  @media (max-width:880px){
-    #zoomLabel{ display:none; }
-  }
-  /* ▲ ここまで */
+  /* ズーム表示の視認性＆スマホでは非表示 */
+  #zoomLabel{ background:#fff; border:1px solid var(--border); min-width:64px; text-align:center; font-weight:800; padding:8px 12px; font-variant-numeric:tabular-nums; line-height:1.1 }
+  @media (max-width:880px){ #zoomLabel{ display:none } }
 
-  /* ▼ 入室前スプラッシュ（フェードアウト追加） */
+  /* 入室前スプラッシュ（フェードアウト） */
   #splash{position:fixed; inset:0; background:#fff; display:none; align-items:center; justify-content:center; z-index:3000; opacity:1}
   #splash.show{display:flex}
   #splash.fadeOut{ animation:splashFade .35s ease forwards }
   #splash img{width:min(60vw, 280px); height:auto; filter:drop-shadow(0 10px 24px rgba(0,0,0,.12))}
   @keyframes splashFade{to{opacity:0}}
-  /* ▲ */
 </style>
 </head>
 <body>
@@ -225,9 +217,8 @@
   </div>
 </div>
 
-<!-- ▼ 入室前スプラッシュ -->
+<!-- 入室前スプラッシュ -->
 <div id="splash"><img src="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/kuronekologo2.png" alt="logo"></div>
-<!-- ▲ -->
 
 <dialog id="helpDialog"></dialog>
 <div id="full" style="display:none"></div>
@@ -238,7 +229,7 @@ const CAT_STAND_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/
 const CAT_SIT_URL   = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png";
 const CAT_ANGRY_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/angerCAT.png";
 const LOGO_SPLASH_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/kuronekologo2.png";  // 起動時
-const LOGO_HEADER_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/kuronekologo3.png";  // 入室後ヘッダ
+const LOGO_HEADER_URL = "https://raw.githubusercontent.com/RARA-vrc/blackcat/main/DF473A5F-2FD9-4440-92F7-D72FBC621075.jpeg";  // 入室後ヘッダ
 const SPLASH_MS = 2000;
 
 /* ===== パラメータ ===== */
@@ -256,9 +247,51 @@ const STALE_MS_PLAYERS = 60*60*1000;
 const NAME_REASSERT_MS = 60*1000;
 
 /* ===== i18n ===== */
-const I18N={ /* 省略なし（元のまま） */ 
-  ja:{brand:"くろねこひろば",roomCount:n=>`🐈‍⬛ ${n}`,namesPeek:list=>`いまの参加者： ${list}`,poseSit:"座る",poseStand:"立つ",anger:"威嚇",soundOn:"音オン",soundMute:"ミュート",newRoom:"新部屋",share:"共有",clear:"クリア",help:"ヘルプ",lang:"日本語",leave:"退室",msgPlaceholder:"(15文字 / 10 words)",hintKeys:"Enterで送信  Sで座る",hint:"ドラッグでフィールド移動。ダブルタップ/ダブルクリックでネコが移動。ピンチでズーム。",joinTitle:"名前を入れて参加",joinDesc:"名前は3文字まで。URLが同じなら同じ部屋。落ち着いて遊ぶ場。",joinStart:"はじめる",joinHint:"音が出ないときは一度画面をタップしてからミュートを確かめる。",confirmLeave:"今の部屋から退室する。OK？",left:"退室した",notify:{join:n=>`${n} が入室した`,leave:n=>`${n} が退室した`,pinOn:"ピンを固定した",pinOff:"ピンを外した",noteSaved:"書き置きを残した",noteUpdated:"書き置きを更新した",noteCleared:"書き置きを消した",urlCopied:"リンクをコピーした。フレンドを招待できる",newRoomBy:n=>`${n} が新しい部屋を作成`,full:n=>`満員だ。${n}人まで`,online:"オンライン",offline:"オフライン。再接続待ち",errorAuth:"認証エラー。設定を確認"}},
-  en:{brand:"Black Cats Plaza",roomCount:n=>`🐈‍⬛ ${n}`,namesPeek:list=>`Players: ${list}`,poseSit:"Sit",poseStand:"Stand",anger:"Angry",soundOn:"Sound",soundMute:"Muted",newRoom:"New",share:"Share",clear:"Clear",help:"Help",lang:"English",leave:"Leave",msgPlaceholder:"(15 chars / 10 words)",hintKeys:"Enter to send  S to sit/stand",hint:"Drag to move the field. Double-tap/double-click to move your cat. Pinch to zoom.",joinTitle:"Enter name to join",joinDesc:"Up to 3 characters. Same URL, same room. A chill place.",joinStart:"Start",joinHint:"No sound? Tap once and toggle the bell.",confirmLeave:"Leave this room?",left:"Left",notify:{join:n=>`${n} joined`,leave:n=>`${n} left`,pinOn:"Pinned",pinOff:"Unpinned",noteSaved:"Note saved",noteUpdated:"Note updated",noteCleared:"Note cleared",urlCopied:"Link copied. Invite friends",newRoomBy:n=>`${n} created a new room`,full:n=>`Room is full (max ${n})`,online:"Online",offline:"Offline. Reconnecting",errorAuth:"Auth error"}}
+const I18N={
+  ja:{
+    brand:"くろねこひろば",
+    roomCount:n=>`🐈‍⬛ ${n}`,
+    namesPeek:list=>`いまの参加者： ${list}`,
+    poseSit:"座る", poseStand:"立つ", anger:"威嚇",
+    soundOn:"音オン", soundMute:"ミュート",
+    newRoom:"新部屋", share:"共有", clear:"クリア", help:"ヘルプ", lang:"日本語", leave:"退室",
+    msgPlaceholder:"(15文字 / 10 words)", hintKeys:"Enterで送信  Sで座る",
+    hint:"ドラッグでフィールド移動。ダブルタップ/ダブルクリックでネコが移動。ピンチでズーム。",
+    joinTitle:"名前を入れて参加", joinDesc:"名前は3文字まで。URLが同じなら同じ部屋。落ち着いて遊ぶ場。", joinStart:"はじめる",
+    joinHint:"音が出ないときは一度画面をタップしてからミュートを確かめる。",
+    confirmLeave:"今の部屋から退室する。OK？", left:"退室した",
+    notify:{
+      join:n=>`${n} が入室した`, leave:n=>`${n} が退室した`,
+      pinOn:"ピンを固定した", pinOff:"ピンを外した",
+      noteSaved:"書き置きを残した", noteUpdated:"書き置きを更新した", noteCleared:"書き置きを消した",
+      urlCopied:"リンクをコピーした。フレンドを招待できる",
+      newRoomBy:n=>`${n} が新しい部屋を作成`,
+      full:n=>`満員だ。${n}人まで`,
+      online:"オンライン", offline:"オフライン。再接続待ち", errorAuth:"認証エラー。設定を確認"
+    }
+  },
+  en:{
+    brand:"Black Cats Plaza",
+    roomCount:n=>`🐈‍⬛ ${n}`,
+    namesPeek:list=>`Players: ${list}`,
+    poseSit:"Sit", poseStand:"Stand", anger:"Angry",
+    soundOn:"Sound", soundMute:"Muted",
+    newRoom:"New", share:"Share", clear:"Clear", help:"Help", lang:"English", leave:"Leave",
+    msgPlaceholder:"(15 chars / 10 words)", hintKeys:"Enter to send  S to sit/stand",
+    hint:"Drag to move the field. Double-tap/double-click to move your cat. Pinch to zoom.",
+    joinTitle:"Enter name to join", joinDesc:"Up to 3 characters. Same URL, same room. A chill place.", joinStart:"Start",
+    joinHint:"No sound? Tap once and toggle the bell.",
+    confirmLeave:"Leave this room?", left:"Left",
+    notify:{
+      join:n=>`${n} joined`, leave:n=>`${n} left`,
+      pinOn:"Pinned", pinOff:"Unpinned",
+      noteSaved:"Note saved", noteUpdated:"Note updated", noteCleared:"Note cleared",
+      urlCopied:"Link copied. Invite friends",
+      newRoomBy:n=>`${n} created a new room`,
+      full:n=>`Room is full (max ${n})`,
+      online:"Online", offline:"Offline. Reconnecting", errorAuth:"Auth error"
+    }
+  }
 };
 let LANG="ja";
 
@@ -359,14 +392,13 @@ function setupAudioUnlock(){ const once=()=>{unlockAudio(); document.removeEvent
 function tone({freq=880,dur=0.12,type="sine",vol=0.7,attack=0.005,release=0.12}={}){ if(!AC) return; const o=AC.createOscillator(); const g=AC.createGain(); o.type=type; o.frequency.value=freq; o.connect(g); g.connect(masterGain||AC.destination); const t=AC.currentTime; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+attack); g.gain.exponentialRampToValueAtTime(0.0001,t+attack+release); o.start(t); o.stop(t+dur+0.25); }
 function playLogin(){ if(!muted&&AC){ tone({freq:880,type:"triangle",vol:0.55,dur:0.12}); setTimeout(()=>tone({freq:1320,type:"triangle",vol:0.55,dur:0.12}),140); } }
 function playMessage(){ if(!muted&&AC){ tone({freq:700,type:"sine",vol:0.5,dur:0.09}); } }
-/* ▼ 追加：かわいいログイン効果音（3音） */
+/* かわいいログイン効果音（3音） */
 function playCuteLogin(){
   if(muted || !AC) return;
-  tone({freq:880,type:"sine",vol:0.55,dur:0.10});          // A5
-  setTimeout(()=>tone({freq:1175,type:"sine",vol:0.50,dur:0.10}),140); // D6#
-  setTimeout(()=>tone({freq:1568,type:"triangle",vol:0.55,dur:0.14}),280); // G6
+  tone({freq:880,type:"sine",vol:0.55,dur:0.10});
+  setTimeout(()=>tone({freq:1175,type:"sine",vol:0.50,dur:0.10}),140);
+  setTimeout(()=>tone({freq:1568,type:"triangle",vol:0.55,dur:0.14}),280);
 }
-/* ▲ */
 
 /* ===== お知らせ ===== */
 function notify(text, ttl=90000){ hintText.textContent=text; hintBox.style.display="flex"; hintBox.style.opacity=.95; clearTimeout(notify._t); notify._t=setTimeout(()=>{ hintBox.style.display="none"; }, ttl); }
@@ -473,19 +505,16 @@ nameInput.addEventListener("input", ()=>{ const n=nameInput.value.trim(); if([..
 enterBtn.addEventListener("click", startJoin);
 nameInput.addEventListener("keydown", e=>{ if(e.key==="Enter") startJoin(); });
 
-/* ▼ アクセス直後スプラッシュ（名前入力前）— フェードアウト付き */
+/* アクセス直後スプラッシュ（名前入力前）— フェードアウト付き */
 function showSplashOnBoot(){
   if(!splash) return;
   splash.firstElementChild?.setAttribute("src", LOGO_SPLASH_URL);
   splash.classList.add("show");
   splash.style.display="flex";
-  // 指定時間の後にフェードアウト開始
   setTimeout(()=>{ splash.classList.add("fadeOut"); }, SPLASH_MS);
-  // フェード終了で非表示に（prefers-reduced-motion でも安全）
   const onEnd=(e)=>{ if(e.animationName==="splashFade"){ splash.classList.remove("show","fadeOut"); splash.style.display="none"; splash.removeEventListener("animationend", onEnd); } };
   splash.addEventListener("animationend", onEnd);
 }
-/* ▲ */
 
 async function startJoin(){
   const n=normalizeName(nameInput.value);
@@ -493,7 +522,7 @@ async function startJoin(){
   warn.textContent="";
   me.name=n; joined=true; me.pose="stand"; me.pinMsg="";
   join.style.display="none";
-  playCuteLogin();    // ★ 追加：かわいいログイン効果音
+  playCuteLogin();    // かわいいログイン効果音
   if(uid && !mounted){ await initAfterAuth(); }
 }
 
@@ -552,7 +581,7 @@ async function initAfterAuth(){
   await mountPresence(true);
   await forceNameSync();
 
-  // 入室後：ヘッダロゴに切替（kuronekologo3.png）
+  // 入室後：ヘッダロゴに切替（指定JPEG）
   if(brandLogo){
     brandLogo.src = LOGO_HEADER_URL;
     brandLogo.style.display = "block";

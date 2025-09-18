@@ -2,7 +2,7 @@
   "applinks": {
     "details": [
       {
-        "appIDs": ["YOUR_TEAM_ID.rara.kuronekohiroba"],
+        "appIDs": ["5LDJ2FH78F.rara.kuronekohiroba"],
         "components": [
           { "/": "/blackcat/*" },
           { "/": "/index.html" },

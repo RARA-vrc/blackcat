@@ -10,16 +10,14 @@
 <link rel="icon" type="image/png" sizes="any" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png">
 <link rel="shortcut icon" type="image/png" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png">
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png">
-<!-- ▲ ここまで追記 -->
 
+<!-- ▼ 先読み（ネコ画像・ロゴ・背景） -->
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_standing.png" as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/CAT_sitting.png"  as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/angerCAT.png"    as="image" crossorigin>
-<!-- ▼ 先読み：スプラッシュ/ヘッダロゴ/ワールド背景 -->
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/kuronekologo2.png" as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/DF473A5F-2FD9-4440-92F7-D72FBC621075.jpeg" as="image" crossorigin>
 <link rel="preload" href="https://raw.githubusercontent.com/RARA-vrc/blackcat/main/56954E64-9618-4A55-95A5-F777E9AF099F.jpeg" as="image" crossorigin>
-<!-- ▲ -->
 
 <style>
   :root{
@@ -37,7 +35,7 @@
 
   header{position:sticky; top:0; z-index:50; padding:calc(env(safe-area-inset-top)+4px) 10px 8px; padding-right:calc(10px + env(safe-area-inset-right)); border-bottom:1px solid var(--border); background:var(--panel)}
   .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px}
-  .brand{display:flex; align-items:center; gap:10px; min-width:0; padding-left:10px;}
+  .brand{display:flex; align-items:center; gap:10px; min-width:0; padding-left:10px;} /* ← 左に10px余地 */
   .brand h1{font-size:clamp(13px,2.2vw,16px); font-weight:800; margin:0; white-space:nowrap; cursor:pointer}
   .vh{position:absolute!important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0}
   #brandLogo{height:22px; width:auto; display:none; cursor:pointer}
@@ -126,6 +124,9 @@
   .subtle{font-size:12px; color:#6b7280}
   #joinGuide{font-size:12px; color:#374151; background:#fafafa; border:1px solid var(--border); padding:10px 10px; border-radius:12px; line-height:1.65; margin-top:8px}
   #joinGuide b{color:#111}
+  /* 法務リンク（小さく） */
+  #legalLinks{margin-top:12px; font-size:12px; color:#6b7280}
+  #legalLinks a{color:#374151; text-decoration:underline}
 
   #namesPeek{position:fixed; left:50%; top:calc(8px + env(safe-area-inset-top)); transform:translateX(-50%); z-index:4; background:rgba(0,0,0,.84); color:#fff; font-size:13px; border-radius:12px; padding:8px 10px; max-width:90vw; white-space:normal; display:none; pointer-events:none}
 
@@ -160,6 +161,9 @@
   #shareMenu .item:active{background:#f3f4f6}
   #shareMenu .sep{height:1px; background:var(--border); margin:4px 2px}
   /* ▲ */
+
+  /* --- iOS/Safari サブピクセルずれ対策 --- */
+  .p, .name, .bubble { will-change: left, top, transform; transform: translateZ(0); }
 </style>
 </head>
 <body>
@@ -235,6 +239,11 @@
     <div id="warn" role="status" aria-live="polite"></div>
     <div id="joinGuide" class="subtle"></div>
     <p class="subtle" id="joinHint">音が出ないときは一度画面をタップしてからミュートを確かめる。</p>
+    <div id="legalLinks" class="subtle">
+      <a href="./tos.html" target="_blank" rel="noopener">利用規約</a> ・
+      <a href="./privacy.html" target="_blank" rel="noopener">プライバシーポリシー</a> ・
+      <a href="./contact.html" target="_blank" rel="noopener">お問い合わせ/通報</a>
+    </div>
   </div>
 </div>
 
@@ -245,7 +254,7 @@
 <div id="shareMenu" role="menu" aria-hidden="true">
   <button id="shareCopyBtn" class="item">📋 リンクをコピー</button>
   <div class="sep"></div>
-  <button id="shareXBtn" class="item">𝕏 で共有</button>
+  <button id="shareXBtn" class="item">Xで共有</button>
 </div>
 <!-- ▲ -->
 
@@ -290,7 +299,7 @@ const I18N={
     joinHint:"音が出ないときは一度画面をタップしてからミュートを確かめる。",
     confirmLeave:"今の部屋から退室する。OK？", left:"退室した",
     shareCopy:"リンクをコピー",
-    shareX:"で共有",
+    shareX:"Xで共有",
     notify:{
       join:n=>`${n} が入室した`, leave:n=>`${n} が退室した`,
       pinOn:"ピンを固定した", pinOff:"ピンを外した",
@@ -455,7 +464,8 @@ const clamp01=v=>Math.max(0,Math.min(1,v));
 const isASCIIish=s=>/^[\x00-\x7F]+$/.test(s);
 const countWordsASCII=s=>s.trim().split(/\s+/).filter(Boolean).length;
 function worldSize(){ return {w:world.offsetWidth, h:world.offsetHeight}; }
-function toPxLocal(nx,ny){ const {w,h}=worldSize(); return {x:nx*w, y:ny*h}; }
+/* ← iOSズレ対策：整数丸め */
+function toPxLocal(nx,ny){ const {w,h}=worldSize(); return {x:Math.round(nx*w), y:Math.round(ny*h)}; }
 function toNormFromClient(cx,cy){ const r=world.getBoundingClientRect(); return {x:clamp01((cx-r.left)/r.width), y:clamp01((cy-r.top)/r.height)}; }
 function normalizeName(s){ if(typeof s!=="string") return ""; const t=s.trim(); return t.length?Array.from(t).slice(0,3).join(""):""; }
 
@@ -515,9 +525,9 @@ function applyLang(){
   document.getElementById("brandTitle").textContent=T.brand;
   msgInput.placeholder=T.msgPlaceholder;
   document.getElementById("hintKeys").textContent=T.hintKeys;
-  // 共有メニューのラベル
-  shareCopyBtn.textContent = (LANG==="ja") ? `📋 ${I18N.ja.shareCopy}` : `📋 ${I18N.en.shareCopy}`;
-  shareXBtn.textContent    = (LANG==="ja") ? `𝕏 ${I18N.ja.shareX}`    : `𝕏 ${I18N.en.shareX}`;
+  // 共有メニューのラベル（重複Xを排除）
+  shareCopyBtn.textContent = (LANG==="ja") ? I18N.ja.shareCopy : I18N.en.shareCopy;
+  shareXBtn.textContent    = (LANG==="ja") ? I18N.ja.shareX    : I18N.en.shareX;
   notify(T.hint, 90000);
   lblPose.textContent  =" "+(me.pose==="stand"?T.poseSit:T.poseStand);
   lblAnger.textContent =" "+T.anger;
@@ -750,7 +760,9 @@ function normalizeNameOrCache(id, name){
 }
 function renderPlayer(pdom, data, isSelf){
   const {w,h}=worldSize();
-  const px=(data.x??0.5)*w, py=(data.y??0.7)*h;
+  /* ← iOSズレ対策：整数丸めしてから代入 */
+  const px=Math.round((data.x??0.5)*w);
+  const py=Math.round((data.y??0.7)*h);
   pdom.wrap.style.left=`${px}px`; pdom.wrap.style.top=`${py}px`;
 
   if(data.pose==="sit"){ pdom.wrap.classList.add("sit"); pdom.wrap.classList.remove("stand"); }
@@ -768,10 +780,17 @@ function renderPlayer(pdom, data, isSelf){
   pdom.nameEl.style.display = decidedName ? "block":"none";
   if(decidedName && pdom.nameEl.textContent!==decidedName) pdom.nameEl.textContent=decidedName;
 
-  const wr=world.getBoundingClientRect();
+  /* ▼ 画面下端の可視範囲を VisualViewport で算出（iOS対応） */
+  const wr = world.getBoundingClientRect();
+  const vv = window.visualViewport;
+  const viewportTop    = vv ? vv.offsetTop : 0;
+  const viewportHeight = vv ? vv.height    : window.innerHeight;
+  const barH = (bar.getBoundingClientRect().height||0);
+  const visibleBottom = viewportTop + viewportHeight - barH;
   const screenY = wr.top + (data.y??0.7)*wr.height;
-  const visibleBottom = window.innerHeight - (bar.getBoundingClientRect().height||0);
   const wantFlip = (screenY + 110) > visibleBottom;
+  /* ▲ */
+
   if(!pdom._flip && wantFlip){ pdom.nameEl.classList.add("flip"); pdom._flip=true; }
   else if(pdom._flip && (screenY + 130) < visibleBottom){ pdom.nameEl.classList.remove("flip"); pdom._flip=false; }
   pdom.bubbleEl.classList.toggle("bump", pdom._flip);
@@ -935,12 +954,12 @@ play.addEventListener("pointerdown", e=>{
     if(pointers.size===1){
       panning=true; panningTouchId=e.pointerId;
       dragStartX=e.clientX; dragStartY=e.clientY; panStartX=panX; panStartY=panY;
-    }else{ if(pointers.size===2){
+    }else if(pointers.size===2){
       panning=false; panningTouchId=null;
       const ids=[...pointers.keys()]; const a=pointers.get(ids[0]); const b=pointers.get(ids[1]);
       const dx=a.x-b.x, dy=a.y-b.y;
       pinch={id1:ids[0],id2:ids[1],prevDist:Math.hypot(dx,dy),prevCx:(a.x+b.x)/2,prevCy:(a.y+b.y)/2};
-    }}
+    }
     try{ play.setPointerCapture(e.pointerId); }catch{}; return;
   }
   if(e.button!==0 && e.buttons!==1) return; if(pointers.size>0) return;
@@ -1022,6 +1041,18 @@ play.addEventListener("touchend", e=>{
   }
 },{passive:true});
 
+/* iOS VisualViewport の伸縮で flip 再計算 */
+if (window.visualViewport) {
+  const refreshFlip = () => {
+    for (const [id, pdom] of domMap) {
+      const p = latestPlayers[id] || {};
+      renderPlayer(pdom, p, id===uid);
+    }
+  };
+  visualViewport.addEventListener('resize', refreshFlip);
+  visualViewport.addEventListener('scroll',  refreshFlip);
+}
+
 /* リサイズ */
 window.addEventListener("resize", ()=>{ if(!userPanned){ centerWorld(); applyView(); }});
 
@@ -1073,8 +1104,8 @@ function upsertNoteDom(ownerUid,data){
   el.style.left=`${x}px`; el.style.top=`${y}px`;
   const wr=world.getBoundingClientRect();
   const screenY=wr.top + (Number(data.y??0.7))*wr.height;
-  const visibleBottom=window.innerHeight - (bar.getBoundingClientRect().height||0);
-  if(screenY<120) el.classList.add("flip"); else if(screenY>140) el.classList.remove("flip");
+  const visibleBottom=(window.visualViewport ? window.visualViewport.offsetTop + window.visualViewport.height : window.innerHeight) - (bar.getBoundingClientRect().height||0);
+  if(screenY<120) el.classList.add("flip"); else if(screenY>140 && screenY<visibleBottom-20) el.classList.remove("flip");
 }
 
 /* ===== 新部屋通知 ===== */
@@ -1127,7 +1158,7 @@ function peekNames(){
 brandTitle.addEventListener("click", peekNames);
 if(brandLogo) brandLogo.addEventListener("click", peekNames);
 
-/* ▼ 共有メニューの実装（旧 shareBtn の直接コピー挙動を内包） */
+/* ▼ 共有メニュー（旧 shareBtn の直接コピー挙動を内包） */
 function inviteURL(){
   const invite=new URL(location.href);
   invite.searchParams.set("room", WORLD_ID);
@@ -1200,8 +1231,7 @@ helpBtn.addEventListener("click", ()=>{
   msgInput.dispatchEvent(new Event("input"));
   centerWorld(); applyView();
   notify(I18N[LANG].hint, 90000);
-  // 起動時スプラッシュ（名前入力前）：フェードアウト付き
-  showSplashOnBoot();
+  showSplashOnBoot(); // 起動時スプラッシュ（名前入力前）：フェードアウト付き
 })();
 function renderMuteButton(){
   const T = I18N[LANG];
@@ -1214,7 +1244,6 @@ muteBtn.addEventListener("click", ()=>{
   if(masterGain) masterGain.gain.value = muted ? 0 : 0.24;
   renderMuteButton();
 });
-
 </script>
 </body>
 </html>
